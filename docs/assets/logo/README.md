@@ -1,44 +1,47 @@
-# Forja logo assets
+# Forja — approved logo assets
 
-Original vector artwork by Codex for Forja, following [decision 0001](../../decisions/0001-logo-direction.md).
-Codex owns visual design and artwork; Claude Code integrates the supplied assets into the app.
+Metallic loaded barbell end on midnight navy, approved by the owner on 2026-11-16.
+See [decision 0001](../../decisions/0001-metallic-barbell-logo.md). Codex creates the artwork;
+Claude Code integrates these files without redrawing or replacing the metallic finish with CSS.
 
-![Logo preview](preview.png)
+![Approved design](approved-preview.png)
 
-| Asset | Use |
-|-------|-----|
-| `symbol-blue.svg` | Canonical 256 × 256 transparent master, deep blue on light surfaces |
-| `symbol-black.svg`, `symbol-white.svg` | Transparent monochrome masters; white for dark surfaces |
-| `wordmark-blue.svg` | 415 × 160 horizontal arrangement: blue symbol and charcoal name |
-| `wordmark-black.svg`, `wordmark-white.svg` | Transparent monochrome arrangements |
-| `favicon.svg` | Blue tile with the simplified white anvil for small browser rendering |
-| `favicon.ico` | Multi-resolution PNG-backed ICO: 16, 32 and 48 px |
-| `favicon-16.png`, `favicon-32.png`, `favicon-48.png` | Browser raster variants; 16 px omits the strike |
-| `app-icon.svg` | Square opaque blue master with full white symbol; no baked-in corner mask |
+| File | Use |
+|------|-----|
+| `approved-preview.png` | Exact approved image, 1254 × 1254, with rounded tile/beveled edge and off-white corners. Design reference or ordinary image presentation; not an OS icon. |
+| `master.png` | Production source, 1254 × 1254. Background-only packaging edit extending navy to all edges without a baked-in corner mask. |
+| `app-icon-1024.png` | Large image placement or high-resolution handoff |
+| `app-icon-512.png`, `app-icon-192.png` | App image and future home-screen icon exports |
 | `app-icon-180.png` | Apple touch icon |
-| `app-icon-192.png`, `app-icon-512.png` | Future home-screen/PWA assets; not a request to implement PWA behavior now |
-| `preview.svg`, `preview.png` | Review sheet, not an application asset |
+| `favicon-16.png`, `favicon-32.png`, `favicon-48.png`, `favicon-64.png` | Browser icon exports |
+| `favicon.ico` | PNG-backed ICO containing 16, 32, 48 and 64 px images |
+| `export-review.png` | Visual QA sheet, not an application asset |
 
-The small angled block suggests a strike above the broad anvil. Open space keeps the two shapes separate.
-All production SVGs contain only paths/groups/rectangles: no text, embedded fonts, external URLs or scripts.
-Wordmark lettering was outlined from Geist Regular already bundled with Next.js in this repository;
-no font binary is redistributed. Use the wordmark as delivered rather than retyping its name.
+Use opaque production PNGs for OS icons and let the platform apply its own corner mask. For an in-app
+rounded tile, use a production PNG with the component's corner radius; avoid double masking the preview.
+Do not stretch, recolor, rotate, add text over the symbol, or reconstruct it from stock shapes.
+Palette anchors are navy `#101B35` and silver `#DDE7F5`; the master includes deliberate lighting variation.
+This is raster artwork, not an SVG or transparent symbol. The previous anvil, wordmarks and vector files
+were rejected and removed from this unmerged proposal. No replacement wordmark is approved.
 
-Keep the SVG view boxes and aspect ratios. Minimum symbol box: 32 px for the full design; use the
-simplified favicon at 16 px. Minimum horizontal wordmark width: 104 px. Leave at least 24 master units
-of space outside the symbol view box (about one tenth of the displayed box) between the logo and other
-content. Do not stretch, rotate, add effects or alter the separation between the shapes.
+Choose an export at least as large as the rendered image times the display pixel ratio. The smallest
+favicons retain the silhouette while the metallic texture naturally softens. No maskable-PWA safe-area
+claim is made; review that separately if installation is implemented in M5.
 
-Use blue `#1E40AF` on off-white `#FAFAF9` or white; charcoal is `#18181B`. Use the white version on
-charcoal or blue. Black and white versions use literal `#000000` and `#FFFFFF`.
-Home-screen icon content stays within the central circular safe area of radius 40% of the canvas width;
-let the operating system apply its own corner mask. The preview shows one possible rounded treatment.
+Claude Code's integration belongs in `apps/web`: copy required production files, wire favicon and touch
+metadata, and supply accessible labels through next-intl in English and Spanish. Hide decorative copies
+beside visible branding. Linked logos need destination labels and a minimum 44 × 44 px touch area.
+None of the image files contain interface text. Existing font styling can render the app name separately.
 
-Claude Code: copy production assets into `apps/web`, wire metadata/icons, and provide translated
-accessible labels in English and Spanish. Hide decorative duplicates beside visible branding. Linked
-logos need destination labels and at least a 44 × 44 px touch area. Do not expose English labels from
-this review sheet as interface text. The assets themselves contain no accessibility text; the embedding
-component supplies it through next-intl.
+## Provenance and reproduction
 
-Validation: rendered all SVG variants, checked the review sheet visually, verified PNG dimensions,
-and checked ICO entries and SVG structure. Recheck actual app integration on light/dark surfaces.
+Created with the built-in imagegen tool, then exported with the repository's existing Sharp library.
+Approval prompt: three substantial rounded vertical plates, middle tallest, short right-facing sleeve,
+soft brushed/satin silver metal with restrained directional highlights, on midnight navy; no text.
+Production edit prompt: preserve the approved subject and finish; remove only the tile border and white
+outside corners, extending the navy background to all four square edges. No redesign.
+All derived icons are Lanczos3 downsamples of `master.png`; none exceed the source resolution.
+
+Validation: visual review of the approved preview, full-bleed master and actual-size export sheet;
+verified opaque square PNG dimensions and decoded each ICO entry to confirm 16/32/48/64 px payloads.
+Application integration still needs its own visual and accessibility review.

@@ -97,7 +97,7 @@ describe("epleyProposal", () => {
     // B has the higher total 1RM (84); 1 rep -> 84/(1+1/30) = 81.29 total -> 30.645 per side.
     expect(w.value).toBeCloseTo(30.64, 1);
   });
-  it("returns currentWeight's unit, mixing lb sets with a kg bar", () => {
+  it("lb sets and lb current weight with a kg bar: result in lb", () => {
     const w = epleyProposal({
       ...base,
       sets: [set(10, 45, true, "lb")],
@@ -158,6 +158,52 @@ describe("percentageProposal", () => {
   it("keeps the unit of the current weight", () => {
     const w = percentageProposal({ ...base, currentWeight: { value: 100, unit: "lb" }, weightStep: 5 });
     expect(w).toEqual({ value: 105, unit: "lb" });
+  });
+});
+
+describe("per side with sets and currentWeight in different units", () => {
+  const perSide = { ...base, loadMode: "per_side" as const, barWeight: { value: 20, unit: "kg" as const } };
+
+  it("lb sets, kg currentWeight: the total is converted to kg, not relabelled", () => {
+    // total = 2 x 45 lb + 20 kg (44.09 lb) = 134.09 lb; 1RM = 134.09 x (1 + 10/30) = 178.79 lb
+    // for 8 reps: 178.79 / (1 + 8/30) = 141.15 lb = 64.02 kg; per side (64.02 - 20) / 2 = 22.01
+    // rounded down to 1.25 -> 21.25 kg. Relabelling 141.15 as kg would give 60.6 -> 60.
+    const r = proposeNextWeight({
+      ...perSide,
+      sets: [set(10, 45, true, "lb")],
+      currentWeight: { value: 20, unit: "kg" },
+      nextTargetReps: 8,
+      weightStep: 1.25,
+    });
+    expect(r.weight).toEqual({ value: 21.25, unit: "kg" });
+  });
+
+  it("kg sets, lb currentWeight: the total is converted to lb, not relabelled", () => {
+    // total = 2 x 20 + 20 = 60 kg; 1RM = 60 x (1 + 10/30) = 80 kg
+    // for 8 reps: 80 / (1 + 8/30) = 63.16 kg = 139.24 lb; bar 20 kg = 44.09 lb
+    // per side (139.24 - 44.09) / 2 = 47.57 -> rounded down to 2.5 = 47.5 lb.
+    const r = proposeNextWeight({
+      ...perSide,
+      sets: [set(10, 20, true, "kg")],
+      currentWeight: { value: 45, unit: "lb" },
+      nextTargetReps: 8,
+      weightStep: 2.5,
+    });
+    expect(r.weight).toEqual({ value: 47.5, unit: "lb" });
+  });
+
+  it("clamp to bar only converts the bar to currentWeight's unit", () => {
+    // total = 0 + 20 kg = 44.09 lb; 1RM = 44.09 x (1 + 8/30) = 55.85; for 10 reps: 55.85 / (1 + 10/30)
+    // = 41.89 lb, below the bar (44.09 lb) -> clamped to the bar -> 0 per side.
+    // Clamping against the bar as "20 lb" would keep 41.89 lb, and toPerSideLoad (bar = 44.09 lb) would throw.
+    const r = proposeNextWeight({
+      ...perSide,
+      sets: [set(8, 0, true, "lb")],
+      currentWeight: { value: 0, unit: "lb" },
+      nextTargetReps: 10,
+      weightStep: 2.5,
+    });
+    expect(r.weight).toEqual({ value: 0, unit: "lb" });
   });
 });
 

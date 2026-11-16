@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M0 scaffolded** — the app builds and shows a placeholder page; M1 (domain core) is next. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M1 done** — the domain core (`packages/core`) is implemented and tested; the app is still a placeholder page. M2 (database) is next. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -154,12 +154,12 @@ Each milestone ends with something that runs. Every task lists which agent role 
 - [ ] Create the GitHub repository and push (**you** decide: name, public or private)
 
 ### M1 — Domain core (no UI, no DB)
-- [ ] Types: `Weight`, `Unit`, `PlanWeek`, `SetLog` (*domain-dev*)
-- [ ] Unit conversion and plate rounding (*domain-dev*)
-- [ ] Default plan generator + "extend week" (*domain-dev*)
-- [ ] Weight proposal (Epley) with fallback (*domain-dev*)
-- [ ] Per-side barbell loads: total = 2 × side + bar, proposals converted back to per side (*domain-dev*)
-- [ ] Unit tests for all of the above, using the sample data as fixtures (*test-engineer*)
+- [x] Types: `Weight`, `Unit`, `PlanWeek`, `SetLog` (*domain-dev*)
+- [x] Unit conversion and plate rounding (*domain-dev*)
+- [x] Default plan generator + "extend week" (*domain-dev*)
+- [x] Weight proposal (Epley) with fallback (*domain-dev*)
+- [x] Per-side barbell loads: total = 2 × side + bar, proposals converted back to per side (*domain-dev*)
+- [x] Unit tests for all of the above, using the sample data as fixtures (*test-engineer*)
 
 ### M2 — Database
 - [ ] Drizzle schema + first migration (*backend-dev*)
@@ -231,3 +231,7 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
    the 23.8 kg "Rear delt" on shoulder days is the same machine as the 52–66 kg one on back days).
 2. The bar is assumed to weigh 20 kg for per-side calculations; it is a setting per exercise.
 3. Domain and trademark availability of "Forja" has not been checked.
+4. The "+5 %" fallback rounds to the **nearest** weight step, so a light weight can get no increase
+   (20 kg + 5 % = 21 kg → 20 kg with a 2.5 kg step). The alternative is "at least one step up".
+5. A proposal is returned in the unit of the weight currently used, even if some sets were logged in the other unit.
+6. A barbell proposal lighter than the empty bar is shown as 0 per side (bar only).

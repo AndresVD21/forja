@@ -2,11 +2,13 @@
 
 Pure domain logic. No database, no framework, no I/O.
 
-Exists: `units.ts` (kg/lb conversion). Planned modules (`src/`):
+Modules (`src/`), each with Zod schemas next to the types they describe:
 
-- `weight.ts` — `Weight` value object, kg/lb conversion, rounding to a weight step
+- `units.ts` — kg/lb, conversion
+- `weight.ts` — `Weight`, load modes, rounding to a weight step
+- `barbell.ts` — per-side <-> total load
 - `plan.ts` — default 6-week template, extend a week
-- `proposal.ts` — Epley 1RM estimate and next-phase weight proposal
-- `schemas.ts` — Zod schemas shared by forms and server actions
+- `set-log.ts` — one logged set
+- `proposal.ts` — Epley 1RM and next-phase weight proposal (strategies)
 
 Imports nothing from `@forja/db` or `apps/web`.

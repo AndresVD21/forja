@@ -18,4 +18,4 @@ pnpm dev        # http://localhost:3000
 
 Other commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
 
-Status: scaffolded (milestone M0). The app is a placeholder page.
+Status: domain core done (milestone M1). The app is still a placeholder page.

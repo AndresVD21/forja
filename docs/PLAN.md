@@ -206,6 +206,7 @@ Every milestone closes with a *reviewer* pass and an update of the docs.
 | 12 | Sets | Always 4 sets per exercise in the notes |
 | 13 | Early gym | Weeks 1–7 without a gym named were at Valle del Lili |
 | 8 | Language | English and Spanish |
+| 14 | Fallback rounding | The "+5 %" fallback rounds to the **nearest** weight step, even when that means no increase on a light weight (20 kg → 21 → 20 with a 2.5 kg step). Decided 2026-11-16 |
 
 ### What the sample data changed in the design
 
@@ -231,7 +232,5 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
    the 23.8 kg "Rear delt" on shoulder days is the same machine as the 52–66 kg one on back days).
 2. The bar is assumed to weigh 20 kg for per-side calculations; it is a setting per exercise.
 3. Domain and trademark availability of "Forja" has not been checked.
-4. The "+5 %" fallback rounds to the **nearest** weight step, so a light weight can get no increase
-   (20 kg + 5 % = 21 kg → 20 kg with a 2.5 kg step). The alternative is "at least one step up".
-5. A proposal is returned in the unit of the weight currently used, even if some sets were logged in the other unit.
-6. A barbell proposal lighter than the empty bar is shown as 0 per side (bar only).
+4. A proposal is returned in the unit of the weight currently used, even if some sets were logged in the other unit.
+5. A barbell proposal lighter than the empty bar is shown as 0 per side (bar only).

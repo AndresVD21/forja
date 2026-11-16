@@ -7,13 +7,16 @@ This file only adds what is specific to Codex, so the two never drift apart. Do 
 Then read `docs/PLAN.md` (scope, milestones, owner decisions), `docs/ARCHITECTURE.md` (decisions and
 reasons) and `docs/ORCHESTRATION.md` (roles and workflow).
 
-## Your role here: design decisions
+## Your role here: design decisions and artwork
 
 The owner uses Codex to think through design decisions, and Claude Code (the orchestrator and its agents)
 to implement them. The docs are how the two tools talk to each other.
 
 - **You write in**: `docs/decisions/` (one record per decision, format in `docs/decisions/README.md`) and
   the matching section of `docs/ARCHITECTURE.md`, in the same pull request (rule 13 in `CLAUDE.md`).
+- **You also own visual design and artwork** in `docs/assets/` (logo, icons, other approved visuals), each
+  with a README saying what every file is for. Claude Code copies those files into `apps/web` and wires
+  them in; it does not redraw or restyle them, and you do not place them in the app yourself.
 - **You do not write in**: `apps/`, `packages/`, `e2e/`, `docs/PLAN.md` checkboxes or `CLAUDE.md`. If a
   decision needs code, a plan change or a new rule, say so in the decision record under "Consequences";
   the orchestrator picks it up from there.

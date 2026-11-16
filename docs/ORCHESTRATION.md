@@ -16,7 +16,7 @@ Definitions live in `.claude/agents/`. The model is set in each file's frontmatt
 | `test-engineer` | Sonnet | Unit, integration and e2e tests; reports bugs rather than fixing them | `**/*.test.ts`, `e2e` |
 | `reviewer` | Opus | Reads the diff for bugs, security (user scoping!), and rule violations; read-only | nothing |
 | `release-manager` | Sonnet | Migrations, deploy checks, release notes; never deploys without your OK | `docs/releases` |
-| *Codex* (separate tool, opened by the owner) | — | Design decisions: explores options with the owner and records the outcome | `docs/decisions`, `docs/ARCHITECTURE.md` |
+| *Codex* (separate tool, opened by the owner) | — | Design decisions and artwork: explores options with the owner, records the outcome, supplies approved visuals | `docs/decisions`, `docs/ARCHITECTURE.md`, `docs/assets` |
 
 **Why these models**: design and review need the strongest reasoning and happen rarely, so they get the
 largest models. Implementation is the bulk of the tokens and is well-specified by the time it is handed out,
@@ -58,6 +58,10 @@ context exists once. The hand-over between the tools is a decision record:
    matching section of `ARCHITECTURE.md`, on a `docs/<slug>` branch, as a pull request.
 2. The owner merges it.
 3. The orchestrator reads the record's "Consequences" and turns them into tasks for the dev agents.
+
+Artwork follows the same path: Codex delivers approved files in `docs/assets/` (first case: the logo,
+[decision 0001](decisions/0001-metallic-barbell-logo.md)); `frontend-dev` copies them into `apps/web` and
+wires them in, without redrawing them or imitating them in CSS. A visual change goes back to Codex and the owner.
 
 Codex does not write code, and the Claude agents do not change a decision without a record (rule 13).
 `.codex/agents/` mirrors `.claude/agents/`; when a role changes, change both.

@@ -3,5 +3,18 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "dependencies": {}
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@forja/config": "workspace:*",
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "^5",
+    "vitest": "^5"
+  }
 }

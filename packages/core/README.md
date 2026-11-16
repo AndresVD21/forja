@@ -2,7 +2,7 @@
 
 Pure domain logic. No database, no framework, no I/O.
 
-Planned modules (`src/`):
+Exists: `units.ts` (kg/lb conversion). Planned modules (`src/`):
 
 - `weight.ts` — `Weight` value object, kg/lb conversion, rounding to a weight step
 - `plan.ts` — default 6-week template, extend a week

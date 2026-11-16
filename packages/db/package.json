@@ -3,5 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "dependencies": { "@forja/core": "workspace:*" }
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": { "@forja/core": "workspace:*" },
+  "devDependencies": {
+    "@forja/config": "workspace:*",
+    "@types/node": "^22",
+    "eslint": "^9",
+    "typescript": "^5"
+  }
 }

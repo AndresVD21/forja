@@ -8,4 +8,14 @@ built with a team of agents.
 - [Orchestration](docs/ORCHESTRATION.md) — agent roles, models and workflow
 - [CLAUDE.md](CLAUDE.md) — context loaded by every agent
 
-Status: planning. No application code yet.
+## Run it
+
+```bash
+corepack enable pnpm
+pnpm install
+pnpm dev        # http://localhost:3000
+```
+
+Other commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
+
+Status: scaffolded (milestone M0). The app is a placeholder page.

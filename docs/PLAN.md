@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **Ready for scaffolding approval**. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M0 scaffolded** — the app builds and shows a placeholder page; M1 (domain core) is next. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -148,9 +148,10 @@ Each milestone ends with something that runs. Every task lists which agent role 
 ### M0 — Foundations *(this session: docs + skeleton)*
 - [x] Plan, architecture, orchestration docs, `CLAUDE.md`, agent definitions
 - [x] Monorepo skeleton
-- [ ] Review and polish this plan (**you**)
-- [ ] Scaffold Next.js in `apps/web`, shared config, lint/typecheck/test scripts (*scaffolder*)
-- [ ] GitHub repo + CI workflow (*scaffolder*)
+- [x] Review and polish this plan (**you**)
+- [x] Scaffold Next.js in `apps/web`, shared config, lint/typecheck/test scripts
+- [x] CI workflow (`.github/workflows/ci.yml`)
+- [ ] Create the GitHub repository and push (**you** decide: name, public or private)
 
 ### M1 — Domain core (no UI, no DB)
 - [ ] Types: `Weight`, `Unit`, `PlanWeek`, `SetLog` (*domain-dev*)

@@ -151,7 +151,7 @@ Each milestone ends with something that runs. Every task lists which agent role 
 - [x] Review and polish this plan (**you**)
 - [x] Scaffold Next.js in `apps/web`, shared config, lint/typecheck/test scripts
 - [x] CI workflow (`.github/workflows/ci.yml`)
-- [ ] Create the GitHub repository and push (**you** decide: name, public or private)
+- [x] Create the GitHub repository and push (private, `AndresVD21/forja`)
 
 ### M1 — Domain core (no UI, no DB)
 - [x] Types: `Weight`, `Unit`, `PlanWeek`, `SetLog` (*domain-dev*)

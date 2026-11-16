@@ -169,7 +169,7 @@ Each milestone ends with something that runs. Every task lists which agent role 
 - [ ] Repository tests against a local Postgres (*test-engineer*)
 
 ### M3 — Log a workout (first usable version)
-- [ ] App shell, mobile layout, navigation, English/Spanish switch (*frontend-dev*)
+- [ ] App shell, mobile layout, navigation, English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
 - [ ] Sign-in with Better Auth: email + password, Google, invite list (*backend-dev*)
 - [ ] Exercises and locations screens (*frontend-dev*)
 - [ ] Log workout screen + server actions (*frontend-dev* + *backend-dev*)
@@ -185,7 +185,7 @@ Each milestone ends with something that runs. Every task lists which agent role 
 - [ ] E2E test for a full plan run with fake dates (*test-engineer*)
 
 ### M5 — Quality of life
-- [ ] Pre-fill from last session, rest timer, PR badges, progress charts, PWA install, CSV import/export
+- [ ] Pre-fill from last session, rest timer, PR badges, progress charts, PWA install (icons from `docs/assets/logo/`, after a maskable safe-area review), CSV import/export
 
 Every milestone closes with a *reviewer* pass and an update of the docs.
 

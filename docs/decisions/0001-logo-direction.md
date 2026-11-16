@@ -20,7 +20,7 @@ of personal effort. There was no previous visual identity decision.
   separating the strike from the anvil). The shapes must remain distinct at small sizes.
 - Use a single foreground color per symbol. Produce an SVG master (vector shapes that scale without
   becoming blurry), with a square view box and enough inset to avoid clipping in icon masks.
-- Pair the symbol with the exact name **Forja** in the app's existing sans-serif font, medium or semibold,
+- Pair the symbol with the exact name **Forja** in Geist Regular, the app's existing sans-serif family,
   using normal letter spacing. Do not add a font dependency for the logo. This combination is the
   wordmark arrangement; the symbol must also work independently.
 - Use these identity colors: deep blue `#1E40AF` for the primary symbol, charcoal `#18181B` for the name,
@@ -39,8 +39,11 @@ of personal effort. There was no previous visual identity decision.
   destination. Every label goes through next-intl in both English and Spanish. Any clickable logo has
   a touch area of at least 44 × 44 px; the graphic itself can be smaller.
 
-This approves the design direction and reproduction requirements. Claude Code produces the final vector
-geometry during implementation; no finished artwork is supplied by this documentation change.
+The owner clarified that Codex creates the logo and visual designs; Claude Code implements those designs
+in the app. Finished artwork is supplied in `docs/assets/logo/`, with usage instructions and a preview.
+The SVG wordmarks contain outlined Geist Regular lettering, so they require no font at runtime. Claude
+Code integrates these assets without recreating the geometry. The 16 px/favicon SVG variant omits the
+strike; larger raster icons retain it. Assets remain outside `apps/` under the owner's editing limits.
 
 ## Consequences
 
@@ -48,14 +51,17 @@ Implementation tasks for the orchestrator:
 
 | Owner / package | Required change | Acceptance criteria |
 |-----------------|-----------------|---------------------|
-| `frontend-dev` / `apps/web` | Create the SVG master and reusable symbol-plus-name and symbol-only presentations using the specification above. | One-color silhouettes; no new runtime or font dependency; same geometry across color variants. |
+| `frontend-dev` / `apps/web` | Copy the supplied masters from `docs/assets/logo/` into app-owned assets and create reusable presentations. | Use the delivered geometry unchanged; no new runtime or font dependency. |
 | `frontend-dev` / `apps/web` | Replace placeholder branding in the M3 shell and sign-in view; add browser favicon assets through the app's metadata conventions. | Review at 16, 32 and 48 px, and at header size, on light and dark surfaces. The anvil remains recognizable and the strike remains separate, or the documented 16 px variant is used. |
-| `frontend-dev` / `apps/web` | Export 180 × 180, 192 × 192 and 512 × 512 PNG icons from the vector master with safe inset and an opaque identity background. | Check square and rounded-mask previews for clipping. Supply assets without adding PWA installation or offline behavior; those remain M5. |
+| `frontend-dev` / `apps/web` | Integrate the supplied 180 × 180, 192 × 192 and 512 × 512 PNG icons, preserving safe inset and the opaque identity background. | Check square and rounded-mask previews for clipping. Supply assets without adding PWA installation or offline behavior; those remain M5. |
 | `frontend-dev` / `apps/web` | Add English and Spanish accessibility labels through next-intl and appropriate decorative treatment. | No duplicate announcement beside visible text; linked logo has a destination label and a minimum 44 × 44 px touch area. |
 | Orchestrator / `docs/PLAN.md` | Describe the logo, favicon and sign-in/header branding in the M3 app-shell scope, and reference this decision for future M5 PWA icons. | Preserve milestone order and existing checkbox states. |
 | Orchestrator / `docs` | Retain this decision and the matching identity section in `docs/ARCHITECTURE.md` as implementation references. | Future changes to this direction receive a new decision record and an architecture update. |
 
 No changes are required in `packages/core`, `packages/db`, `packages/config`, `e2e` or `CLAUDE.md` rules.
+For role documentation, the orchestrator should record that Codex owns visual design and artwork in
+`docs/assets/`, while Claude Code owns application implementation; align `AGENTS.md`,
+`docs/ORCHESTRATION.md` and mirrored role definitions with this owner-authorized scope.
 The design stays within the presentation layer and existing mobile-first and internationalisation rules.
-The small-size optical variant means two related silhouettes must be maintained. Final implementation
-needs visual review because contrast calculations cannot establish recognizability or perceived calmness.
+The small-size optical variant means two related silhouettes must be maintained. The delivered preview was visually reviewed at header and icon sizes. Integration
+still needs visual review because contrast calculations cannot establish recognizability or perceived calmness.

@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_BAR_WEIGHT, toPerSideLoad, toTotalLoad } from "./barbell";
 
+describe("DEFAULT_BAR_WEIGHT", () => {
+  it("is frozen, so no caller can change it", () => {
+    expect(Object.isFrozen(DEFAULT_BAR_WEIGHT)).toBe(true);
+    expect(() => {
+      (DEFAULT_BAR_WEIGHT as { value: number }).value = 15;
+    }).toThrow(TypeError);
+    expect(DEFAULT_BAR_WEIGHT).toEqual({ value: 20, unit: "kg" });
+  });
+});
+
 describe("toTotalLoad", () => {
   it("is 2 x side + bar", () => {
     expect(toTotalLoad({ value: 20, unit: "kg" }, DEFAULT_BAR_WEIGHT)).toEqual({ value: 60, unit: "kg" });

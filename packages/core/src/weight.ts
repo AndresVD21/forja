@@ -4,17 +4,34 @@ import { convert, toKg, UnitSchema, type Unit } from "./units";
 /** 9999.99 matches the database column numeric(6,2). */
 export const MAX_WEIGHT_VALUE = 9999.99;
 
+/**
+ * True when `value` has at most 2 decimals. Not `value % 0.01 === 0` and not zod's multipleOf(0.01):
+ * both trip on float noise (57.3 * 100 is 5729.999999999999). We scale, round, and allow a tiny
+ * tolerance instead.
+ */
+export function hasAtMostTwoDecimals(value: number): boolean {
+  return Math.abs(value * 100 - Math.round(value * 100)) < 1e-6;
+}
+
+const twoDecimals = (value: number) => hasAtMostTwoDecimals(value);
+
 export const WeightSchema = z.object({
-  value: z.number().finite().min(0).max(MAX_WEIGHT_VALUE),
+  value: z.number().finite().min(0).max(MAX_WEIGHT_VALUE).refine(twoDecimals, "at most 2 decimals"),
   unit: UnitSchema,
 });
 export type Weight = z.infer<typeof WeightSchema>;
 
-export function weightToKg(w: Weight): number {
+/**
+ * The smallest increase for an exercise, as stored per exercise. At most 2 decimals because the
+ * rounding helpers below only guarantee a clean result for such steps.
+ */
+export const WeightStepSchema = z.number().finite().positive().refine(twoDecimals, "at most 2 decimals");
+
+export function weightToKg(w: Readonly<Weight>): number {
   return toKg(w.value, w.unit);
 }
 
-export function convertWeight(w: Weight, to: Unit): Weight {
+export function convertWeight(w: Readonly<Weight>, to: Unit): Weight {
   return { value: convert(w.value, w.unit, to), unit: to };
 }
 
@@ -42,7 +59,12 @@ function stepsIn(value: number, step: number): number {
   return Math.round((value / step) * 1e9) / 1e9;
 }
 
-/** Drops float noise from the result of steps * step (3 * 1.25 is fine, 3 * 0.1 is not). */
+/**
+ * Drops float noise from the result of steps * step (3 * 1.25 is fine, 3 * 0.1 is not).
+ * It rounds to 2 decimals, so the rounding helpers rely on steps having at most 2 decimals:
+ * roundDownToStep(2, 0.625) would give 1.88, which is off the 0.625 grid. That is why the stored
+ * per-exercise step is validated with WeightStepSchema.
+ */
 function clean(value: number): number {
   return Math.round(value * 100) / 100;
 }

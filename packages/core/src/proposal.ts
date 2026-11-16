@@ -1,6 +1,6 @@
 import { toPerSideLoad, toTotalLoad } from "./barbell";
 import type { SetLog } from "./set-log";
-import { roundDownToStep, roundToNearestStep, weightToKg, type LoadMode, type Weight } from "./weight";
+import { convertWeight, roundDownToStep, roundToNearestStep, weightToKg, type LoadMode, type Weight } from "./weight";
 
 /** Epley: 1RM = weight * (1 + reps / 30). */
 export function estimateOneRepMax(weight: number, reps: number): number {
@@ -36,10 +36,13 @@ export type ProposalInput = {
   /** Weight used in that phase, as the user records it (per side for per_side exercises). */
   currentWeight: Weight;
   nextTargetReps: number;
-  /** Same unit as the proposed weight and in the user's representation (per side for per_side). */
+  /**
+   * In `currentWeight`'s unit (the proposal is always returned in that unit) and in the user's
+   * representation (per side for per_side). At most 2 decimals, see WeightStepSchema.
+   */
   weightStep: number;
   loadMode: LoadMode;
-  barWeight: Weight;
+  barWeight: Readonly<Weight>;
 };
 
 /** Strategy pattern: a plan can swap how the next weight is computed. */
@@ -59,15 +62,25 @@ function proposeOnTotalLoad(
   computeTotal: (sets: readonly SetLog[], currentWeight: Weight) => Weight,
   round: Rounder,
 ): Weight {
+  // One guard for both strategies: 0 would return the 1RM itself, negatives a nonsense weight.
+  if (!Number.isInteger(input.nextTargetReps) || input.nextTargetReps < 1) {
+    throw new RangeError(`nextTargetReps must be an integer >= 1, got ${input.nextTargetReps}`);
+  }
+  // The result is always in currentWeight's unit, so the caller knows which unit weightStep is in.
+  const unit = input.currentWeight.unit;
   let proposed: Weight;
   if (input.loadMode === "per_side") {
     const totalSets = input.sets.map((s) => ({ ...s, weight: toTotalLoad(s.weight, input.barWeight) }));
     const totalCurrent = toTotalLoad(input.currentWeight, input.barWeight);
-    proposed = toPerSideLoad(computeTotal(totalSets, totalCurrent), input.barWeight);
+    const total = convertWeight(computeTotal(totalSets, totalCurrent), unit);
+    // A target with many reps can ask for less than the empty bar. Nobody lifts less than the bar,
+    // so propose "bar only" (0 per side). toPerSideLoad stays strict for other callers.
+    const bar = convertWeight(input.barWeight, unit);
+    proposed = toPerSideLoad({ value: Math.max(total.value, bar.value), unit }, input.barWeight);
   } else {
-    proposed = computeTotal(input.sets, input.currentWeight);
+    proposed = convertWeight(computeTotal(input.sets, input.currentWeight), unit);
   }
-  return { value: round(proposed.value, input.weightStep), unit: proposed.unit };
+  return { value: round(proposed.value, input.weightStep), unit };
 }
 
 /**
@@ -99,7 +112,8 @@ export const percentageProposal: ProposalStrategy = (input) =>
   );
 
 export function proposeNextWeight(input: ProposalInput): { weight: Weight; method: "epley" | "percentage" } {
-  // Per-side sets are compared as recorded here; epleyProposal re-picks on total load.
+  // Only *whether* a failure set exists matters here, not which one is best. Comparing per-side
+  // numbers as recorded is therefore harmless; epleyProposal re-picks the best set on total load.
   if (bestFailureSet(input.sets) !== undefined) {
     return { weight: epleyProposal(input), method: "epley" };
   }

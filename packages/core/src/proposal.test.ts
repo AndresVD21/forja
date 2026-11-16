@@ -44,6 +44,12 @@ describe("bestFailureSet", () => {
     const light = set(12, 55, true); // 77
     expect(bestFailureSet([light, heavy])).toBe(heavy);
   });
+  it("converts to kg before comparing: 70 kg beats 135 lb although 135 > 70", () => {
+    const kg = set(10, 70, true, "kg"); // 1RM 93.3
+    const lb = set(10, 135, true, "lb"); // 61.2 kg -> 81.6
+    expect(bestFailureSet([lb, kg])).toBe(kg);
+    expect(bestFailureSet([kg, lb])).toBe(kg);
+  });
   it("compares across units", () => {
     const lb = set(10, 135, true, "lb"); // 61.2 kg -> 81.6
     const kg = set(10, 60, true, "kg"); // 80
@@ -88,10 +94,10 @@ describe("epleyProposal", () => {
       nextTargetReps: 1,
       weightStep: 0.01,
     });
-    // B has the higher total 1RM (84); 1 rep -> 84/(1+1/30) = 81.29 total -> 30.65 per side.
+    // B has the higher total 1RM (84); 1 rep -> 84/(1+1/30) = 81.29 total -> 30.645 per side.
     expect(w.value).toBeCloseTo(30.64, 1);
   });
-  it("uses the unit of the best set, mixing lb sets with a kg bar", () => {
+  it("returns currentWeight's unit, mixing lb sets with a kg bar", () => {
     const w = epleyProposal({
       ...base,
       sets: [set(10, 45, true, "lb")],
@@ -105,6 +111,34 @@ describe("epleyProposal", () => {
   });
   it("throws without a failure set", () => {
     expect(() => epleyProposal({ ...base, sets: [set(10, 50, false)] })).toThrow();
+  });
+});
+
+describe("proposal unit and validation", () => {
+  it("proposes in currentWeight's unit: 135 lb x 8 logged, current 60 kg, target 6 -> 62.5 kg", () => {
+    // 1RM 171 lb; /1.2 = 142.5 lb = 64.64 kg; floor to 2.5 -> 62.5
+    const w = epleyProposal({
+      ...base,
+      sets: [set(8, 135, true, "lb")],
+      currentWeight: { value: 60, unit: "kg" },
+      nextTargetReps: 6,
+    });
+    expect(w).toEqual({ value: 62.5, unit: "kg" });
+  });
+  it("empty bar x 8 to failure, target 10: clamped to bar only (0 per side)", () => {
+    const w = epleyProposal({
+      ...base,
+      sets: [set(8, 0, true)],
+      currentWeight: { value: 0, unit: "kg" },
+      loadMode: "per_side",
+      nextTargetReps: 10,
+      weightStep: 1.25,
+    });
+    expect(w).toEqual({ value: 0, unit: "kg" });
+  });
+  it.each([0, -1, 1.5, NaN, Infinity])("rejects nextTargetReps %s", (nextTargetReps) => {
+    expect(() => epleyProposal({ ...base, sets: [set(10, 50, true)], nextTargetReps })).toThrow(RangeError);
+    expect(() => percentageProposal({ ...base, nextTargetReps })).toThrow(RangeError);
   });
 });
 

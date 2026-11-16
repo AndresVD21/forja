@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_BAR_WEIGHT } from "./barbell";
 import { epleyProposal, percentageProposal, proposeNextWeight, type ProposalInput } from "./proposal";
 import type { SetLog } from "./set-log";
-import { SetLogSchema } from "./set-log";
 
 const failureSet = (value: number, reps: number): SetLog => ({
   setNumber: 1,
@@ -23,27 +22,17 @@ const base: ProposalInput = {
 };
 
 describe("robustness probes", () => {
-  it("nextTargetReps 0: proposes the 1RM itself (70 kg for 50 x 12), no error", () => {
-    // 1RM 70, divisor 1 -> 70
-    expect(proposeNextWeight({ ...base, nextTargetReps: 0 }).weight.value).toBe(70);
-  });
-  it("nextTargetReps -30: divisor 0 -> Infinity -> RangeError", () => {
-    expect(() => proposeNextWeight({ ...base, nextTargetReps: -30 })).toThrow(RangeError);
-  });
-  it("nextTargetReps -40: divisor negative -> silently returns a NEGATIVE weight", () => {
-    // 70 / (1 - 40/30) = -210
-    expect(proposeNextWeight({ ...base, nextTargetReps: -40 }).weight.value).toBeLessThan(0);
-  });
-  it("nextTargetReps NaN: RangeError", () => {
-    expect(() => proposeNextWeight({ ...base, nextTargetReps: NaN })).toThrow(RangeError);
+  it.each([0, -1, -30, -40, 1.5, NaN])("nextTargetReps %s: RangeError", (nextTargetReps) => {
+    expect(() => proposeNextWeight({ ...base, nextTargetReps })).toThrow(RangeError);
+    expect(() => percentageProposal({ ...base, nextTargetReps })).toThrow(RangeError);
   });
   it("weightStep 0 and negative: RangeError", () => {
     expect(() => proposeNextWeight({ ...base, weightStep: 0 })).toThrow(RangeError);
     expect(() => proposeNextWeight({ ...base, weightStep: -2.5 })).toThrow(RangeError);
     expect(() => percentageProposal({ ...base, weightStep: 0 })).toThrow(RangeError);
   });
-  it("per-side proposal lighter than the bar: RangeError from toPerSideLoad", () => {
-    // 5/side x 1: total 30, 1RM 31; target 300 reps: 31/11 = 2.8 kg total < 20 kg bar
+  it("per-side proposal lighter than the bar: clamped to the bar, 0 per side", () => {
+    // 5/side x 1: total 30, 1RM 31; target 300 reps: 31/11 = 2.8 kg total < 20 kg bar -> 0 per side
     const input: ProposalInput = {
       ...base,
       sets: [failureSet(5, 1)],
@@ -52,7 +41,19 @@ describe("robustness probes", () => {
       loadMode: "per_side",
       weightStep: 1.25,
     };
-    expect(() => proposeNextWeight(input)).toThrow(RangeError);
+    expect(proposeNextWeight(input).weight).toEqual({ value: 0, unit: "kg" });
+  });
+  it("empty bar x 8 to failure, next target 10: total 19 kg < bar -> 0 per side, no crash", () => {
+    // total 20; 1RM 20*(38/30)=25.333; /(40/30)=19 < 20 -> clamped to 20 -> (20-20)/2 = 0
+    const input: ProposalInput = {
+      ...base,
+      sets: [failureSet(0, 8)],
+      currentWeight: { value: 0, unit: "kg" },
+      nextTargetReps: 10,
+      loadMode: "per_side",
+      weightStep: 1.25,
+    };
+    expect(proposeNextWeight(input).weight).toEqual({ value: 0, unit: "kg" });
   });
   it("currentWeight 0 in the fallback: total mode stays 0", () => {
     expect(percentageProposal({ ...base, sets: [], currentWeight: { value: 0, unit: "kg" } }).value).toBe(0);
@@ -80,17 +81,15 @@ describe("robustness probes", () => {
   it("a failure set with zero weight (bodyweight) proposes 0", () => {
     expect(proposeNextWeight({ ...base, sets: [failureSet(0, 12)] }).weight.value).toBe(0);
   });
-  it("schema accepts more than 2 decimals although the column is numeric(6,2)", () => {
-    const r = SetLogSchema.safeParse({ setNumber: 1, reps: 1, weight: { value: 20.123, unit: "kg" }, toFailure: false });
-    expect(r.success).toBe(true);
-  });
-  it("proposal unit follows the best failure set, not currentWeight", () => {
+  it("proposal unit follows currentWeight, not the best failure set", () => {
+    // 135 lb x 8: 1RM 171 lb; next 6 reps: 171/1.2 = 142.5 lb = 64.64 kg; floor to 2.5 -> 62.5 kg
     const r = proposeNextWeight({
       ...base,
-      sets: [{ setNumber: 1, reps: 10, weight: { value: 135, unit: "lb" }, toFailure: true }],
+      sets: [{ setNumber: 1, reps: 8, weight: { value: 135, unit: "lb" }, toFailure: true }],
       currentWeight: { value: 60, unit: "kg" },
-      weightStep: 5,
+      nextTargetReps: 6,
+      weightStep: 2.5,
     });
-    expect(r.weight.unit).toBe("lb");
+    expect(r.weight).toEqual({ value: 62.5, unit: "kg" });
   });
 });

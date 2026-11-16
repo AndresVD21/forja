@@ -12,7 +12,7 @@ import { defaultWeightStep, roundDownToStep, roundToNearestStep } from "./weight
 import type { Unit } from "./units";
 import type { LoadMode, Weight } from "./weight";
 
-/** `n` sets of the same weight; the last `failureSets` of them are flagged to failure. */
+/** One set per entry of `reps`, all at the same weight; sets from index `failureFrom` on are flagged to failure. */
 function sets(value: number, unit: Unit, reps: number[], failureFrom = 0): SetLog[] {
   return reps.map((r, i) => ({ setNumber: i + 1, reps: r, weight: { value, unit }, toFailure: i >= failureFrom }));
 }
@@ -165,20 +165,22 @@ describe("per-side rule (CLAUDE.md rule 4)", () => {
 });
 
 describe("mixed units", () => {
-  it("per-side lb sets with the bar given in kg: 45 lb/side x 10, 8 reps next", () => {
-    // bar 20 kg = 44.0925 lb; total 90+44.0925=134.0925; 1RM *(40/30)=178.79; /(38/30)=141.150
-    // side (141.150-44.0925)/2=48.529; step 2.5 lb: 19.4 -> 47.5 lb
+  it("per-side lb sets with the bar given in kg: 35 lb/side x 10, 8 reps next", () => {
+    // bar 20 kg = 44.0925 lb; total 70+44.0925=114.0925; 1RM *(40/30)=152.123; /(38/30)=120.097
+    // side (120.097-44.0925)/2=38.002; floor to 2.5 -> 37.5 lb.
+    // If the bar were wrongly read as 20 lb: total 90; 1RM 120; /(38/30)=94.737; side 37.368 -> 35 lb.
     const r = proposeNextWeight(
-      input({ sets: sets(45, "lb", [10, 10, 10, 10]), currentWeight: w(45, "lb"), nextTargetReps: 8, loadMode: "per_side", barWeight: w(20, "kg") }),
+      input({ sets: sets(35, "lb", [10, 10, 10, 10]), currentWeight: w(35, "lb"), nextTargetReps: 8, loadMode: "per_side", barWeight: w(20, "kg") }),
     );
-    expect(r).toEqual({ weight: w(47.5, "lb"), method: "epley" });
+    expect(r).toEqual({ weight: w(37.5, "lb"), method: "epley" });
   });
-  it("per-side lb fallback with a kg bar", () => {
-    // total 90+44.09245=134.09245; *1.05=140.797; side 48.352; /2.5=19.34 -> 19 -> 47.5 lb
+  it("per-side lb fallback with a kg bar: 55 lb/side", () => {
+    // total 110+44.0925=154.0925; *1.05=161.797; side (161.797-44.0925)/2=58.852; /2.5=23.54 -> 24 -> 60 lb.
+    // If the bar were wrongly read as 20 lb: total 130; *1.05=136.5; side 58.25; /2.5=23.3 -> 23 -> 57.5 lb.
     const r = percentageProposal(
-      input({ sets: [], currentWeight: w(45, "lb"), nextTargetReps: 8, loadMode: "per_side", barWeight: w(20, "kg") }),
+      input({ sets: [], currentWeight: w(55, "lb"), nextTargetReps: 8, loadMode: "per_side", barWeight: w(20, "kg") }),
     );
-    expect(r).toEqual(w(47.5, "lb"));
+    expect(r).toEqual(w(60, "lb"));
   });
   it("sets in kg and lb in one phase: the lb set is stronger (135 lb = 61.2 kg > 60 kg) and decides", () => {
     // 135 lb x 10: 1RM 180 lb; for 8 reps 180*30/38=142.105 lb; /5=28.4 -> 140 lb.

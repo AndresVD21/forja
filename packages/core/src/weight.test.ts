@@ -5,7 +5,9 @@ import {
   LoadModeSchema,
   roundDownToStep,
   roundToNearestStep,
+  hasAtMostTwoDecimals,
   WeightSchema,
+  WeightStepSchema,
   weightToKg,
 } from "./weight";
 
@@ -20,6 +22,28 @@ describe("WeightSchema", () => {
   it("rejects an unknown unit and a missing unit", () => {
     expect(WeightSchema.safeParse({ value: 10, unit: "st" }).success).toBe(false);
     expect(WeightSchema.safeParse({ value: 10 }).success).toBe(false);
+  });
+});
+
+describe("2-decimal rule", () => {
+  it.each([0, 0.07, 0.01, 19.3, 57.3, 72.57, 147.5, 9999.99])("accepts %s", (value) => {
+    expect(hasAtMostTwoDecimals(value)).toBe(true);
+    expect(WeightSchema.safeParse({ value, unit: "kg" }).success).toBe(true);
+    expect(WeightStepSchema.safeParse(value).success).toBe(value > 0);
+  });
+  it.each([20.123, 0.001, 19.305, 0.005])("rejects %s", (value) => {
+    expect(hasAtMostTwoDecimals(value)).toBe(false);
+    expect(WeightSchema.safeParse({ value, unit: "kg" }).success).toBe(false);
+    expect(WeightStepSchema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe("WeightStepSchema", () => {
+  it.each([2.5, 1.25, 0.01, 5])("accepts %s", (step) => {
+    expect(WeightStepSchema.safeParse(step).success).toBe(true);
+  });
+  it.each([0, -2.5, Infinity, NaN, 0.625])("rejects %s", (step) => {
+    expect(WeightStepSchema.safeParse(step).success).toBe(false);
   });
 });
 

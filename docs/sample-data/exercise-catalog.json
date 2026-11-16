@@ -1,0 +1,429 @@
+{
+  "_about": "Canonical exercises derived from README.md (raw training notes). 'aliases' are the spellings found in the notes; matching is case- and accent-insensitive. Entries with 'confirm' are guesses the owner still has to verify.",
+  "exercises": [
+    {
+      "id": "incline-barbell-press",
+      "en": "Incline Barbell Press",
+      "es": "Press inclinado con barra",
+      "group": "chest",
+      "equipment": "barbell",
+      "aliases": [
+        "Press inclinado barra"
+      ],
+      "load_mode": "per_side"
+    },
+    {
+      "id": "machine-chest-press",
+      "en": "Machine Chest Press",
+      "es": "Press de pecho en máquina",
+      "group": "chest",
+      "equipment": "machine",
+      "aliases": [
+        "Press máquina",
+        "Press plano máquina",
+        "Press barra"
+      ],
+      "confirm": "'Press barra' (week 2, 50kg) is assumed to be a typo for 'Press máquina'.",
+      "load_mode": "total"
+    },
+    {
+      "id": "incline-machine-press-unilateral",
+      "en": "Unilateral Incline Machine Press",
+      "es": "Press inclinado en máquina unilateral",
+      "group": "chest",
+      "equipment": "machine",
+      "aliases": [
+        "Press inclinado máquina unilateral"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "pec-fly",
+      "en": "Pec Fly",
+      "es": "Aperturas en máquina",
+      "group": "chest",
+      "equipment": "machine",
+      "aliases": [
+        "Pec fly"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "triceps-rope-pushdown",
+      "en": "Triceps Rope Pushdown",
+      "es": "Tríceps con cuerda",
+      "group": "triceps",
+      "equipment": "cable",
+      "aliases": [
+        "Tríceps cuerda",
+        "Triceps"
+      ],
+      "confirm": "Bare 'Triceps - 23.75' (week 11) is assumed to be the rope pushdown.",
+      "load_mode": "total"
+    },
+    {
+      "id": "triceps-cable-pushdown",
+      "en": "Triceps Cable Pushdown",
+      "es": "Extensión de tríceps en polea",
+      "group": "triceps",
+      "equipment": "cable",
+      "aliases": [
+        "Tríceps press",
+        "Tríceps press (polea)",
+        "Triceps extension (polea)"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "triceps-press-machine",
+      "en": "Triceps Press Machine",
+      "es": "Press de tríceps en máquina",
+      "group": "triceps",
+      "equipment": "machine",
+      "aliases": [
+        "Tríceps press (máquina)"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "overhead-triceps-extension",
+      "en": "Overhead Triceps Extension",
+      "es": "Extensión de tríceps sobre la cabeza",
+      "group": "triceps",
+      "equipment": "cable",
+      "aliases": [
+        "Overhead triceps extension (polea)",
+        "Triceps over head extension (polea)"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "leg-press",
+      "en": "Leg Press",
+      "es": "Prensa de pierna",
+      "group": "legs",
+      "equipment": "machine",
+      "aliases": [
+        "Leg press",
+        "Leg press (máquina)"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "incline-leg-press",
+      "en": "Incline Leg Press",
+      "es": "Prensa inclinada",
+      "group": "legs",
+      "equipment": "sled",
+      "aliases": [
+        "Leg press inclinado",
+        "Leg press (inclinado)"
+      ],
+      "confirm": "Kept separate from 'Leg press' because the sled adds its own weight ('40kg + 75.7 peso prensa').",
+      "load_mode": "total"
+    },
+    {
+      "id": "leg-extension",
+      "en": "Leg Extension",
+      "es": "Extensión de pierna",
+      "group": "legs",
+      "equipment": "machine",
+      "aliases": [
+        "Leg Extension"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "lying-leg-curl",
+      "en": "Lying Leg Curl",
+      "es": "Curl femoral acostado",
+      "group": "legs",
+      "equipment": "machine",
+      "aliases": [
+        "Prone leg curl"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "hip-abduction",
+      "en": "Hip Abduction",
+      "es": "Abducción de cadera",
+      "group": "legs",
+      "equipment": "machine",
+      "aliases": [
+        "Hip abductor"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "hip-adduction",
+      "en": "Hip Adduction",
+      "es": "Aducción de cadera",
+      "group": "legs",
+      "equipment": "machine",
+      "aliases": [
+        "Hip adductor"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "calf-raise",
+      "en": "Calf Raise",
+      "es": "Elevación de talones",
+      "group": "legs",
+      "equipment": "machine",
+      "aliases": [
+        "Calf extension"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "lat-pulldown",
+      "en": "Lat Pulldown",
+      "es": "Jalón al pecho",
+      "group": "back",
+      "equipment": "machine",
+      "aliases": [
+        "Lat pull",
+        "Lat pull agarre de los lados"
+      ],
+      "confirm": "Neutral-grip ('agarre de los lados') and plain 'Lat pull' are merged into one exercise.",
+      "load_mode": "total"
+    },
+    {
+      "id": "seated-row-machine",
+      "en": "Seated Row (Machine)",
+      "es": "Remo sentado en máquina",
+      "group": "back",
+      "equipment": "machine",
+      "aliases": [
+        "Seated row",
+        "Seated row máquina",
+        "Remo"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "low-row-cable",
+      "en": "Low Row (Cable)",
+      "es": "Remo bajo en polea",
+      "group": "back",
+      "equipment": "cable",
+      "aliases": [
+        "Low row",
+        "Seated row poleas (Low row)",
+        "Remo low row"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "single-arm-row",
+      "en": "Single-Arm Row",
+      "es": "Remo a una mano",
+      "group": "back",
+      "equipment": "machine",
+      "aliases": [
+        "Row"
+      ],
+      "confirm": "From 'Row - 66kg/145lb (one hand)' in week 25.",
+      "load_mode": "total"
+    },
+    {
+      "id": "straight-arm-pulldown",
+      "en": "Straight-Arm Pulldown",
+      "es": "Pull over en polea",
+      "group": "back",
+      "equipment": "cable",
+      "aliases": [
+        "Pull over polea",
+        "Jalón en polea",
+        "Jalón en polea multifuncional"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "rear-delt-machine",
+      "en": "Rear Delt Fly (Machine)",
+      "es": "Deltoides posterior en máquina",
+      "group": "shoulders",
+      "equipment": "machine",
+      "aliases": [
+        "Rear delt"
+      ],
+      "confirm": "'Rear delt - 23.8kg' on shoulder days is much lighter than the 52-66kg on back days; possibly a different machine.",
+      "load_mode": "total"
+    },
+    {
+      "id": "rear-delt-cable",
+      "en": "Rear Delt Fly (Cable)",
+      "es": "Deltoides posterior en polea",
+      "group": "shoulders",
+      "equipment": "cable",
+      "aliases": [
+        "Rear delt (polea)"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "barbell-curl",
+      "en": "Barbell Curl",
+      "es": "Curl de bíceps con barra",
+      "group": "biceps",
+      "equipment": "barbell",
+      "aliases": [
+        "Curl biceps barra"
+      ],
+      "load_mode": "total",
+      "confirm": "Logged as 20 and 25 with no unit; assumed kg and total weight (a fixed curl bar), not plates per side."
+    },
+    {
+      "id": "cable-curl",
+      "en": "Cable Curl",
+      "es": "Curl de bíceps en polea",
+      "group": "biceps",
+      "equipment": "cable",
+      "aliases": [
+        "Curl biceps polea"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "hammer-curl",
+      "en": "Hammer Curl",
+      "es": "Curl martillo",
+      "group": "biceps",
+      "equipment": "dumbbell",
+      "aliases": [
+        "Martillo bíceps (mancuerna)"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "wrist-curl-cable",
+      "en": "Cable Wrist Curl",
+      "es": "Antebrazo en polea",
+      "group": "forearms",
+      "equipment": "cable",
+      "aliases": [
+        "Antebrazo polea"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "shoulder-press-machine",
+      "en": "Shoulder Press (Machine)",
+      "es": "Press de hombro en máquina",
+      "group": "shoulders",
+      "equipment": "machine",
+      "aliases": [
+        "Shoulder press"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "lateral-raise-cable",
+      "en": "Cable Lateral Raise",
+      "es": "Elevaciones laterales en polea",
+      "group": "shoulders",
+      "equipment": "cable",
+      "aliases": [
+        "Lateral raises (polea)"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "ab-crunch-machine",
+      "en": "Ab Crunch (Machine)",
+      "es": "Crunch abdominal en máquina",
+      "group": "core",
+      "equipment": "machine",
+      "aliases": [
+        "Abdominal crunch (máquina)",
+        "Abdomen crunch"
+      ],
+      "load_mode": "total"
+    },
+    {
+      "id": "back-extension-machine",
+      "en": "Back Extension (Machine)",
+      "es": "Extensión de espalda en máquina",
+      "group": "core",
+      "equipment": "machine",
+      "aliases": [
+        "Back extension (máquina)"
+      ],
+      "load_mode": "total"
+    }
+  ],
+  "training_days": [
+    {
+      "id": "chest",
+      "en": "Chest",
+      "es": "Pecho",
+      "aliases": [
+        "pecho"
+      ]
+    },
+    {
+      "id": "back",
+      "en": "Back",
+      "es": "Espalda",
+      "aliases": [
+        "espalda"
+      ]
+    },
+    {
+      "id": "legs",
+      "en": "Legs",
+      "es": "Pierna",
+      "aliases": [
+        "pierna"
+      ]
+    },
+    {
+      "id": "shoulders-abs",
+      "en": "Shoulders / Abs",
+      "es": "Hombro / Abs",
+      "aliases": [
+        "hombro/abs"
+      ]
+    }
+  ],
+  "activities": [
+    {
+      "id": "volleyball",
+      "en": "Volleyball",
+      "es": "Voleibol",
+      "aliases": [
+        "Voley"
+      ]
+    }
+  ],
+  "locations": [
+    "Hacienda",
+    "Cañasgordas",
+    "Pasoancho",
+    "Valle del Lili",
+    "Mall Plaza"
+  ],
+  "notation": {
+    "(max N) / (N reps)": "Best reps reached on a to-failure set",
+    "(a-b-c-d) after the weight": "Reps per set",
+    "a-b-c-d instead of a weight": "Weight per set",
+    "Xkg/Ylb": "Same weight in both units as labelled on the machine; store one, keep the unit that was printed first",
+    "(last two)": "Note: only the last two sets reached / failed the target",
+    "(peso prensa)": "Note: figure includes or refers to the sled's own weight",
+    "X (resistencia) Y (reps)": "Two different weights used in the same session for different set styles",
+    "Todo": "Full weight stack",
+    "Weekday with nothing under it": "No training that day",
+    "Repeated SEMANA number": "The plan week was repeated (extended)",
+    "Barbell weight": "Plates on one side, bar excluded"
+  },
+  "defaults": {
+    "sets": 4,
+    "unit": "kg",
+    "bar_weight_kg": 20,
+    "location_when_missing": "Valle del Lili",
+    "notes_start": "2026-01-05 (Monday of the first SEMANA 1); later week numbers do not map to real dates"
+  }
+}

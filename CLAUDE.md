@@ -1,0 +1,93 @@
+# Forja — context for agents
+
+Read this first. Details are in `docs/PLAN.md` (scope, milestones), `docs/ARCHITECTURE.md` (decisions and
+reasons) and `docs/ORCHESTRATION.md` (roles and workflow).
+
+## What this is
+
+**Forja** (Spanish for "forge") is a personal web app to log gym workouts and follow a 6-week progression plan (10 → 8 → 6 reps, each phase
+ending in a to-failure week, with proposed weight increases). It is also the owner's project for learning
+React and Next.js, so **clarity beats cleverness** and every non-obvious decision gets explained.
+
+## Status
+
+Milestone **M0**: docs and monorepo skeleton exist; no application code yet. The owner's decisions are in
+`docs/PLAN.md` section 7; section 8 lists what is still open — do not assume answers to those.
+The app is called **Forja**; packages use the `@forja/*` scope.
+
+## Stack
+
+TypeScript (strict) · Next.js 16 App Router + React 19 · Tailwind + shadcn/ui · Postgres (Neon) · Drizzle ORM ·
+Better Auth (email + password, Google) · next-intl (en + es) · Zod · Vitest · Playwright · pnpm workspaces + Turborepo · GitHub Actions · Vercel Hobby.
+
+## Layout
+
+```
+apps/web         Next.js app (pages, components, server actions)
+packages/core    Pure domain logic — imports nothing from the other packages
+packages/db      Drizzle schema, migrations, repositories — the only place with SQL
+packages/config  Shared tsconfig / ESLint
+e2e              Playwright
+docs             Plan, architecture, orchestration, decisions, sample data
+```
+
+Dependency direction: `apps/web → packages/db → packages/core`. Never the other way.
+
+## Commands
+
+```
+pnpm install      install everything
+pnpm dev          run the app locally
+pnpm test         unit + integration tests
+pnpm lint         ESLint
+pnpm typecheck    tsc across all packages
+pnpm build        production build
+```
+
+(Scripts are wired at the root but the packages are still empty during M0.)
+
+## Rules
+
+1. **User scoping**: every repository function takes `userId` first and filters by it. No exceptions.
+2. **Server actions** always: authenticate → validate with Zod → execute → revalidate.
+3. **Domain rules live in `packages/core`** as pure functions with unit tests. No rules in components or SQL.
+4. **Weights** are stored as entered (`value` + `unit`); convert only for comparison and display.
+   Barbell exercises are entered as **plates on one side**; any maths on them goes through total load
+   (`2 × side + bar`) in `packages/core`, never on the per-side number directly.
+5. **Each set is a row.** Never collapse to "sets × reps".
+6. **Migrations are append-only.** Change the schema, generate a new migration, never edit a merged one.
+7. **Mobile first.** The app is used one-handed in a gym; touch targets ≥ 44 px.
+8. **Stay in your lane**: only write in the folders your role owns (`docs/ORCHESTRATION.md`).
+9. **Never** commit secrets, merge to `main`, or deploy to production — the owner does those.
+10. **No hard-coded UI text.** Every string goes through next-intl with both `en` and `es` messages.
+11. **History and proposals are location-aware**: same exercise at the same location first.
+12. **Exercises come from the catalogue** (`docs/sample-data/exercise-catalog.json` seeds it); match user
+    input against aliases before creating a new exercise.
+13. If a decision in `ARCHITECTURE.md` needs to change, add a record to `docs/decisions/` and update the doc
+    in the same pull request.
+
+## How to explain your work
+
+The owner is learning. Every PR description and final report includes:
+
+- **What changed** in two or three sentences.
+- **Why this way**, naming the alternative you did not take.
+- **Concept applied** (e.g. "repository pattern", "optimistic update"), with a pointer to the file that shows it best.
+
+Code comments explain *why*, not *what*. Prefer plain, readable code over abstractions with one caller.
+
+## Glossary
+
+| Term | Meaning |
+|------|---------|
+| Set (serie) | One run of repetitions of an exercise |
+| Rep | One repetition |
+| To failure | Continue until no further full rep is possible; the reps reached are logged |
+| Phase | Two or more plan weeks sharing a rep target (10, 8 or 6) |
+| Extend | Repeat a plan week before moving on |
+| Proposal | Weight the app suggests for the next phase; the user can override it |
+| 1RM | Estimated one-rep maximum, Epley: `weight × (1 + reps / 30)` |
+| Weight step | Smallest weight increase available for an exercise |
+| Per-side load | Barbell weight as the owner records it: plates on one side, bar excluded |
+| Training day | A named group of exercises done together (Chest, Back, Legs, Shoulders/Abs) |
+| Activity | A non-gym session such as volleyball, logged by date |

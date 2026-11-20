@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:seed-catalogue": "tsx src/scripts/seed-catalogue.ts"
+    "db:seed-catalogue": "tsx src/scripts/seed-catalogue.ts",
+    "db:seed-user": "tsx src/scripts/seed-user.ts"
   },
   "dependencies": {
     "@forja/core": "workspace:*",

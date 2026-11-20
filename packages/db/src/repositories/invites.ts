@@ -3,14 +3,6 @@ import { and, asc, eq, gt, isNotNull, isNull } from "drizzle-orm";
 import type { Database } from "../client";
 import { invites } from "../schema";
 
-/**
- * Trim and lower-case an email, so " Ana@Example.com " and "ana@example.com" are the same address.
- * (Better Auth stores emails lower-case, so anything that looks a user up by email must do the same.)
- */
-export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
 /** An invite as callers see it. The token hash is deliberately left out: nobody outside this file needs it. */
 export type Invite = {
   id: string;
@@ -87,9 +79,10 @@ export function inviteRepository(db: Database) {
     },
 
     /**
-     * Gives a claimed invite back, for when creating the account failed (e.g. the email is taken) and the
-     * person should be able to retry. Only works while no user is attached, so it can never reopen an
-     * invite that really produced an account.
+     * Gives a claimed invite back. Safe ONLY when it is certain that no user was created, e.g. sign-up
+     * refused the email as already taken. After any other failure a user row may already exist (the local
+     * PGlite database has no transactions), so the invite must stay used. The check below (no user attached)
+     * is a second guard, but it cannot see a user that exists and was never attached: the caller decides.
      */
     async unclaim(inviteId: string): Promise<boolean> {
       const rows = await db

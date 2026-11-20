@@ -36,5 +36,5 @@ export type { WorkoutDetail, WorkoutInput } from "./workouts";
 export type { LastFor } from "./history";
 export type { PlanDetail, PlanInput, PlanWeekRecord, PlanExerciseRecord, PlanTarget } from "./plans";
 export type { ReferenceWeight, ReferenceWeightInput } from "./reference-weights";
-export { normalizeEmail } from "./invites";
+export { normalizeEmail } from "./users";
 export type { Invite } from "./invites";

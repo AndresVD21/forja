@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { users } from "../schema";
 import { CatalogueSchema } from "../seed/catalogue";
 import { ReferenceWeightsSchema, seedUserData } from "../seed/user";
-import { normalizeEmail } from "../repositories/invites";
+import { normalizeEmail } from "../repositories/users";
 import { openTarget } from "./target";
 
 // pnpm may pass a literal "--" through; ignore it.

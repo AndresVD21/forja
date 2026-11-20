@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
   // PGlite (the local dev database) finds its WebAssembly and data files with `new URL(..., import.meta.url)`.
   // A bundler rewrites those URLs and Node's fs then rejects them; left external, Node loads PGlite untouched.
   serverExternalPackages: ["@electric-sql/pglite"],
+  // "No secrets in logs" (see src/server/safe-log.ts). In dev Next prints every server action call WITH its
+  // arguments (registerWithInvite({"password": ...})) and every request URL (/sign-up?invite=<token>); Playwright
+  // pipes that into CI logs. So: no server-function logging, and /sign-up requests are not logged.
+  logging: {
+    serverFunctions: false,
+    incomingRequests: { ignore: [/\/sign-up/] },
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

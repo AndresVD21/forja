@@ -15,7 +15,7 @@ const { values } = parseArgs({
 
 const days = Number(values.days);
 if (!Number.isFinite(days) || days <= 0 || days > 365) {
-  console.error("--days must be a number between 0 and 365 (default 7).");
+  console.error("--days must be a number above 0 and up to 365 (default 7).");
   process.exit(1);
 }
 const baseUrl = process.env.BETTER_AUTH_URL?.trim().replace(/\/+$/, "");

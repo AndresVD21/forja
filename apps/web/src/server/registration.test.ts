@@ -87,7 +87,7 @@ describe("registerWithInviteFor", () => {
     expect(await registerWithInviteFor(db, auth, now, "nope")).toEqual({ ok: false, error: "invalid_invite" });
   });
 
-  it("an unexpected failure gives server_error, gives the invite back, and logs neither token, email nor password", async () => {
+  it("an unexpected failure gives server_error, leaves the invite used, and logs neither token, email nor password", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const { token, invite } = await fresh();
     const secretPassword = "hunter2-hunter2-hunter2";
@@ -100,7 +100,7 @@ describe("registerWithInviteFor", () => {
     expect(spy).toHaveBeenCalled();
     const logged = JSON.stringify(spy.mock.calls);
     for (const secret of [token, email, secretPassword, "Ana"]) expect(logged).not.toContain(secret);
-    expect(await inviteRow(invite.id)).toMatchObject({ usedAt: null });
+    expect(await inviteRow(invite.id)).toMatchObject({ usedAt: expect.any(Date) });
   });
 
   it("a failing database while claiming gives server_error and logs no secrets", async () => {

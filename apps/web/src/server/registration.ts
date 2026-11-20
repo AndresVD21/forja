@@ -43,8 +43,8 @@ export async function getInviteStatusFor(db: Database, now: Date, token: unknown
  *     With its default `autoSignIn` this also creates the session, and the `nextCookies` plugin puts the
  *     session cookie on the response of the server action: the person arrives signed in;
  *  4. record which user used the invite.
- * If step 3 fails the invite is given back, so the friend can retry (for example with another email).
- * A crash between 2 and 3 would burn the invite; the owner just makes another one.
+ * If step 3 fails because the email is taken, the invite is given back so the friend can retry with another one.
+ * Any other failure (or a crash between 2 and 3) burns the invite; the owner just makes another one.
  */
 export async function registerWithInviteFor(
   db: Database,
@@ -75,10 +75,13 @@ export async function registerWithInviteFor(
     const created = await auth.api.signUpEmail({ body: fields.data, headers: requestHeaders });
     userId = created.user.id;
   } catch (error) {
-    await giveBack(invites, inviteId);
     if (error instanceof APIError && error.body?.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+      // The only failure where we know for certain no user was created, so the only one that gives the invite back.
+      await giveBack(invites, inviteId);
       return { ok: false, error: "email_taken" };
     }
+    // Any other failure leaves the invite used: without transactions (local PGlite) the user row may already be
+    // written, and reopening the invite would let a second account in. The owner makes another link.
     // describeError, never the error itself: its message or body can hold the email.
     console.error("register: creating the user failed:", describeError(error));
     return { ok: false, error: "server_error" };

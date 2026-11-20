@@ -3,6 +3,14 @@ import type { Database } from "../client";
 import { plans, users, workouts } from "../schema";
 import { NotFoundError } from "./shared";
 
+/**
+ * Trim and lower-case an email, so " Ana@Example.com " and "ana@example.com" are the same address.
+ * (Better Auth stores emails lower-case, so anything that looks a user up by email must do the same.)
+ */
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export function userRepository(db: Database) {
   return {
     /**

@@ -1,2 +1,5 @@
-// Schema, client and repositories arrive in milestone M2.
-export {};
+export * from "./schema";
+export { createDb, type Database } from "./client";
+export { CatalogueSchema, seedCatalogue, type Catalogue } from "./seed/catalogue";
+export { ReferenceWeightsSchema, seedUserData, type ReferenceWeights } from "./seed/user";
+export * from "./repositories";

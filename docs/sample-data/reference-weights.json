@@ -1,0 +1,810 @@
+{
+  "_about": "Last known weight per exercise and gym, derived from README.md. Seeds reference_weights for the owner. location null = gym not recorded.",
+  "entries": [
+    {
+      "exercise": "ab-crunch-machine",
+      "location": "Cañasgordas",
+      "weight": 59,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Sábado"
+    },
+    {
+      "exercise": "ab-crunch-machine",
+      "location": "Hacienda",
+      "weight": 100,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 11, Miércoles"
+    },
+    {
+      "exercise": "ab-crunch-machine",
+      "location": "Valle del Lili",
+      "weight": 59,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 24, Lunes"
+    },
+    {
+      "exercise": "ab-crunch-machine",
+      "location": null,
+      "weight": 72,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Domingo"
+    },
+    {
+      "exercise": "back-extension-machine",
+      "location": "Cañasgordas",
+      "weight": 63,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Sábado"
+    },
+    {
+      "exercise": "back-extension-machine",
+      "location": "Valle del Lili",
+      "weight": 68,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 21, Domingo"
+    },
+    {
+      "exercise": "back-extension-machine",
+      "location": null,
+      "weight": 68,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Domingo"
+    },
+    {
+      "exercise": "barbell-curl",
+      "location": "Valle del Lili",
+      "weight": 25,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 3, Jueves"
+    },
+    {
+      "exercise": "cable-curl",
+      "location": "Cañasgordas",
+      "weight": 26,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Viernes"
+    },
+    {
+      "exercise": "cable-curl",
+      "location": "Hacienda",
+      "weight": 26,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 16, Martes"
+    },
+    {
+      "exercise": "cable-curl",
+      "location": "Mall Plaza",
+      "weight": 55,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 14 (3rd), Jueves"
+    },
+    {
+      "exercise": "cable-curl",
+      "location": "Valle del Lili",
+      "weight": 28.4,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Jueves"
+    },
+    {
+      "exercise": "cable-curl",
+      "location": null,
+      "weight": 55,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Jueves"
+    },
+    {
+      "exercise": "calf-raise",
+      "location": "Cañasgordas",
+      "weight": 72.5,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Lunes"
+    },
+    {
+      "exercise": "calf-raise",
+      "location": "Hacienda",
+      "weight": 126,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 8, Jueves"
+    },
+    {
+      "exercise": "calf-raise",
+      "location": "Pasoancho",
+      "weight": 72.5,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 10, Jueves"
+    },
+    {
+      "exercise": "calf-raise",
+      "location": "Valle del Lili",
+      "weight": 72.5,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14, Miércoles"
+    },
+    {
+      "exercise": "calf-raise",
+      "location": null,
+      "weight": 72.5,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 12, Jueves"
+    },
+    {
+      "exercise": "hammer-curl",
+      "location": "Valle del Lili",
+      "weight": 20,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 7, Miércoles"
+    },
+    {
+      "exercise": "hammer-curl",
+      "location": null,
+      "weight": 24,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 9, Viernes"
+    },
+    {
+      "exercise": "hip-abduction",
+      "location": "Cañasgordas",
+      "weight": 90,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Miércoles"
+    },
+    {
+      "exercise": "hip-abduction",
+      "location": "Hacienda",
+      "weight": 250,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 8, Jueves"
+    },
+    {
+      "exercise": "hip-abduction",
+      "location": "Pasoancho",
+      "weight": 130,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 10, Jueves"
+    },
+    {
+      "exercise": "hip-abduction",
+      "location": "Valle del Lili",
+      "weight": 95,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Martes"
+    },
+    {
+      "exercise": "hip-abduction",
+      "location": null,
+      "weight": 95,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 23, Miércoles"
+    },
+    {
+      "exercise": "hip-adduction",
+      "location": "Cañasgordas",
+      "weight": 90,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Lunes"
+    },
+    {
+      "exercise": "hip-adduction",
+      "location": "Hacienda",
+      "weight": 250,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 8, Jueves"
+    },
+    {
+      "exercise": "hip-adduction",
+      "location": "Pasoancho",
+      "weight": 130,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 10, Jueves"
+    },
+    {
+      "exercise": "hip-adduction",
+      "location": "Valle del Lili",
+      "weight": 95,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Martes"
+    },
+    {
+      "exercise": "hip-adduction",
+      "location": null,
+      "weight": 90,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 23, Miércoles"
+    },
+    {
+      "exercise": "incline-barbell-press",
+      "location": "Cañasgordas",
+      "weight": 27.5,
+      "unit": "kg",
+      "note": "reps 7-7 last two",
+      "source": "SEMANA 19, Martes"
+    },
+    {
+      "exercise": "incline-barbell-press",
+      "location": "Hacienda",
+      "weight": 30,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Miércoles"
+    },
+    {
+      "exercise": "incline-barbell-press",
+      "location": "Mall Plaza",
+      "weight": 27.5,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 15, Martes"
+    },
+    {
+      "exercise": "incline-barbell-press",
+      "location": "Valle del Lili",
+      "weight": 20,
+      "unit": "kg",
+      "note": null,
+      "source": "POST VACACIONES SEMANA 1, Lunes"
+    },
+    {
+      "exercise": "incline-barbell-press",
+      "location": null,
+      "weight": 30,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14, Jueves"
+    },
+    {
+      "exercise": "incline-leg-press",
+      "location": "Cañasgordas",
+      "weight": 40,
+      "unit": "kg",
+      "note": "peso prensa: the figure includes the sled's own weight, so it is not comparable with other leg press machines",
+      "source": "SEMANA 19, Miércoles"
+    },
+    {
+      "exercise": "incline-leg-press",
+      "location": "Valle del Lili",
+      "weight": 80,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 18, Miércoles"
+    },
+    {
+      "exercise": "incline-machine-press-unilateral",
+      "location": "Valle del Lili",
+      "weight": 35,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Lunes"
+    },
+    {
+      "exercise": "lat-pulldown",
+      "location": "Cañasgordas",
+      "weight": 73,
+      "unit": "kg",
+      "note": "reps per set 10-10-9-8",
+      "source": "SEMANA 19, Viernes"
+    },
+    {
+      "exercise": "lat-pulldown",
+      "location": "Hacienda",
+      "weight": 73,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 16, Martes"
+    },
+    {
+      "exercise": "lat-pulldown",
+      "location": "Mall Plaza",
+      "weight": 79,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (3rd), Jueves"
+    },
+    {
+      "exercise": "lat-pulldown",
+      "location": "Valle del Lili",
+      "weight": 66,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Jueves"
+    },
+    {
+      "exercise": "lat-pulldown",
+      "location": null,
+      "weight": 175,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Jueves"
+    },
+    {
+      "exercise": "lateral-raise-cable",
+      "location": "Cañasgordas",
+      "weight": 7.9,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Sábado"
+    },
+    {
+      "exercise": "lateral-raise-cable",
+      "location": "Valle del Lili",
+      "weight": 7.9,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 21, Domingo"
+    },
+    {
+      "exercise": "lateral-raise-cable",
+      "location": null,
+      "weight": 7.9,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Domingo"
+    },
+    {
+      "exercise": "leg-extension",
+      "location": "Cañasgordas",
+      "weight": 18,
+      "unit": "kg",
+      "note": "14 kg used for the reps sets (resistance sets at 18 kg)",
+      "source": "SEMANA 19, Miércoles"
+    },
+    {
+      "exercise": "leg-extension",
+      "location": "Valle del Lili",
+      "weight": 19.1,
+      "unit": "kg",
+      "note": "16.5 kg used for the reps sets (resistance sets at 19.1 kg)",
+      "source": "SEMANA 20, Martes"
+    },
+    {
+      "exercise": "leg-extension",
+      "location": null,
+      "weight": 19.1,
+      "unit": "kg",
+      "note": "16.5 kg used for the reps sets (resistance sets at 19.1 kg)",
+      "source": "SEMANA 23, Miércoles"
+    },
+    {
+      "exercise": "leg-press",
+      "location": "Cañasgordas",
+      "weight": 63,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Lunes"
+    },
+    {
+      "exercise": "leg-press",
+      "location": "Hacienda",
+      "weight": 60,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 8, Jueves"
+    },
+    {
+      "exercise": "leg-press",
+      "location": "Pasoancho",
+      "weight": 80,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 10, Jueves"
+    },
+    {
+      "exercise": "leg-press",
+      "location": "Valle del Lili",
+      "weight": 81,
+      "unit": "kg",
+      "note": "peso prensa: the figure includes the sled's own weight, so it is not comparable with other leg press machines",
+      "source": "SEMANA 25, Martes"
+    },
+    {
+      "exercise": "leg-press",
+      "location": null,
+      "weight": 81,
+      "unit": "kg",
+      "note": "peso prensa: the figure includes the sled's own weight, so it is not comparable with other leg press machines",
+      "source": "SEMANA 23, Miércoles"
+    },
+    {
+      "exercise": "low-row-cable",
+      "location": "Valle del Lili",
+      "weight": 73,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 22 (2nd), Jueves"
+    },
+    {
+      "exercise": "lying-leg-curl",
+      "location": "Cañasgordas",
+      "weight": 32,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Miércoles"
+    },
+    {
+      "exercise": "lying-leg-curl",
+      "location": "Hacienda",
+      "weight": 100,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 8, Jueves"
+    },
+    {
+      "exercise": "lying-leg-curl",
+      "location": "Pasoancho",
+      "weight": 27.5,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 10, Jueves"
+    },
+    {
+      "exercise": "lying-leg-curl",
+      "location": "Valle del Lili",
+      "weight": 41,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Martes"
+    },
+    {
+      "exercise": "lying-leg-curl",
+      "location": null,
+      "weight": 41,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 23, Miércoles"
+    },
+    {
+      "exercise": "machine-chest-press",
+      "location": "Cañasgordas",
+      "weight": 68,
+      "unit": "kg",
+      "note": "reps per set 10-10-9-8",
+      "source": "SEMANA 19, Martes"
+    },
+    {
+      "exercise": "machine-chest-press",
+      "location": "Hacienda",
+      "weight": 77,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Miércoles"
+    },
+    {
+      "exercise": "machine-chest-press",
+      "location": "Mall Plaza",
+      "weight": 77,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 15, Martes"
+    },
+    {
+      "exercise": "machine-chest-press",
+      "location": "Valle del Lili",
+      "weight": 47.5,
+      "unit": "kg",
+      "note": null,
+      "source": "POST VACACIONES SEMANA 1, Lunes"
+    },
+    {
+      "exercise": "machine-chest-press",
+      "location": null,
+      "weight": 77,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14, Jueves"
+    },
+    {
+      "exercise": "overhead-triceps-extension",
+      "location": "Valle del Lili",
+      "weight": 6.8,
+      "unit": "kg",
+      "note": null,
+      "source": "POST VACACIONES SEMANA 1, Lunes"
+    },
+    {
+      "exercise": "pec-fly",
+      "location": "Cañasgordas",
+      "weight": 81,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Martes"
+    },
+    {
+      "exercise": "pec-fly",
+      "location": "Hacienda",
+      "weight": 100,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Miércoles"
+    },
+    {
+      "exercise": "pec-fly",
+      "location": "Mall Plaza",
+      "weight": 100,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 15, Martes"
+    },
+    {
+      "exercise": "pec-fly",
+      "location": "Valle del Lili",
+      "weight": 79,
+      "unit": "kg",
+      "note": null,
+      "source": "POST VACACIONES SEMANA 1, Lunes"
+    },
+    {
+      "exercise": "pec-fly",
+      "location": null,
+      "weight": 100,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14, Jueves"
+    },
+    {
+      "exercise": "rear-delt-cable",
+      "location": "Cañasgordas",
+      "weight": 5.7,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Viernes"
+    },
+    {
+      "exercise": "rear-delt-machine",
+      "location": "Cañasgordas",
+      "weight": 59,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 18 (2nd), Viernes"
+    },
+    {
+      "exercise": "rear-delt-machine",
+      "location": "Valle del Lili",
+      "weight": 66,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Jueves"
+    },
+    {
+      "exercise": "rear-delt-machine",
+      "location": null,
+      "weight": 23.8,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Domingo"
+    },
+    {
+      "exercise": "seated-row-machine",
+      "location": "Cañasgordas",
+      "weight": 68,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Viernes"
+    },
+    {
+      "exercise": "seated-row-machine",
+      "location": "Hacienda",
+      "weight": 63,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 16, Martes"
+    },
+    {
+      "exercise": "seated-row-machine",
+      "location": "Mall Plaza",
+      "weight": 73,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (3rd), Jueves"
+    },
+    {
+      "exercise": "seated-row-machine",
+      "location": "Valle del Lili",
+      "weight": 72,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 24, Miércoles"
+    },
+    {
+      "exercise": "seated-row-machine",
+      "location": null,
+      "weight": 160,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Jueves"
+    },
+    {
+      "exercise": "shoulder-press-machine",
+      "location": "Cañasgordas",
+      "weight": 41,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Sábado"
+    },
+    {
+      "exercise": "shoulder-press-machine",
+      "location": "Valle del Lili",
+      "weight": 50,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 21, Domingo"
+    },
+    {
+      "exercise": "shoulder-press-machine",
+      "location": null,
+      "weight": 50,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Domingo"
+    },
+    {
+      "exercise": "single-arm-row",
+      "location": "Valle del Lili",
+      "weight": 66,
+      "unit": "kg",
+      "note": "one hand",
+      "source": "SEMANA 25, Jueves"
+    },
+    {
+      "exercise": "straight-arm-pulldown",
+      "location": "Hacienda",
+      "weight": 72.5,
+      "unit": "lb",
+      "note": null,
+      "source": "SEMANA 16, Martes"
+    },
+    {
+      "exercise": "straight-arm-pulldown",
+      "location": "Mall Plaza",
+      "weight": 32.9,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (3rd), Jueves"
+    },
+    {
+      "exercise": "straight-arm-pulldown",
+      "location": "Valle del Lili",
+      "weight": 28.4,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 24, Miércoles"
+    },
+    {
+      "exercise": "straight-arm-pulldown",
+      "location": null,
+      "weight": 32.9,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Jueves"
+    },
+    {
+      "exercise": "triceps-cable-pushdown",
+      "location": "Cañasgordas",
+      "weight": 28,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 19, Martes"
+    },
+    {
+      "exercise": "triceps-cable-pushdown",
+      "location": "Hacienda",
+      "weight": 33.75,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14 (2nd), Miércoles"
+    },
+    {
+      "exercise": "triceps-cable-pushdown",
+      "location": "Mall Plaza",
+      "weight": 33.75,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 15, Martes"
+    },
+    {
+      "exercise": "triceps-cable-pushdown",
+      "location": "Valle del Lili",
+      "weight": 26.1,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 25, Lunes"
+    },
+    {
+      "exercise": "triceps-cable-pushdown",
+      "location": null,
+      "weight": 32.9,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 14, Jueves"
+    },
+    {
+      "exercise": "triceps-press-machine",
+      "location": "Cañasgordas",
+      "weight": 68,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 18 (2nd), Lunes"
+    },
+    {
+      "exercise": "triceps-press-machine",
+      "location": "Valle del Lili",
+      "weight": 68,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 18, Lunes"
+    },
+    {
+      "exercise": "triceps-rope-pushdown",
+      "location": "Cañasgordas",
+      "weight": 22.5,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 13, Miércoles"
+    },
+    {
+      "exercise": "triceps-rope-pushdown",
+      "location": "Hacienda",
+      "weight": 23.75,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 11, Miércoles"
+    },
+    {
+      "exercise": "triceps-rope-pushdown",
+      "location": "Valle del Lili",
+      "weight": 21.6,
+      "unit": "kg",
+      "note": null,
+      "source": "SEMANA 7, Lunes"
+    },
+    {
+      "exercise": "wrist-curl-cable",
+      "location": "Valle del Lili",
+      "weight": 20.4,
+      "unit": "kg",
+      "note": null,
+      "source": "POST VACACIONES SEMANA 1, Lunes"
+    }
+  ],
+  "unmatched": [],
+  "skipped": [
+    {
+      "text": "Hip adductor - Todo",
+      "source": "SEMANA 16, Viernes",
+      "reason": "full weight stack (\"Todo\")"
+    },
+    {
+      "text": "Calf Extension -",
+      "source": "SEMANA 16, Viernes",
+      "reason": "no weight recorded"
+    }
+  ]
+}

@@ -1,12 +1,84 @@
 # @forja/db
 
-The only package that talks to Postgres.
+The only package that talks to Postgres. Depends on `@forja/core` (enums and name matching come from it).
 
-Planned layout (`src/`):
+## Schema, client and catalogue (M2, first half)
 
-- `schema/` — Drizzle table definitions
-- `migrations/` — generated SQL, append-only
-- `repositories/` — one file per aggregate (`workouts`, `plans`, `exercises`, `locations`);
-  every function takes `userId` first
-- `client.ts` — connection setup
-- `seed.ts` — loads `docs/sample-data`
+- `src/schema/` — Drizzle table definitions: `users` (minimal; Better Auth sessions/accounts arrive in M3),
+  `exercises` + `exercise_aliases`, `locations`, `training_days`, `activities`, `plans`, `plan_weeks`,
+  `plan_exercises`, `plan_targets`, `workouts`, `workout_exercises`, `workout_sets`, `reference_weights`.
+- `src/migrations/` — generated SQL, append-only. Change the schema, run `pnpm --filter @forja/db db:generate`,
+  commit the new file; never edit one that is merged.
+- `src/client.ts` — `createDb(url)` (Neon WebSocket driver, supports transactions) and the `Database` type
+  that repositories take as a parameter. Nothing connects at import time.
+- `src/testing.ts` — `createTestDb()`: in-memory PGlite with all migrations applied. Test-only, not exported
+  from `src/index.ts` (decision 0002).
+- `src/seed/catalogue.ts` — `CatalogueSchema` and `seedCatalogue(db, catalogue)`: idempotent upsert of the
+  shared exercises and aliases, in one transaction.
+- `src/scripts/seed-catalogue.ts` — `DATABASE_URL=... pnpm --filter @forja/db db:seed-catalogue`.
+
+## Repositories (M2, second half)
+
+`createRepositories(db)` (in `src/repositories/index.ts`) returns `exercises`, `locations`, `trainingDays`,
+`activities`, `workouts`, `history`, `plans`, `referenceWeights` and `users`. One file per aggregate; **every function
+takes `userId` first** (rule 1) and filters by it.
+
+- **Ownership convention.** Child rows have no `user_id` and foreign keys accept anyone's ids, so each
+  repository checks every id it receives (helpers in `shared.ts`). An id that is missing and an id that
+  belongs to someone else both throw `NotFoundError` with the same message, so nothing leaks. Reads that find
+  nothing without being given an id (`plans.getActive`, `locations.lastUsed`, `exercises.findByName`)
+  return `undefined`. `history.lastFor` does get ids (exercise and location): it checks them like every
+  other function and returns `undefined` only when the ids are yours but there is no history yet. Exercises are visible when `user_id = userId OR user_id IS NULL`.
+- **Weights.** `toWeight` in `shared.ts` is the only place that turns `weight` + `unit` columns into core's
+  `{ value, unit }`. Values are stored as entered (per side for barbell exercises).
+- **Transactions.** `workouts.create`, `plans.create`, `plans.extendWeek`, `exercises.create`,
+  `referenceWeights.upsert`, `plans.setTarget` and the seeds run in one transaction.
+- **History fallback** (`history.lastFor`, decision 0003 — the gym comes first): workout at this location,
+  reference weight at this location, workout at any location, reference weight with no location, reference
+  weight at any other location. Only workout exercises with at least one set count; `workouts.create`
+  refuses an exercise without sets.
+- **Deleting an account** goes through `repos.users.deleteAccount(userId)`, never a bare `DELETE FROM users`:
+  a custom exercise used by a workout or a plan blocks the cascade (those foreign keys are RESTRICT), so the
+  function deletes workouts and plans first, then the user, in one transaction.
+- **Names** of gyms and training days are compared with core's `namesMatch`: `locations.findOrCreate` and
+  `trainingDays.create` return the existing row for "pierna" / "Pierna", and the per-user seed skips gyms
+  and days the user already has.
+- **`plans.extendWeek`** locks the plan row (`FOR UPDATE`), asks core's `extendWeek` what the plan must look
+  like, and applies it by id; weeks are numbered 1..n (`plans.create` refuses anything else; the schema caps
+  week numbers at 999). `plans.setTarget` leaves a weight unchanged when it is `undefined` and clears it
+  when it is `null`.
+- **Validation** (Zod) happens in the server actions, not here.
+
+## Per-user seed
+
+`seedUserData(db, userId, { catalogue, referenceWeights })` (`src/seed/user.ts`) adds the catalogue's gyms and
+training days and the reference weights for one user; idempotent, and it never overwrites edited reference
+weights. Run after the owner signs up and the catalogue is seeded:
+`DATABASE_URL=... pnpm --filter @forja/db db:seed-user -- <email>`.
+
+Apply migrations to a real database with `DATABASE_URL=... pnpm --filter @forja/db db:migrate`.
+
+## Tests
+
+Each repository has a test file next to it using `createTestDb()` and the catalogue seed, including a
+cross-user test per repository.
+
+## Before M3
+
+What M3 (Better Auth) must check against this package:
+
+- **Model names.** Better Auth calls its tables `user`, `session`, `account`, `verification`; ours is the plural
+  `users`. Map the names in its Drizzle adapter configuration instead of renaming ours.
+- **Ids.** `users.id` is a `uuid` with a database default. Better Auth generates its own string ids by default;
+  make it use the database default (or generate uuids) so the id fits the column.
+- **New tables.** `sessions`, `accounts` and `verification` arrive as a NEW migration, with `user_id uuid`
+  foreign keys that `ON DELETE CASCADE` from `users`.
+- **Account deletion** must call `repos.users.deleteAccount(userId)`; a bare `DELETE FROM users` fails for
+  users with custom exercises in use.
+- **E-mail case.** `scripts/seed-user.ts` looks the user up by exact e-mail; Better Auth lower-cases e-mails,
+  so use the lower-case address (or make the script compare case-insensitively).
+- **Postgres version.** Neon must run Postgres 15 or newer: `reference_weights` uses `NULLS NOT DISTINCT`.
+- **Migrations** are applied with `pnpm --filter @forja/db db:migrate` (Neon WebSocket migrator).
+- **Constraint errors.** Server actions must translate database errors into friendly messages, at least
+  `plans_one_active_per_user` (a second active plan) and duplicate names (`locations_user_name_unique`,
+  `training_days_user_name_unique`).

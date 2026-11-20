@@ -13,12 +13,14 @@ import { authClient } from "@/lib/auth-client";
 import { syncTimeZoneCookie } from "@/lib/time-zone-cookie";
 
 // googleEnabled comes from the server page (it reads the environment); the browser cannot.
-export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
+// refused: the browser came back from Google with ?error=... (for example an address that was not invited).
+export function SignInForm({ googleEnabled, refused }: { googleEnabled: boolean; refused: boolean }) {
   const t = useTranslations("SignIn");
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  // Same generic message for a refused Google sign-in; the raw error text is never shown.
+  const [failed, setFailed] = useState(refused);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // Stop the browser's own page-reloading submit. The browser has already checked required/email.
@@ -49,8 +51,15 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
   async function handleGoogle() {
     syncTimeZoneCookie();
     setPending(true);
-    // Redirects away to Google; on return Better Auth sends the browser to callbackURL.
-    await authClient.signIn.social({ provider: "google", callbackURL: "/" });
+    setFailed(false);
+    try {
+      // Redirects away to Google; on return Better Auth sends the browser to callbackURL, or to
+      // errorCallbackURL with ?error=... when the sign-in is refused (e.g. an address that is not invited).
+      await authClient.signIn.social({ provider: "google", callbackURL: "/", errorCallbackURL: "/sign-in" });
+    } catch {
+      setFailed(true);
+      setPending(false);
+    }
   }
 
   return (

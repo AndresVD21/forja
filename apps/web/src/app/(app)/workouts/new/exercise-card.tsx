@@ -8,7 +8,7 @@ import { IconButton } from "@/components/icon-button";
 import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { weightToKg, type Unit } from "@forja/core";
+import { heaviestSet, type Unit } from "@forja/core";
 import type { EntryExercise } from "@/server/queries";
 import type { LastTime } from "@/server/workout-actions";
 import { getLastTime } from "./actions";
@@ -73,7 +73,7 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
 
       {/* The reference stays on its own line, never inside the inputs (no pre-fill in M3). */}
       {lastTime?.failed && <p className="rounded-xl bg-page px-3 py-2 text-sm text-muted">{t("errors.server_error")}</p>}
-      {lastTime?.lastTime && exercise && <LastTimeLine lastTime={lastTime.lastTime} perSide={perSide} />}
+      {lastTime?.lastTime && exercise && <LastTimeLine lastTime={lastTime.lastTime} exercise={exercise} />}
 
       <SetsTable
         sets={draft.sets}
@@ -129,7 +129,7 @@ function useLastTime(exerciseId: string | null, locationId: string): { lastTime:
     getLastTime({ exerciseId, locationId })
       .then((result) => {
         // A failure only costs the reference line, so it is shown as a small note, not an interruption.
-        if (!stale) setAnswer({ question, lastTime: result.ok ? result.lastTime : null, failed: !result.ok && result.error === "server_error" });
+        if (!stale) setAnswer({ question, lastTime: result.ok ? result.lastTime : null, failed: !result.ok && (result.error === "server_error" || result.error === "signed_out") });
       })
       .catch(() => {
         if (!stale) setAnswer({ question, lastTime: null, failed: true });
@@ -142,7 +142,8 @@ function useLastTime(exerciseId: string | null, locationId: string): { lastTime:
   return answer && answer.question === question ? answer : null;
 }
 
-function LastTimeLine({ lastTime, perSide }: { lastTime: LastTime; perSide: boolean }) {
+function LastTimeLine({ lastTime, exercise }: { lastTime: LastTime; exercise: EntryExercise }) {
+  const perSide = exercise.loadMode === "per_side";
   const t = useTranslations("Entry");
   const format = useFormatter();
 
@@ -155,8 +156,11 @@ function LastTimeLine({ lastTime, perSide }: { lastTime: LastTime; perSide: bool
   let text: string;
   if (lastTime.source === "workout") {
     if (lastTime.sets.length === 0) return null;
-    // The heaviest set is the one worth beating; weightToKg only compares across units.
-    const top = lastTime.sets.reduce((best, set) => (weightToKg(set.weight) > weightToKg(best.weight) ? set : best));
+    // The set to beat is chosen by core on total load (bar included for per-side exercises), never by
+    // comparing per-side numbers. The 0 kg bar is only a fallback for an exercise without one; it is unused
+    // for total-load exercises.
+    const top = heaviestSet(lastTime.sets, exercise.loadMode, exercise.barWeight ?? { value: 0, unit: "kg" });
+    if (!top) return null;
     const values = { weight: describe(top.weight), reps: top.reps };
     text = lastTime.locationMatched
       ? t("lastWorkoutHere", values)

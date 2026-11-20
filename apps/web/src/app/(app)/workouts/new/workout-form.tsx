@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { translatedOrTyped } from "@/i18n/labels";
 import type { EntryFormData } from "@/server/queries";
+import type { ErrorCode } from "@/server/workout-actions";
 import { saveWorkout } from "./actions";
 import { checkExercise, hasProblems, newExercise, toSaveExercises, type ExerciseDraft } from "./draft";
 import { ExerciseCard } from "./exercise-card";
@@ -31,7 +32,7 @@ export function WorkoutForm({ data, today }: Props) {
 
   const [attempted, setAttempted] = useState(false); // problems are shown only after a Save attempt
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<"invalid_input" | "not_found" | "save_failed" | null>(null);
+  const [saveError, setSaveError] = useState<ErrorCode | null>(null);
 
   // Derived from the draft on every render, so a message disappears as soon as the user fixes the problem.
   const dateProblem = !IsoDateSchema.safeParse(date).success || date > today;

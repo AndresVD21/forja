@@ -258,3 +258,7 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
 11. `instant = false` in the root layout keeps `<html lang>` correct but gives up an instant static shell for the
     whole app (every page waits for the request). Next still prints dev hints such as "instant-shell-url-data"
     when a page reads URL data outside `<Suspense>`.
+12. **Invite links in logs**: an unused link (single-use, 7-day expiry) can appear in request logs on Vercel.
+    Accept it, or later move the token into the URL `#fragment`, which browsers never send to the server.
+13. **Probing emails with an invite**: whoever holds a valid link can retry with different emails to learn which
+    ones already have an account, because a taken email gives the link back. Accepted as low risk for a few friends.

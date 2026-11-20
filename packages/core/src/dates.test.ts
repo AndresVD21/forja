@@ -75,3 +75,25 @@ describe("weekDays / isSameWeek", () => {
     expect(isSameWeek(d("2026-11-22"), d("2026-11-23"))).toBe(false);
   });
 });
+
+describe("calendar range 1900-9999", () => {
+  it.each(["1899-12-31", "10000-01-01", "0100-01-01"])("schema rejects %s", (s) => {
+    expect(IsoDateSchema.safeParse(s).success).toBe(false);
+  });
+  it.each(["1900-01-01", "9999-12-31"])("schema accepts %s", (s) => {
+    expect(IsoDateSchema.safeParse(s).success).toBe(true);
+  });
+  it("addDays throws instead of leaving the range", () => {
+    expect(() => addDays(d("9999-12-31"), 1)).toThrow(RangeError);
+    expect(() => addDays(d("1900-01-01"), -1)).toThrow(RangeError);
+    expect(addDays(d("9999-12-31"), 0)).toBe("9999-12-31");
+    expect(addDays(d("9999-12-30"), 1)).toBe("9999-12-31");
+  });
+  it("weekStart works at both ends (1900-01-01 is a Monday)", () => {
+    expect(weekStart(d("1900-01-01"))).toBe("1900-01-01");
+    expect(weekStart(d("9999-12-31"))).toBe("9999-12-27");
+  });
+  it("weekDays of the last week of 9999 throws: it would reach 10000-01-02", () => {
+    expect(() => weekDays(weekStart(d("9999-12-31")))).toThrow(RangeError);
+  });
+});

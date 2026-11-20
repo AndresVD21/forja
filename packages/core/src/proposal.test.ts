@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_BAR_WEIGHT } from "./barbell";
 import {
   bestFailureSet,
+  heaviestSet,
   epleyProposal,
   estimateOneRepMax,
   percentageProposal,
@@ -217,5 +218,37 @@ describe("proposeNextWeight", () => {
   });
   it("falls back when the only failure set has zero reps", () => {
     expect(proposeNextWeight({ ...base, sets: [set(0, 50, true)] }).method).toBe("percentage");
+  });
+});
+
+describe("heaviestSet", () => {
+  const kg = (value: number) => ({ value, unit: "kg" as const });
+  const lb = (value: number) => ({ value, unit: "lb" as const });
+  const bar = DEFAULT_BAR_WEIGHT;
+
+  it("returns undefined for an empty list", () => {
+    expect(heaviestSet([], "total", bar)).toBeUndefined();
+  });
+  it("compares total loads in kg across units", () => {
+    const a = { reps: 8, weight: kg(60) };
+    const b = { reps: 8, weight: lb(140) }; // 63.5 kg
+    expect(heaviestSet([a, b], "total", bar)).toBe(b);
+  });
+  it("per-side: lb plates with a kg bar, returned as entered", () => {
+    const a = { reps: 8, weight: kg(20) }; // 60 kg total
+    const b = { reps: 8, weight: lb(45) }; // 90 lb + 20 kg bar = 40.82 + 20 = 60.82 kg
+    expect(heaviestSet([a, b], "per_side", bar)).toBe(b);
+    expect(heaviestSet([a, b], "per_side", bar)?.weight).toEqual({ value: 45, unit: "lb" });
+  });
+  it("ties go to more reps, then to the earlier set", () => {
+    const first = { reps: 6, weight: kg(50) };
+    const moreReps = { reps: 8, weight: kg(50) };
+    const same = { reps: 8, weight: kg(50) };
+    expect(heaviestSet([first, moreReps], "total", bar)).toBe(moreReps);
+    expect(heaviestSet([moreReps, same], "total", bar)).toBe(moreReps);
+  });
+  it("accepts zero-rep sets", () => {
+    const only = { reps: 0, weight: kg(10) };
+    expect(heaviestSet([only], "total", bar)).toBe(only);
   });
 });

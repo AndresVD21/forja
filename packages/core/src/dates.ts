@@ -16,11 +16,24 @@ function parts(date: string): [number, number, number] {
   return [Number(m[1]), Number(m[2]), Number(m[3])];
 }
 
+/**
+ * Years we accept. 9999 is the last year `toISOString()` prints as four digits (year 10000 comes
+ * out as "+010000-...", which Postgres rejects). 1900 keeps typos like 0100-01-01 out of the
+ * history, and avoids Date.UTC treating years 0-99 as 1900-1999.
+ */
+export const MIN_YEAR = 1900;
+export const MAX_YEAR = 9999;
+
 function format(ms: number): IsoDate {
-  return new Date(ms).toISOString().slice(0, 10) as IsoDate;
+  const date = new Date(ms);
+  const year = date.getUTCFullYear(); // NaN for an invalid Date, which fails both checks below
+  if (!(year >= MIN_YEAR && year <= MAX_YEAR)) {
+    throw new RangeError(`date outside ${MIN_YEAR}-${MAX_YEAR}`);
+  }
+  return date.toISOString().slice(0, 10) as IsoDate;
 }
 
-/** A real calendar date: rejects 2026-02-30, 2026-13-01 and 26-1-1. */
+/** A real calendar date in 1900-9999: rejects 2026-02-30, 2026-13-01, 26-1-1 and 0100-01-01. */
 export const IsoDateSchema = z
   .string()
   .regex(ISO_SHAPE, "Expected YYYY-MM-DD")
@@ -28,6 +41,7 @@ export const IsoDateSchema = z
     // Zod 4 still runs refinements after a failed regex, so guard the shape here too.
     if (!ISO_SHAPE.test(s)) return false;
     const [y, m, d] = parts(s);
+    if (y < MIN_YEAR || y > MAX_YEAR) return false;
     const back = new Date(Date.UTC(y, m - 1, d));
     // Date.UTC rolls 02-30 over to 03-02, so a round trip catches invalid days.
     return back.getUTCFullYear() === y && back.getUTCMonth() === m - 1 && back.getUTCDate() === d;
@@ -49,7 +63,7 @@ export function todayIn(timeZone: string, now: Date): IsoDate {
   return `${get("year")}-${get("month")}-${get("day")}` as IsoDate;
 }
 
-/** Adds (or, if negative, subtracts) whole days. */
+/** Adds (or, if negative, subtracts) whole days. Throws RangeError if the result leaves 1900-9999. */
 export function addDays(date: IsoDate, days: number): IsoDate {
   const [y, m, d] = parts(date);
   return format(Date.UTC(y, m - 1, d + days));

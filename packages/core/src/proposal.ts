@@ -30,6 +30,31 @@ export function bestFailureSet(sets: readonly SetLog[]): SetLog | undefined {
   return best;
 }
 
+/**
+ * The set with the highest total load (the weight actually lifted), compared in kg so sets in
+ * different units and per-side sets are comparable (CLAUDE.md rule 4). Ties go to more reps, then
+ * to the earlier set. Returns the set as entered, not converted.
+ */
+export function heaviestSet<T extends { reps: number; weight: Weight }>(
+  sets: readonly T[],
+  loadMode: LoadMode,
+  barWeight: Readonly<Weight>,
+): T | undefined {
+  const totalKg = (set: T) =>
+    weightToKg(loadMode === "per_side" ? toTotalLoad(set.weight, barWeight) : set.weight);
+  let best: T | undefined;
+  let bestKg = -Infinity;
+  for (const set of sets) {
+    const kg = totalKg(set);
+    // Strict comparisons keep the earlier set when everything is equal.
+    if (kg > bestKg || (kg === bestKg && set.reps > best!.reps)) {
+      best = set;
+      bestKg = kg;
+    }
+  }
+  return best;
+}
+
 export type ProposalInput = {
   /** Sets logged in the phase that just ended. */
   sets: readonly SetLog[];

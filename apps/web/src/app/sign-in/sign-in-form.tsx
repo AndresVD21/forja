@@ -21,7 +21,9 @@ export function SignInForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // Stop the browser's own page-reloading submit. The browser has already checked required/email.
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
+    // Keep the form: event.currentTarget is null after the first await.
+    const form = event.currentTarget;
+    const data = new FormData(form);
     setPending(true);
     setFailed(false);
     syncTimeZoneCookie();
@@ -36,6 +38,11 @@ export function SignInForm() {
         setPending(false);
         return;
       }
+      // Backstop: Next keeps this page hidden after we leave it, so clear the password and un-stick the button
+      // now or the next visit to /sign-in would show them.
+      form.reset();
+      setShowPassword(false);
+      setPending(false);
       router.replace("/");
       router.refresh();
     } catch {

@@ -17,6 +17,8 @@ describe("checkSignUpFields", () => {
   it("rejects an empty or malformed email", () => {
     expect(checkSignUpFields({ ...valid, email: "" }).email).toBe("emailInvalid");
     expect(checkSignUpFields({ ...valid, email: "ana@" }).email).toBe("emailInvalid");
+    expect(checkSignUpFields({ ...valid, email: "a@b.c" }).email).toBe("emailInvalid");
+    expect(checkSignUpFields({ ...valid, email: "a@b" }).email).toBe("emailInvalid");
     expect(checkSignUpFields({ ...valid, email: " ana@example.com " }).email).toBeUndefined();
   });
 

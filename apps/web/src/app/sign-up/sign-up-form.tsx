@@ -43,6 +43,11 @@ export function SignUpForm({ token }: { token: string }) {
       const result = await registerWithInvite({ token, name, email, password });
       if (result.ok) {
         // The session cookie is already set by the action.
+        // Backstop: this page stays hidden after we leave it, so do not leave the password (or a stuck
+        // button) in it.
+        setPassword("");
+        setShowPassword(false);
+        setPending(false);
         router.replace("/");
         router.refresh();
         return;

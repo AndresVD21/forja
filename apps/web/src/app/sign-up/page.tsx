@@ -5,6 +5,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { buttonVariants } from "@/components/ui/button";
 import { getInviteStatus } from "@/server/invite-status";
+import { RedirectIfSignedIn } from "../sign-in/redirect-if-signed-in";
 import { SignUpForm } from "./sign-up-form";
 
 // Server Component. The page shell is static; the invite token lives in the URL (request-time data), so it
@@ -12,6 +13,10 @@ import { SignUpForm } from "./sign-up-form";
 export default function SignUpPage({ searchParams }: PageProps<"/sign-up">) {
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4 sm:px-6">
+      {/* A signed-in person must not create a second account through an invite link. */}
+      <Suspense>
+        <RedirectIfSignedIn />
+      </Suspense>
       <div className="flex justify-end">
         <LocaleSwitch />
       </div>
@@ -34,7 +39,7 @@ async function InviteGate({ searchParams }: Pick<PageProps<"/sign-up">, "searchP
   // ?invite=a&invite=b gives an array: treat it as no token.
   const token = typeof invite === "string" ? invite : undefined;
 
-  if ((await getInviteStatus(token)) === "invalid" || !token) {
+  if (!token || (await getInviteStatus(token)) === "invalid") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
         <p role="alert" className="text-base font-medium text-ink">

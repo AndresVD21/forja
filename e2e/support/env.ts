@@ -9,3 +9,5 @@ export const TEST_NAME = "E2E Athlete";
 export const DB_DIR = fileURLToPath(new URL("../.data/pglite", import.meta.url));
 /** Written by prepare.mjs, read by the tests. Git-ignored. */
 export const CREDENTIALS_FILE = fileURLToPath(new URL("../.auth/credentials.json", import.meta.url));
+/** Invite tokens made by prepare.mjs, one list per test. Git-ignored. */
+export const INVITES_FILE = fileURLToPath(new URL("../.auth/invites.json", import.meta.url));

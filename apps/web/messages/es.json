@@ -98,6 +98,7 @@
     "errors": {
       "invalid_input": "Algo del entrenamiento no es válido. Revisa la fecha y las series e inténtalo de nuevo.",
       "not_found": "No se encontró el gimnasio, el día de entrenamiento o algún ejercicio. Recarga la página e inténtalo de nuevo.",
+      "server_error": "No se pudo cargar el resultado anterior.",
       "save_failed": "No se pudo guardar el entrenamiento. Tus datos siguen aquí: inténtalo de nuevo."
     }
   }

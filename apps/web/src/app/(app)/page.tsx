@@ -2,7 +2,6 @@ import { addDays } from "@forja/core";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import type { DateTimeFormatOptions } from "next-intl";
 import { getFormatter, getMessages, getTranslations } from "next-intl/server";
-import { connection } from "next/server";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ListCardRow } from "@/components/list-card-row";
@@ -26,8 +25,6 @@ const navLinkClasses =
   "inline-flex size-11 items-center justify-center rounded-xl border border-field bg-surface text-ink";
 
 async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
-  // getToday() reads the clock; Next wants a request-time marker before any clock read.
-  await connection();
   const { week } = await searchParams;
   const [days, today, t, format, messages] = await Promise.all([
     getWeek(typeof week === "string" ? week : undefined),

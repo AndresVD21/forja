@@ -72,7 +72,8 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
       </div>
 
       {/* The reference stays on its own line, never inside the inputs (no pre-fill in M3). */}
-      {lastTime && exercise && <LastTimeLine lastTime={lastTime} perSide={perSide} />}
+      {lastTime?.failed && <p className="rounded-xl bg-page px-3 py-2 text-sm text-muted">{t("errors.server_error")}</p>}
+      {lastTime?.lastTime && exercise && <LastTimeLine lastTime={lastTime.lastTime} perSide={perSide} />}
 
       <SetsTable
         sets={draft.sets}
@@ -118,27 +119,27 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
  * Asks the server for the last time this exercise was done (at this gym first). The answer is stored together
  * with the question it answers, so a late reply for a previous exercise or gym is never shown.
  */
-function useLastTime(exerciseId: string | null, locationId: string): LastTime | null {
+function useLastTime(exerciseId: string | null, locationId: string): { lastTime: LastTime | null; failed: boolean } | null {
   const question = exerciseId && locationId ? `${exerciseId}|${locationId}` : null;
-  const [answer, setAnswer] = useState<{ question: string; lastTime: LastTime | null } | null>(null);
+  const [answer, setAnswer] = useState<{ question: string; lastTime: LastTime | null; failed: boolean } | null>(null);
 
   useEffect(() => {
     if (!exerciseId || !question) return;
     let stale = false;
     getLastTime({ exerciseId, locationId })
       .then((result) => {
-        // An error just means no reference line: it is a nicety, not worth interrupting the entry.
-        if (!stale) setAnswer({ question, lastTime: result.ok ? result.lastTime : null });
+        // A failure only costs the reference line, so it is shown as a small note, not an interruption.
+        if (!stale) setAnswer({ question, lastTime: result.ok ? result.lastTime : null, failed: !result.ok && result.error === "server_error" });
       })
       .catch(() => {
-        if (!stale) setAnswer({ question, lastTime: null });
+        if (!stale) setAnswer({ question, lastTime: null, failed: true });
       });
     return () => {
       stale = true;
     };
   }, [exerciseId, locationId, question]);
 
-  return answer && answer.question === question ? answer.lastTime : null;
+  return answer && answer.question === question ? answer : null;
 }
 
 function LastTimeLine({ lastTime, perSide }: { lastTime: LastTime; perSide: boolean }) {

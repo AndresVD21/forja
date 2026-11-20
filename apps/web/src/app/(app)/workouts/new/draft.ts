@@ -84,14 +84,29 @@ export function findExactMatch(text: string, exercises: EntryExercise[]): EntryE
   return exercises.find((e) => searchTerms(e).some((term) => term === wanted));
 }
 
-/** Exercises whose name (either language) or alias contains what was typed, best (shortest names) first. */
-export function filterExercises(text: string, exercises: EntryExercise[], limit = 8): EntryExercise[] {
+/**
+ * Exercises matching what was typed, best match first. For each exercise the best of its names (either
+ * language) and aliases counts. Rank 0: exactly the query; 1: starts with it; 2: contains it; 3: contains
+ * every word of it (in any order). Anything else is not a match. Ties are sorted by name in `locale`.
+ */
+export function filterExercises(text: string, exercises: EntryExercise[], locale = "en", limit = 8): EntryExercise[] {
   const wanted = normalizeName(text);
   if (wanted === "") return [];
-  return exercises
-    .filter((e) => searchTerms(e).some((term) => term.includes(wanted)))
-    .sort((a, b) => a.nameEn.length - b.nameEn.length)
-    .slice(0, limit);
+  const words = wanted.split(" ");
+  const rank = (term: string) =>
+    term === wanted ? 0 : term.startsWith(wanted) ? 1 : term.includes(wanted) ? 2 : words.every((w) => term.includes(w)) ? 3 : null;
+  const name = (e: EntryExercise) => (locale === "es" ? e.nameEs : e.nameEn);
+
+  const ranked: { exercise: EntryExercise; best: number }[] = [];
+  for (const exercise of exercises) {
+    const ranks = searchTerms(exercise).map(rank);
+    const best = Math.min(...ranks.map((r) => r ?? Infinity));
+    if (best !== Infinity) ranked.push({ exercise, best });
+  }
+  return ranked
+    .sort((a, b) => a.best - b.best || name(a.exercise).localeCompare(name(b.exercise), locale))
+    .slice(0, limit)
+    .map((entry) => entry.exercise);
 }
 
 function searchTerms(exercise: EntryExercise): string[] {

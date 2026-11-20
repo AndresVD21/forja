@@ -1,6 +1,5 @@
 import { ChevronLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { connection } from "next/server";
 import Link from "next/link";
 import { Suspense } from "react";
 import { iconButtonClasses } from "@/components/icon-button";
@@ -13,11 +12,15 @@ export default async function NewWorkoutPage() {
   const t = await getTranslations("Entry");
   return (
     <>
-      <div className="relative flex items-center justify-center">
-        <Link href="/" aria-label={t("back")} className={`${iconButtonClasses} absolute left-0`}>
+      {/* Back (44 px) | title | an equal empty slot, so the title stays centred and wraps instead of touching the arrow. */}
+      <div className="flex items-center gap-3">
+        <Link href="/" aria-label={t("back")} className={`${iconButtonClasses} shrink-0`}>
           <ChevronLeft aria-hidden />
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <h1 className="min-w-0 flex-1 text-balance text-center text-2xl font-bold leading-tight tracking-tight sm:text-3xl">
+          {t("title")}
+        </h1>
+        <span aria-hidden className="w-11 shrink-0" />
       </div>
       <Suspense fallback={<p className="text-muted">…</p>}>
         <Form />
@@ -27,8 +30,6 @@ export default async function NewWorkoutPage() {
 }
 
 async function Form() {
-  // getToday() reads the clock; Next wants a request-time marker before any clock read.
-  await connection();
   const [data, today] = await Promise.all([getEntryFormData(), getToday()]);
   return <WorkoutForm data={data} today={today} />;
 }

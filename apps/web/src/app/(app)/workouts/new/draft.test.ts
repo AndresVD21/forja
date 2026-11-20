@@ -56,6 +56,18 @@ describe("matching", () => {
     expect(findExactMatch("bench press", [bench])).toBe(bench);
     expect(findExactMatch("bench", [bench])).toBeUndefined();
   });
+  it("ranks exact, then starts-with, then contains, then all words; ties by name", () => {
+    const make = (nameEn: string, aliases: string[] = []): EntryExercise => ({ ...bench, id: nameEn, nameEn, nameEs: nameEn, aliases });
+    const legPress = make("Incline Leg Press", ["leg press inclinado"]);
+    const barbell = make("Incline Barbell Press", ["press inclinado con barra"]);
+    const press = make("Press");
+    const overhead = make("Overhead Press");
+    const pressUp = make("Press Up");
+    const all = [legPress, overhead, pressUp, barbell, press];
+    expect(filterExercises("press inclinado", all)).toEqual([barbell, legPress]);
+    expect(filterExercises("press", all)).toEqual([press, barbell, pressUp, legPress, overhead]);
+    expect(filterExercises("press incline", all)).toEqual([barbell, legPress]);
+  });
   it("filters by substring", () => {
     expect(filterExercises("banca", [bench])).toEqual([bench]);
     expect(filterExercises("squat", [bench])).toEqual([]);

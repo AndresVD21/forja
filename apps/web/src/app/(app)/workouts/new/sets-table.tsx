@@ -41,16 +41,16 @@ export function SetsTable({ sets, unit, perSide, problems, onChange }: Props) {
 
   return (
     <div className="flex flex-col">
-      <div className="grid grid-cols-[2rem_1fr_1fr] gap-2 border-b border-line pb-2 text-sm font-semibold uppercase text-muted">
-        <span>{t("colSet")}</span>
-        <span>{weightHeader}</span>
-        <span>{t("colReps")}</span>
+      <div className="grid grid-cols-[3.5rem_1fr_1fr] gap-2 border-b border-line pb-2 text-sm font-semibold uppercase text-muted">
+        <span className="min-w-0 break-words">{t("colSet")}</span>
+        <span className="min-w-0 break-words">{weightHeader}</span>
+        <span className="min-w-0 break-words">{t("colReps")}</span>
       </div>
       {sets.map((set, index) => {
         const number = index + 1;
         return (
           <div key={index} className="border-b border-line py-2">
-            <div className="grid grid-cols-[2rem_1fr_1fr] items-center gap-2">
+            <div className="grid grid-cols-[3.5rem_1fr_1fr] items-center gap-2">
               <span className="text-lg font-semibold tabular-nums">{number}</span>
               <div className="relative">
                 <input

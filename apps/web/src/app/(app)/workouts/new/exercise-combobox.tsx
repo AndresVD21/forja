@@ -39,7 +39,7 @@ export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSel
   const [active, setActive] = useState(-1);
 
   // Right after a pick the text equals the chosen name; no need to suggest it again.
-  const suggestions = selectedId === null ? filterExercises(text, exercises) : [];
+  const suggestions = selectedId === null ? filterExercises(text, exercises, locale) : [];
   const open = focused && !dismissed && suggestions.length > 0;
   const nothingMatches = selectedId === null && text.trim() !== "" && suggestions.length === 0;
   const activeIndex = Math.min(active, suggestions.length - 1);

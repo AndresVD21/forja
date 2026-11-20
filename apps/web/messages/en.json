@@ -98,6 +98,7 @@
     "errors": {
       "invalid_input": "Something in the workout is not valid. Check the date and the sets, then try again.",
       "not_found": "The gym, training day or an exercise could not be found. Reload the page and try again.",
+      "server_error": "The previous result could not be loaded.",
       "save_failed": "The workout could not be saved. Your entries are still here: try again."
     }
   }

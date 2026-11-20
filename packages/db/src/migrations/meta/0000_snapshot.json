@@ -1,5 +1,5 @@
 {
-  "id": "4b514364-1ae4-452f-8d22-e449f6c8ff35",
+  "id": "bb3ed5c4-3d05-472b-bdf9-89b02cf3c5fe",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -807,6 +807,10 @@
         "plan_weeks_week_number_positive": {
           "name": "plan_weeks_week_number_positive",
           "value": "\"plan_weeks\".\"week_number\" >= 1"
+        },
+        "plan_weeks_week_number_max": {
+          "name": "plan_weeks_week_number_max",
+          "value": "\"plan_weeks\".\"week_number\" <= 999"
         },
         "plan_weeks_phase_positive": {
           "name": "plan_weeks_phase_positive",

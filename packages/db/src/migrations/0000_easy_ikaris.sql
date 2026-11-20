@@ -93,6 +93,7 @@ CREATE TABLE "plan_weeks" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "plan_weeks_plan_week_unique" UNIQUE("plan_id","week_number"),
 	CONSTRAINT "plan_weeks_week_number_positive" CHECK ("plan_weeks"."week_number" >= 1),
+	CONSTRAINT "plan_weeks_week_number_max" CHECK ("plan_weeks"."week_number" <= 999),
 	CONSTRAINT "plan_weeks_phase_positive" CHECK ("plan_weeks"."phase" >= 1),
 	CONSTRAINT "plan_weeks_target_reps_positive" CHECK ("plan_weeks"."target_reps" >= 1),
 	CONSTRAINT "plan_weeks_target_sets_positive" CHECK ("plan_weeks"."target_sets" >= 1)

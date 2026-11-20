@@ -1,6 +1,5 @@
-// Rule 11: history.lastFor order, per decision 0003 ("real workouts first, reference weight only when
-// there is none, same location first") and ARCHITECTURE 2.13 ("same location first, then any").
-// Documented order (history.ts): 1 workout here, 2 workout anywhere, 3 reference here,
+// Rule 11: history.lastFor order, per decision 0003 ("the gym comes first") and ARCHITECTURE 2.13 ("same location first, then any").
+// Order (history.ts, decision 0003 as updated): 1 workout here, 2 reference here, 3 workout anywhere,
 // 4 reference with no gym, 5 reference at another gym (alphabetical).
 import { beforeEach, describe, expect, it } from "vitest";
 import { kg, lb, type World } from "./spec-utils";
@@ -62,11 +61,25 @@ describe("history.lastFor", () => {
     expect(last).toMatchObject({ source: "workout", locationMatched: false, locationName: "Cañasgordas", performedOn: "2026-02-01" });
   });
 
-  it("a real workout at ANOTHER gym beats a reference weight at the SAME gym (0003: real workouts first)", async () => {
+  it("a reference weight at the SAME gym beats a real workout at ANOTHER gym (0003: the gym comes first)", async () => {
     await ref(legPress, hacienda, 140);
     await log(valle, "2026-02-01", legPress, [100]);
     const last = await t.repos.history.lastFor(t.userA, legPress, hacienda);
+    expect(last).toMatchObject({ source: "reference", locationMatched: true, locationName: "Hacienda", weight: kg(140) });
+  });
+
+  it("a workout at another gym beats the reference with no gym and references at other gyms (steps 3 before 4, 5)", async () => {
+    await ref(legPress, null, 72);
+    await ref(legPress, canas, 63);
+    await log(valle, "2026-02-01", legPress, [100]);
+    const last = await t.repos.history.lastFor(t.userA, legPress, hacienda);
     expect(last).toMatchObject({ source: "workout", locationMatched: false, locationName: "Valle del Lili" });
+  });
+
+  it("a workout at this gym beats a reference weight at this gym (step 1 before 2)", async () => {
+    await ref(legPress, hacienda, 140);
+    await log(hacienda, "2026-02-01", legPress, [100]);
+    expect(await t.repos.history.lastFor(t.userA, legPress, hacienda)).toMatchObject({ source: "workout", locationMatched: true });
   });
 
   it("step 3: no workout -> reference weight for this gym", async () => {
@@ -113,9 +126,18 @@ describe("history.lastFor", () => {
     expect(last?.source === "workout" && last.sets.map((s) => [s.setNumber, s.weight.value])).toEqual([[1, 25], [2, 27.5], [3, 30], [4, 30]]);
   });
 
-  it("a workout of an exercise logged with no sets still counts as 'last time' but with empty sets", async () => {
-    await log(hacienda, "2026-02-01", legPress, []);
+  it("workouts.create refuses an exercise with no sets and saves nothing", async () => {
+    await expect(log(hacienda, "2026-02-01", legPress, [])).rejects.toThrow(RangeError);
+    expect(await t.repos.workouts.listForUser(t.userA, { from: "2000-01-01", to: "2100-01-01" })).toEqual([]);
+    expect(await t.repos.history.lastFor(t.userA, legPress, hacienda)).toBeUndefined();
+  });
+
+  it("lastFor ignores a workout exercise that has no sets (defence in depth: inserted directly)", async () => {
+    const { workoutExercises, workouts } = await import("../schema");
+    const [w] = await t.db.insert(workouts).values({ userId: t.userA, locationId: hacienda, performedOn: "2026-03-01" }).returning();
+    await t.db.insert(workoutExercises).values({ workoutId: w!.id, exerciseId: legPress, position: 0 });
+    await log(hacienda, "2026-02-01", legPress, [90]); // older, but the only one with sets
     const last = await t.repos.history.lastFor(t.userA, legPress, hacienda);
-    expect(last).toMatchObject({ source: "workout", sets: [] });
+    expect(last).toMatchObject({ source: "workout", performedOn: "2026-02-01" });
   });
 });

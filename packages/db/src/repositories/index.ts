@@ -6,6 +6,7 @@ import { locationRepository } from "./locations";
 import { planRepository } from "./plans";
 import { referenceWeightRepository } from "./reference-weights";
 import { trainingDayRepository } from "./training-days";
+import { userRepository } from "./users";
 import { workoutRepository } from "./workouts";
 
 /** One object with every repository; each function takes `userId` first (rule 1). */
@@ -19,6 +20,7 @@ export function createRepositories(db: Database) {
     history: historyRepository(db),
     plans: planRepository(db),
     referenceWeights: referenceWeightRepository(db),
+    users: userRepository(db),
   };
 }
 export type Repositories = ReturnType<typeof createRepositories>;

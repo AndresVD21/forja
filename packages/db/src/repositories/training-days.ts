@@ -1,3 +1,4 @@
+import { namesMatch } from "@forja/core";
 import { asc, eq } from "drizzle-orm";
 import type { Database } from "../client";
 import { trainingDays } from "../schema";
@@ -12,14 +13,24 @@ export function trainingDayRepository(db: Database) {
       return db.select(columns).from(trainingDays).where(eq(trainingDays.userId, userId)).orderBy(asc(trainingDays.name));
     },
 
-    /** A second day with the same name fails on the (user_id, name) unique constraint. */
+    /**
+     * Like locations.findOrCreate: "Pierna" and "pierna" are one day, compared with core's namesMatch,
+     * so the existing day is returned instead of a duplicate. (The unique constraint on
+     * (user_id, name) is only the exact-text backstop.)
+     */
     async create(userId: string, input: { name: string; catalogKey?: string }): Promise<TrainingDay> {
-      const [row] = await db
-        .insert(trainingDays)
-        .values({ userId, name: input.name.trim(), catalogKey: input.catalogKey ?? null })
-        .returning(columns);
-      if (!row) throw new Error("Insert of training day returned no row");
-      return row;
+      const name = input.name.trim();
+      return db.transaction(async (tx) => {
+        const mine = await tx.select(columns).from(trainingDays).where(eq(trainingDays.userId, userId));
+        const existing = mine.find((d) => namesMatch(d.name, name));
+        if (existing) return existing;
+        const [row] = await tx
+          .insert(trainingDays)
+          .values({ userId, name, catalogKey: input.catalogKey ?? null })
+          .returning(columns);
+        if (!row) throw new Error("Insert of training day returned no row");
+        return row;
+      });
     },
   };
 }

@@ -1,5 +1,5 @@
 import type { SetLog, Weight } from "@forja/core";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, exists, sql } from "drizzle-orm";
 import type { Database } from "../client";
 import { locations, referenceWeights, workoutExercises, workoutSets, workouts } from "../schema";
 import { requireExercises, requireLocation, toSetLog, toWeight } from "./shared";
@@ -25,7 +25,11 @@ export type LastFor =
       note: string | null;
     };
 
-/** The most recent workout containing the exercise, optionally restricted to one location. */
+/**
+ * The most recent workout containing the exercise, optionally restricted to one location.
+ * Only workout exercises that have at least one set count: "last time" must have something to show
+ * (workouts.create refuses empty exercises, this is the second line of defence).
+ */
 async function latestWorkout(db: Database, userId: string, exerciseId: string, locationId?: string) {
   const [row] = await db
     .select({
@@ -41,6 +45,9 @@ async function latestWorkout(db: Database, userId: string, exerciseId: string, l
       and(
         eq(workouts.userId, userId),
         eq(workoutExercises.exerciseId, exerciseId),
+        exists(
+          db.select({ one: sql`1` }).from(workoutSets).where(eq(workoutSets.workoutExerciseId, workoutExercises.id)),
+        ),
         locationId === undefined ? undefined : eq(workouts.locationId, locationId),
       ),
     )
@@ -50,38 +57,41 @@ async function latestWorkout(db: Database, userId: string, exerciseId: string, l
 }
 
 export function historyRepository(db: Database) {
+  /** The sets of one workout exercise, as a LastFor. */
+  async function workoutResult(workout: NonNullable<Awaited<ReturnType<typeof latestWorkout>>>, locationMatched: boolean): Promise<LastFor> {
+    const sets = await db
+      .select()
+      .from(workoutSets)
+      .where(eq(workoutSets.workoutExerciseId, workout.workoutExerciseId))
+      .orderBy(asc(workoutSets.setNumber));
+    return {
+      source: "workout",
+      locationMatched,
+      locationId: workout.locationId,
+      locationName: workout.locationName,
+      performedOn: workout.performedOn,
+      sets: sets.map(toSetLog),
+    };
+  }
+
   return {
     /**
      * What to show as "last time" for an exercise (rule 11, ARCHITECTURE 2.13, decision 0003).
-     * First match wins, in this order:
+     * The gym comes first. First match wins, in this order:
      *   1. sets of the most recent workout with this exercise AT this location
-     *   2. sets of the most recent workout with this exercise at ANY location
-     *   3. reference weight for this exercise at this location
+     *   2. reference weight for this exercise at this location
+     *   3. sets of the most recent workout with this exercise at ANY location
      *   4. reference weight with no location recorded
      *   5. reference weight at any other location (alphabetical by location name, so it is stable)
-     * Real workouts always beat reference weights, even from another gym. Returns undefined if none apply.
+     * Why: machines differ between gyms, so another gym's workout must not override this gym's number
+     * from the notes. Returns undefined if none apply.
      */
     async lastFor(userId: string, exerciseId: string, locationId: string): Promise<LastFor | undefined> {
       await requireExercises(db, userId, [exerciseId]);
       await requireLocation(db, userId, locationId);
 
       const here = await latestWorkout(db, userId, exerciseId, locationId);
-      const workout = here ?? (await latestWorkout(db, userId, exerciseId));
-      if (workout) {
-        const sets = await db
-          .select()
-          .from(workoutSets)
-          .where(eq(workoutSets.workoutExerciseId, workout.workoutExerciseId))
-          .orderBy(asc(workoutSets.setNumber));
-        return {
-          source: "workout",
-          locationMatched: here !== undefined,
-          locationId: workout.locationId,
-          locationName: workout.locationName,
-          performedOn: workout.performedOn,
-          sets: sets.map(toSetLog),
-        };
-      }
+      if (here) return workoutResult(here, true);
 
       const references = await db
         .select({ row: referenceWeights, locationName: locations.name })
@@ -89,19 +99,23 @@ export function historyRepository(db: Database) {
         .leftJoin(locations, eq(locations.id, referenceWeights.locationId))
         .where(and(eq(referenceWeights.userId, userId), eq(referenceWeights.exerciseId, exerciseId)))
         .orderBy(asc(locations.name));
-      const chosen =
-        references.find((r) => r.row.locationId === locationId) ??
-        references.find((r) => r.row.locationId === null) ??
-        references[0];
-      if (!chosen) return undefined;
-      return {
+      const toReference = (chosen: (typeof references)[number]): LastFor => ({
         source: "reference",
         locationMatched: chosen.row.locationId === locationId,
         locationId: chosen.row.locationId,
         locationName: chosen.locationName,
         weight: toWeight(chosen.row.weight, chosen.row.unit),
         note: chosen.row.note,
-      };
+      });
+
+      const referenceHere = references.find((r) => r.row.locationId === locationId);
+      if (referenceHere) return toReference(referenceHere);
+
+      const anywhere = await latestWorkout(db, userId, exerciseId);
+      if (anywhere) return workoutResult(anywhere, false);
+
+      const chosen = references.find((r) => r.row.locationId === null) ?? references[0];
+      return chosen ? toReference(chosen) : undefined;
     },
   };
 }

@@ -147,7 +147,7 @@ describe("seedUserData with the real files", () => {
     expect(await t.repos.referenceWeights.list(u!.id)).toHaveLength(1);
   });
 
-  it("DEFECT (seed duplicates a gym): seeding a user who already logged a gym as 'hacienda' must not create a second 'Hacienda'", async () => {
+  it("seeding a user who already logged a gym as 'hacienda' must not create a second 'Hacienda'", async () => {
     const [u] = await t.db.insert((await import("../schema")).users).values({ name: "E", email: "e@example.com" }).returning();
     await t.repos.locations.findOrCreate(u!.id, "hacienda");
     await seedUserData(t.db, u!.id, data);

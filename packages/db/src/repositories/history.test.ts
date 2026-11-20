@@ -47,9 +47,14 @@ describe("history.lastFor fallback order", () => {
     });
   });
 
-  it("2. a workout anywhere beats every reference weight, flagged as another location", async () => {
+  it("2. the reference weight at the asked location beats a workout at another gym (decision 0003)", async () => {
     await log(valle, "2026-01-10", 40);
     expect(await t.repos.history.lastFor(t.userA, pressId, hacienda)).toMatchObject({
+      source: "reference", locationMatched: true, locationName: "Hacienda", weight: kg(20),
+    });
+    // Asked for another gym with no reference of its own, the workout elsewhere still comes before
+    // the unlocated and other-gym references (step 3 before 4 and 5).
+    expect(await t.repos.history.lastFor(t.userA, pressId, mall)).toMatchObject({
       source: "workout", locationMatched: false, locationName: "Valle del Lili", performedOn: "2026-01-10",
       sets: [{ setNumber: 1, reps: 10, weight: kg(40), toFailure: false }],
     });

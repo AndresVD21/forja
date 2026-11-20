@@ -1,4 +1,4 @@
-import { namesMatch, normalizeName, UnitSchema, MAX_WEIGHT_VALUE } from "@forja/core";
+import { namesMatch, normalizeName, UnitSchema, WeightSchema } from "@forja/core";
 import { eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../client";
@@ -11,7 +11,7 @@ export const ReferenceWeightsSchema = z.object({
     z.object({
       exercise: z.string().min(1), // catalogue slug
       location: z.string().min(1).nullable(),
-      weight: z.number().finite().min(0).max(MAX_WEIGHT_VALUE),
+      weight: WeightSchema.shape.value, // same range and 2-decimal rule as every other weight
       unit: UnitSchema,
       note: z.string().nullish(),
       source: z.string().nullish(),
@@ -32,19 +32,26 @@ export async function seedUserData(
   data: { catalogue: Catalogue; referenceWeights: ReferenceWeights },
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    if (data.catalogue.locations.length > 0) {
-      await tx
-        .insert(locations)
-        .values(data.catalogue.locations.map((name) => ({ userId, name })))
-        .onConflictDoNothing();
+    // Skip a catalogue gym or day when the user already has one that namesMatch (so a gym they logged as
+    // "hacienda" is not duplicated as "Hacienda"). SQL's unique constraint only catches the exact text.
+    const knownGyms = (await tx.select({ name: locations.name }).from(locations).where(eq(locations.userId, userId))).map((l) => l.name);
+    const newGyms = [];
+    for (const name of data.catalogue.locations) {
+      if (knownGyms.some((known) => namesMatch(known, name))) continue;
+      knownGyms.push(name); // also protects against duplicates inside the catalogue itself
+      newGyms.push({ userId, name });
     }
-    if (data.catalogue.training_days.length > 0) {
-      await tx
-        .insert(trainingDays)
-        // Name in Spanish because the owner writes in Spanish; the UI translates through catalog_key anyway.
-        .values(data.catalogue.training_days.map((day) => ({ userId, name: day.es, catalogKey: day.id })))
-        .onConflictDoNothing();
+    if (newGyms.length > 0) await tx.insert(locations).values(newGyms).onConflictDoNothing();
+
+    const knownDays = (await tx.select({ name: trainingDays.name }).from(trainingDays).where(eq(trainingDays.userId, userId))).map((d) => d.name);
+    const newDays = [];
+    for (const day of data.catalogue.training_days) {
+      if (knownDays.some((known) => namesMatch(known, day.es))) continue;
+      knownDays.push(day.es);
+      // Name in Spanish because the owner writes in Spanish; the UI translates through catalog_key anyway.
+      newDays.push({ userId, name: day.es, catalogKey: day.id });
     }
+    if (newDays.length > 0) await tx.insert(trainingDays).values(newDays).onConflictDoNothing();
 
     const locationRows = await tx.select().from(locations).where(eq(locations.userId, userId));
     const exerciseRows = await tx.select({ id: exercises.id, slug: exercises.slug }).from(exercises).where(isNull(exercises.userId));

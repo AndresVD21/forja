@@ -92,7 +92,7 @@ describe("workouts", () => {
     await expectNotFound(
       t.repos.workouts.create(t.userB, {
         locationId: bLocation, performedOn: "2026-08-02",
-        exercises: [{ exerciseId: exercise.id, sets: [] }],
+        exercises: [{ exerciseId: exercise.id, sets: [{ reps: 8, weight: { value: 10, unit: "kg" }, toFailure: false }] }],
       }),
       "exercise",
     );

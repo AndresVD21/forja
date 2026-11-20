@@ -100,7 +100,7 @@ describe("rule 2: one transaction, nothing half-saved", () => {
         locationId: hacienda, performedOn: "2026-03-02",
         exercises: [
           { exerciseId: await t.exerciseId("pec-fly"), sets: [{ reps: 10, weight: kg(20), toFailure: false }] },
-          { exerciseId: "7c1f0a52-3b7e-4f5e-9d0a-5d3f9a1b2c3d", sets: [] },
+          { exerciseId: "7c1f0a52-3b7e-4f5e-9d0a-5d3f9a1b2c3d", sets: [{ reps: 8, weight: kg(10), toFailure: false }] },
         ],
       }),
     ).rejects.toThrow(/exercise not found/);

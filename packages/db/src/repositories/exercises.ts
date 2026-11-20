@@ -63,20 +63,19 @@ async function withAliases(db: Database, rows: (typeof exercises.$inferSelect)[]
 }
 
 async function findByName(db: Database, userId: string, input: string): Promise<ExerciseWithAliases | undefined> {
+  // Normalise once in TypeScript (core's normalizeName is the single definition of "same name", rule 3)
+  // and let the indexed alias_normalized column do the lookup. Every exercise's own names are stored as
+  // aliases (the catalogue seed and exercises.create both do it), so no extra name comparison is needed.
   const wanted = normalizeName(input);
-  const visible = await withAliases(db, await db.select().from(exercises).where(exerciseVisibleTo(userId)));
-  // The catalogue is small (tens of rows), so comparing in TypeScript keeps "same name" defined in one
-  // place (core's normalizeName) instead of re-implementing it in SQL. The seed stores every exercise's
-  // own names as aliases too, but custom exercises are checked by name as well to be safe.
-  const matches = visible.filter(
-    (e) =>
-      normalizeName(e.nameEn) === wanted ||
-      normalizeName(e.nameEs) === wanted ||
-      e.aliases.some((alias) => normalizeName(alias) === wanted),
-  );
+  const rows = await db
+    .selectDistinct({ exercise: exercises })
+    .from(exerciseAliases)
+    .innerJoin(exercises, eq(exercises.id, exerciseAliases.exerciseId))
+    .where(and(eq(exerciseAliases.aliasNormalized, wanted), exerciseVisibleTo(userId)));
   // On a tie the user's own exercise wins over the catalogue one (false sorts before true).
-  matches.sort((a, b) => Number(a.userId === null) - Number(b.userId === null));
-  return matches[0];
+  rows.sort((a, b) => Number(a.exercise.userId === null) - Number(b.exercise.userId === null));
+  const [found] = await withAliases(db, rows.slice(0, 1).map((r) => r.exercise));
+  return found;
 }
 
 /** "Incline DB press!" -> "incline-db-press". Used only to give custom exercises a unique slug. */

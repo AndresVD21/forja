@@ -72,6 +72,10 @@ export function workoutRepository(db: Database) {
      * negative rep count trips a CHECK), nothing is saved, so there are never half-written workouts.
      */
     async create(userId: string, input: WorkoutInput): Promise<WorkoutDetail> {
+      // A logged exercise with no sets would later show up as "last time: nothing". Refuse the whole workout.
+      for (const exercise of input.exercises) {
+        if (exercise.sets.length === 0) throw new RangeError("every exercise in a workout needs at least one set");
+      }
       return db.transaction(async (tx) => {
         // Ownership first: the foreign keys would accept another user's ids.
         await requireLocation(tx, userId, input.locationId);
@@ -106,7 +110,6 @@ export function workoutRepository(db: Database) {
             .values({ workoutId: workout.id, exerciseId: exercise.exerciseId, position, note: exercise.note ?? null })
             .returning({ id: workoutExercises.id });
           if (!workoutExercise) throw new Error("Insert of workout exercise returned no row");
-          if (exercise.sets.length === 0) continue;
           await tx.insert(workoutSets).values(
             exercise.sets.map((set, index) => ({
               workoutExerciseId: workoutExercise.id,

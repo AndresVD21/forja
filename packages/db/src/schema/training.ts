@@ -10,6 +10,10 @@ import { users } from "./users";
 //   set null  - keep the child, forget the link (column must be nullable)
 // Every table directly owned by a user cascades from users. Tables below a parent (plan_weeks, workout_sets...)
 // have no user_id of their own: they are always reached through their parent, which is scoped by user.
+// CAUTION: a plain DELETE FROM users does NOT always work. workout_exercises.exercise_id and
+// plan_exercises.exercise_id are RESTRICT, and the cascade from users reaches the user's custom exercises
+// before the rows that use them, so Postgres refuses. Delete accounts with repos.users.deleteAccount, which
+// removes workouts and plans first.
 
 const userId = () =>
   uuid("user_id")
@@ -88,6 +92,8 @@ export const planWeeks = pgTable(
   (t) => [
     unique("plan_weeks_plan_week_unique").on(t.planId, t.weekNumber),
     check("plan_weeks_week_number_positive", sql`${t.weekNumber} >= 1`),
+    // Upper bound so plans.extendWeek can "park" rows on week_number + 100000 without ever colliding.
+    check("plan_weeks_week_number_max", sql`${t.weekNumber} <= 999`),
     check("plan_weeks_phase_positive", sql`${t.phase} >= 1`),
     check("plan_weeks_target_reps_positive", sql`${t.targetReps} >= 1`),
     check("plan_weeks_target_sets_positive", sql`${t.targetSets} >= 1`),

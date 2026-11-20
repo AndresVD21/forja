@@ -254,5 +254,6 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
 10. **Before the first deploy**: Better Auth's rate limiter keeps counts in memory per serverless instance
     (consider database storage); Vercel preview URLs differ from `BETTER_AUTH_URL` (needs `trustedOrigins` or a
     per-preview URL); decide the session lifetime and cookie renewal (a cookie can expire mid-workout).
-11. `instant = false` in the root layout keeps `<html lang>` correct but turns off Next's static-shell check for
-    the whole app, so dev no longer warns when a page reads request data outside `<Suspense>`.
+11. `instant = false` in the root layout keeps `<html lang>` correct but gives up an instant static shell for the
+    whole app (every page waits for the request). Next still prints dev hints such as "instant-shell-url-data"
+    when a page reads URL data outside `<Suspense>`.

@@ -168,9 +168,12 @@ is the set of Server Actions plus `packages/db` and `packages/core`.
 
 ### 2.14 Invite-only sign-up
 
-- **Decision**: an `allowed_emails` table; registration (password or Google) is rejected unless the email is on it.
+- **Decision**: registration only through a **one-time invite link** that expires (7 days by default). The
+  `invites` table stores a hash of each link's token, when it expires and when it was used. Better Auth's
+  public sign-up endpoint is closed; a server action claims the invite and creates the account. No social
+  sign-in providers ([decision 0006](decisions/0006-invite-links-no-google.md)).
 - **Why**: the app is public on the internet but meant for a handful of people, and the free tiers should
-  stay comfortably free.
+  stay comfortably free. A link needs no third-party credentials and no list of emails kept in sync.
 
 ## 3. Data model (second draft)
 

@@ -21,7 +21,7 @@ The app is called **Forja**; packages use the `@forja/*` scope.
 ## Stack
 
 TypeScript (strict) · Next.js 16 App Router + React 19 · Tailwind + shadcn/ui · Postgres (Neon) · Drizzle ORM ·
-Better Auth (email + password, Google) · next-intl (en + es) · Zod · Vitest · Playwright · pnpm workspaces + Turborepo · GitHub Actions · Vercel Hobby.
+Better Auth (email + password, invite links) · next-intl (en + es) · Zod · Vitest · Playwright · pnpm workspaces + Turborepo · GitHub Actions · Vercel Hobby.
 
 ## Layout
 

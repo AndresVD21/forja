@@ -22,7 +22,7 @@
 | F5 | Weight proposals | Proposed weight when reps drop (10 → 8 → 6), always overridable by hand |
 | F6 | Extend a phase | Repeat a week if the weight is not under control yet |
 | F7 | History | See past workouts and the last values for each exercise |
-| F8 | Sign-in | Email + password and Google. Sign-up is invite-only: the owner plus a few friends |
+| F8 | Sign-in | Email + password. Sign-up only through a one-time invite link: the owner plus a few friends ([decision 0006](decisions/0006-invite-links-no-google.md)) |
 | F9 | Two languages | English and Spanish UI; exercises carry a name in each language |
 | F10 | Training days | A plan has named days (Chest, Back, Legs, Shoulders/Abs), each with its own exercises |
 | F11 | Other activities | Log a non-gym day such as volleyball, so the week view shows why there was no workout |
@@ -73,7 +73,7 @@
 | Styling / UI | Tailwind CSS + shadcn/ui | Mobile-first quickly; components are copied into the repo so they can be read and changed | CSS Modules, MUI |
 | Database | **Postgres on Neon** (free plan) | Relational data (workouts → sets) fits SQL; scales to zero; database branches per preview | Supabase, Turso (SQLite), Cloudflare D1 |
 | ORM | **Drizzle** | Schema is plain TypeScript, queries look like SQL, so SQL is learned rather than hidden | Prisma (more magic, heavier) |
-| Auth | **Better Auth** (email + password, Google; Apple later) | Runs inside the Next app, stores users in our own DB | Clerk (hosted, less to learn), Supabase Auth |
+| Auth | **Better Auth** (email + password, invite links) | Runs inside the Next app, stores users in our own DB | Clerk (hosted, less to learn), Supabase Auth |
 | Translations | **next-intl** (English + Spanish) | Standard for the App Router, works in Server Components, typed message keys | react-i18next |
 | Validation | Zod | One schema validates forms on the client and input on the server | Valibot |
 | Unit tests | Vitest | Fast, same config style as the rest | Jest |
@@ -173,7 +173,8 @@ Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (desi
 
 - [x] App shell, mobile layout, light and dark themes (from the phone's setting), English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
 - [x] Local development database: PGlite file when `DATABASE_URL` is unset ([decision 0005](decisions/0005-m3-scope-and-local-database.md)) (*backend-dev*)
-- [x] Sign-in with Better Auth: email + password, invite list (Google wired; appears once the owner adds credentials); adopts the M2 `users` table; account deletion stays off until it has a screen (*backend-dev*)
+- [x] Sign-in with Better Auth: email + password; adopts the M2 `users` table; account deletion stays off until it has a screen (*backend-dev*)
+- [ ] Registration by one-time invite link, no Google ([decision 0006](decisions/0006-invite-links-no-google.md)): `invites` table, closed public sign-up, `/sign-up?invite=…` page (*backend-dev* + *frontend-dev*)
 - [x] Log workout screen + server actions, with editable exercise autocomplete over existing exercises (*frontend-dev* + *backend-dev*)
 - [ ] When Codex's designs land: "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete) (*frontend-dev* + *backend-dev*)
 - [x] History screen with week view, including activities such as volleyball (*frontend-dev*)
@@ -201,7 +202,7 @@ Every milestone closes with a *reviewer* pass and an update of the docs.
 |---|-------|----------|
 | 1 | Name | **Forja**. Folder `forja`, packages in the `@forja/*` scope |
 | 2 | Users | The owner now, a few friends later → multi-user from day one, sign-up by invitation only |
-| 3 | Sign-in | Email + password and Google in the MVP. **Apple is deferred**: Sign in with Apple needs a paid Apple Developer membership (about 99 USD per year), which breaks the zero-cost goal |
+| 3 | Sign-in | Email + password only; friends register through a one-time invite link. **Google removed** on 2026-11-20 so there are no third-party credentials to manage ([decision 0006](decisions/0006-invite-links-no-google.md)). **Apple is deferred**: it needs a paid Apple Developer membership (about 99 USD per year) |
 | 4 | Units | kg by default; any set can be logged in lb |
 | 5 | Training split | Yes — several training days per week, each with its own exercises |
 | 6 | To failure | The user decides in the gym; the app records reps per set and uses the best set |
@@ -249,8 +250,8 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
 
 8. **Invited friends**: they have no gyms until a gym screen is designed, so they cannot log a workout in M3.
    `seed-user` would give them the owner's gyms and reference weights, which would be wrong for them.
-9. **Revoking an invite** blocks a later Google sign-in of that person but not their password sign-in.
-   Decide whether revoking should lock the account out entirely.
+9. **Removing a friend's access**: an unused invite link can be deleted, but there is no way yet to lock out an
+   account that already exists (account deletion has no screen). Decide when that is needed.
 10. **Before the first deploy**: Better Auth's rate limiter keeps counts in memory per serverless instance
     (consider database storage); Vercel preview URLs differ from `BETTER_AUTH_URL` (needs `trustedOrigins` or a
     per-preview URL); decide the session lifetime and cookie renewal (a cookie can expire mid-workout).

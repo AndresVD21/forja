@@ -35,6 +35,7 @@ const password = await askPassword("Password (8 characters or more): ");
 const { auth } = await import("../src/server/auth");
 const { db, closeDb } = await import("../src/server/db");
 const { createRepositories } = await import("@forja/db");
+const { describeError } = await import("../src/server/safe-log");
 
 try {
   if (!(await createRepositories(db).allowedEmails.isAllowed(email))) {
@@ -46,7 +47,7 @@ try {
     console.log(`Created ${result.user.email} (id ${result.user.id}).`);
   }
 } catch (error) {
-  console.error(`Could not create the user: ${error instanceof Error ? error.message : String(error)}`);
+  console.error(`Could not create the user: ${describeError(error)}`);
   process.exitCode = 1;
 }
 await closeDb();

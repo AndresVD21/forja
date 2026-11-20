@@ -81,3 +81,25 @@ export function resolveWeekStart(requested: string | undefined, today: IsoDate):
     throw error;
   }
 }
+
+/**
+ * The Monday of the week `weeks` weeks away from `start` (-1 = previous, 1 = next), or null when that week
+ * would leave core's supported years (1900-9999), so the page shows a link only when there is somewhere to go.
+ */
+export function neighbourWeek(start: IsoDate, weeks: number): IsoDate | null {
+  try {
+    const other = addDays(start, weeks * 7);
+    weekDays(other); // all seven days must exist too
+    return other;
+  } catch (error) {
+    if (error instanceof RangeError) return null;
+    throw error;
+  }
+}
+
+export type WeekView = {
+  days: WeekDay[];
+  /** Monday of the previous / next week; null at the edges of the supported years. */
+  previousWeek: IsoDate | null;
+  nextWeek: IsoDate | null;
+};

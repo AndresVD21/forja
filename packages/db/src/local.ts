@@ -3,7 +3,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
+import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { Database } from "./client";
 import * as schema from "./schema";
@@ -41,19 +41,22 @@ function isAlive(pid: number): boolean {
 function claimFolder(dataDir: string): () => void {
   const lockFile = `${dataDir}.lock`;
   const release = () => rmSync(lockFile, { force: true });
-  // Creating the file with flag "wx" fails if it exists, and the check and the creation are ONE operation,
-  // so two processes starting together cannot both think they got the lock. A stale lock gets one retry.
+  // The pid is written to a private temp file FIRST, then hard-linked to the lock name. linkSync is atomic and
+  // fails if the name exists, so the lock appears already containing its pid: there is no moment when another
+  // process could read an empty file and take it for a stale one. A stale lock gets one retry.
+  const temp = `${lockFile}.${process.pid}.tmp`;
   for (let attempt = 0; attempt < 2; attempt++) {
+    writeFileSync(temp, String(process.pid));
     try {
-      const fd = openSync(lockFile, "wx");
-      writeSync(fd, String(process.pid));
-      closeSync(fd);
+      linkSync(temp, lockFile);
+      rmSync(temp, { force: true });
       rmSync(`${dataDir}/postmaster.pid`, { force: true });
       return release;
     } catch (error) {
+      rmSync(temp, { force: true });
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
       assertLockStale(dataDir);
-      rmSync(lockFile, { force: true }); // its owner is dead: take over
+      rmSync(lockFile, { force: true }); // its owner is dead (or the file is junk): take over
     }
   }
   throw new Error(`Could not take the lock ${lockFile}; try again.`);

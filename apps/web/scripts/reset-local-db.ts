@@ -22,7 +22,7 @@ const dir = localDbDir();
 try {
   assertLocalDbFree(dir);
 } catch (error) {
-  console.error(`Stop pnpm dev first. ${error instanceof Error ? error.message : ""}`);
+  console.error(`Cannot reset the local database. ${error instanceof Error ? error.message : ""}`); // names the lock and says to stop the process
   process.exit(1);
 }
 console.log(`Deleting ${dir}`);

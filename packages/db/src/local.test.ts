@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { sql } from "drizzle-orm";
@@ -44,5 +44,14 @@ describe("openLocalDb", () => {
     expect(() => assertLocalDbFree(dir)).not.toThrow(); // dead owner
     writeFileSync(`${dir}.lock`, String(process.ppid));
     expect(() => assertLocalDbFree(dir)).toThrow(/in use by process/);
+  });
+
+  it("an empty or unreadable lock file is junk, not a live owner: it is replaced by ours", async () => {
+    const dir = freshDir();
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(`${dir}.lock`, "");
+    const db = openLocalDb(dir);
+    expect(readFileSync(`${dir}.lock`, "utf8")).toBe(String(process.pid));
+    await db.close();
   });
 });

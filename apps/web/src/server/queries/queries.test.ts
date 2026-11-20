@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { setupDb } from "../test-helpers";
 import { saveWorkoutFor } from "../workout-actions";
 import { loadEntryFormData } from "./entry-form";
-import { loadWeek, resolveWeekStart } from "./week";
+import { loadWeek, neighbourWeek, resolveWeekStart } from "./week";
 
 let t: Awaited<ReturnType<typeof setupDb>>;
 let gymA: string;
@@ -97,4 +97,25 @@ describe("resolveWeekStart", () => {
       expect(resolveWeekStart(requested, today)).toBe("2026-11-16");
     },
   );
+});
+
+describe("week edges (1900-9999)", () => {
+  const d = (s: string) => IsoDateSchema.parse(s);
+  it("1900-01-01 and 1900-01-03 are the first week: no previous week, a next week", () => {
+    for (const requested of ["1900-01-01", "1900-01-03"]) {
+      const start = resolveWeekStart(requested, d("2026-11-19"));
+      expect(start).toBe("1900-01-01");
+      expect(neighbourWeek(start, -1)).toBeNull();
+      expect(neighbourWeek(start, 1)).toBe("1900-01-08");
+    }
+  });
+  it("the last buildable week has no next week; 9999-12-27 (its Sunday is in year 10000) falls back to this week", () => {
+    expect(neighbourWeek(d("9999-12-20"), 1)).toBeNull();
+    expect(neighbourWeek(d("9999-12-20"), -1)).toBe("9999-12-13");
+    expect(resolveWeekStart("9999-12-27", d("2026-11-19"))).toBe("2026-11-16");
+  });
+  it("an ordinary week has both neighbours", () => {
+    expect(neighbourWeek(d("2026-11-16"), -1)).toBe("2026-11-09");
+    expect(neighbourWeek(d("2026-11-16"), 1)).toBe("2026-11-23");
+  });
 });

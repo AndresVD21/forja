@@ -10,8 +10,9 @@ const uuid = "22222222-2222-4222-8222-222222222222";
 // What Drizzle throws: the message contains the statement and its parameters (user id and note included);
 // the Postgres details (SQLSTATE, constraint) are on `cause`.
 function drizzleShapedError() {
-  const error = new Error(`Failed query: insert into "workouts" ("user_id", "notes") values ($1, $2)\nparams: ${USER_ID},${NOTE}`);
-  error.name = "DrizzleQueryError";
+  // Like drizzle-orm's real class: `name` stays "Error"; only the constructor says what it is.
+  class DrizzleQueryError extends Error {}
+  const error = new DrizzleQueryError(`Failed query: insert into "workouts" ("user_id", "notes") values ($1, $2)\nparams: ${USER_ID},${NOTE}`);
   return Object.assign(error, { cause: { code: "23514", constraint: "workout_sets_reps_nonnegative", detail: NOTE } });
 }
 const failingDb = () => {

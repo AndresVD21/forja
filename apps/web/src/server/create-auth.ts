@@ -7,6 +7,7 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import * as schema from "@forja/db/schema";
+import { safeAuthLogger } from "./safe-log";
 
 export type AuthOptions = {
   secret?: string;
@@ -46,6 +47,9 @@ export function createAuth(db: Database, options: AuthOptions = {}) {
   return betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
+
+    // Better Auth's default logger prints raw errors, whose messages contain query parameters (the session token).
+    logger: safeAuthLogger,
 
     database: drizzleAdapter(db, {
       provider: "pg",

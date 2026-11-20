@@ -8,7 +8,7 @@ Definitions live in `.claude/agents/`. The model is set in each file's frontmatt
 
 | Agent | Model | Job | Writes to |
 |-------|-------|-----|-----------|
-| *orchestrator* (the main session) | Fable | Breaks a milestone into tasks, hands them out, merges results, explains decisions to you | docs, task list |
+| *orchestrator* (the main session) | Opus | Breaks a milestone into tasks, hands them out, merges results, explains decisions to you | docs, task list |
 | `scaffolder` | Haiku | Mechanical setup: configs, scripts, CI files, dependency bumps | root, `packages/config`, `.github` |
 | `domain-dev` | Sonnet | Pure logic in `packages/core` | `packages/core` |
 | `backend-dev` | Sonnet | Schema, migrations, repositories, server actions, auth | `packages/db`, `apps/web/**/actions` |
@@ -21,6 +21,15 @@ Definitions live in `.claude/agents/`. The model is set in each file's frontmatt
 **Why these models**: design and review need the strongest reasoning and happen rarely, so they get the
 largest models. Implementation is the bulk of the tokens and is well-specified by the time it is handed out,
 so it runs on Sonnet. Setup chores need speed, not depth, so Haiku.
+
+The orchestrator's model is whatever the main session runs on; it is not set in a file. It moved from Fable
+to Opus on 2026-11-19 because Fable is no longer available on the owner's plan. Nothing else changed:
+the reviewer was already on Opus, and every agent file names its own model, so subagents never inherit the
+main session's. The reviewer now runs on the same model as the orchestrator, but it still starts with a fresh
+context and sees only the diff and the docs, which is what keeps the review independent.
+
+**If a model becomes unavailable**, change this table and the `model:` line in the affected
+`.claude/agents/*.md` files in the same pull request, and record the date and reason in this paragraph.
 
 ## The loop for one task
 

@@ -10,8 +10,6 @@
   "SignIn": {
     "title": "Welcome back",
     "subtitle": "Your training, recorded.",
-    "google": "Continue with Google",
-    "or": "or",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
@@ -20,7 +18,7 @@
     "submit": "Sign in",
     "submitting": "Signing in…",
     "error": "We could not sign you in. Check your email and password and try again.",
-    "invitationOnly": "Access is by invitation."
+    "invitationOnly": "Access is by invitation. Got an invitation link? Open it to create your account."
   },
   "TrainingDays": {
     "chest": "Chest",
@@ -102,5 +100,27 @@
       "server_error": "The previous result could not be loaded.",
       "save_failed": "The workout could not be saved. Your entries are still here: try again."
     }
+  },
+  "SignUp": {
+    "title": "Create your account",
+    "subtitle": "You have been invited to Forja.",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordHint": "8 to 128 characters.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submit": "Create account",
+    "submitting": "Creating account…",
+    "nameRequired": "Enter your name (up to 80 characters).",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordLength": "The password must be 8 to 128 characters.",
+    "invalidInput": "Check the fields and try again.",
+    "emailTaken": "An account with this email already exists. Sign in instead, or use another email.",
+    "serverError": "Something went wrong. Please try again.",
+    "invalidInvite": "This invitation link is invalid, expired or already used. Ask for a new one.",
+    "signInLink": "Go to sign in",
+    "signInInstead": "Sign in"
   }
 }

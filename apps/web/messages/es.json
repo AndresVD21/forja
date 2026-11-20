@@ -10,8 +10,6 @@
   "SignIn": {
     "title": "Bienvenido de nuevo",
     "subtitle": "Tu entrenamiento, registrado.",
-    "google": "Continuar con Google",
-    "or": "o",
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "tu@ejemplo.com",
     "passwordLabel": "Contraseña",
@@ -20,7 +18,7 @@
     "submit": "Iniciar sesión",
     "submitting": "Entrando…",
     "error": "No pudimos iniciar tu sesión. Revisa tu correo y tu contraseña e inténtalo de nuevo.",
-    "invitationOnly": "El acceso es solo por invitación."
+    "invitationOnly": "El acceso es por invitación. ¿Tienes un enlace de invitación? Ábrelo para crear tu cuenta."
   },
   "TrainingDays": {
     "chest": "Pecho",
@@ -102,5 +100,27 @@
       "server_error": "No se pudo cargar el resultado anterior.",
       "save_failed": "No se pudo guardar el entrenamiento. Tus datos siguen aquí: inténtalo de nuevo."
     }
+  },
+  "SignUp": {
+    "title": "Crea tu cuenta",
+    "subtitle": "Te han invitado a Forja.",
+    "nameLabel": "Nombre",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "passwordHint": "De 8 a 128 caracteres.",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "submit": "Crear cuenta",
+    "submitting": "Creando cuenta…",
+    "nameRequired": "Escribe tu nombre (máximo 80 caracteres).",
+    "emailInvalid": "Escribe un correo electrónico válido.",
+    "passwordLength": "La contraseña debe tener de 8 a 128 caracteres.",
+    "invalidInput": "Revisa los campos e inténtalo de nuevo.",
+    "emailTaken": "Ya existe una cuenta con este correo. Inicia sesión o usa otro correo.",
+    "serverError": "Algo salió mal. Inténtalo de nuevo.",
+    "invalidInvite": "Este enlace de invitación no es válido, ha caducado o ya se usó. Pide uno nuevo.",
+    "signInLink": "Ir a iniciar sesión",
+    "signInInstead": "Iniciar sesión"
   }
 }

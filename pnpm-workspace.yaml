@@ -3,7 +3,10 @@ packages:
   - "packages/*"
   - "e2e"
 
-# Packages allowed (true) or not (false) to run install scripts. From create-next-app's defaults.
+# Packages allowed (true) or not (false) to run install scripts. sharp and unrs-resolver come from
+# create-next-app's defaults. esbuild (via drizzle-kit, tsx and vite) ships its binary as a platform
+# package, so its install script is not needed; CI's frozen install fails on any package left unlisted.
 allowBuilds:
+  esbuild: false
   sharp: false
   unrs-resolver: false

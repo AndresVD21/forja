@@ -195,11 +195,17 @@ export function planRepository(db: Database) {
           throw new RangeError("proposed and chosen weights must use the same unit"); // one `unit` column serves both
         }
 
-        const values = { proposedWeight: proposed?.value ?? null, chosenWeight: chosen?.value ?? null, unit };
+        // Only the fields that were given go into the upsert's SET, so two simultaneous partial calls
+        // (one proposed, one chosen) touch different columns and cannot overwrite each other.
+        // The read above is only for the unit/validation check on the merged result.
+        const given = {
+          ...(weights.proposed !== undefined && { proposedWeight: weights.proposed?.value ?? null }),
+          ...(weights.chosen !== undefined && { chosenWeight: weights.chosen?.value ?? null }),
+        };
         const [row] = await tx
           .insert(planTargets)
-          .values({ planWeekId, planExerciseId, ...values })
-          .onConflictDoUpdate({ target: [planTargets.planWeekId, planTargets.planExerciseId], set: values })
+          .values({ planWeekId, planExerciseId, proposedWeight: null, chosenWeight: null, ...given, unit })
+          .onConflictDoUpdate({ target: [planTargets.planWeekId, planTargets.planExerciseId], set: { ...given, unit } })
           .returning();
         if (!row) throw new Error("Upsert of plan target returned no row");
         return toTarget(row);

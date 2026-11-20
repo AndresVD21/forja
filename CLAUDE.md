@@ -11,9 +11,10 @@ React and Next.js, so **clarity beats cleverness** and every non-obvious decisio
 
 ## Status
 
-Milestone **M1 done**: the workspace installs, lints, typechecks, tests and builds; `packages/core` holds the
-tested domain core (units, weights, plan, proposals, per-side loads); the app is still a placeholder page.
-Next is **M2** (database in `packages/db`). The owner's decisions are in
+Milestone **M2 done**: the workspace installs, lints, typechecks, tests and builds; `packages/core` holds the
+tested domain core (units, weights, plan, proposals, per-side loads, name matching) and `packages/db` the
+schema, repositories and seeds, tested on PGlite; the app is still a placeholder page.
+Next is **M3** (log a workout: app shell, sign-in, logging screens). The owner's decisions are in
 `docs/PLAN.md` section 7; section 8 lists what is still open — do not assume answers to those.
 The app is called **Forja**; packages use the `@forja/*` scope.
 

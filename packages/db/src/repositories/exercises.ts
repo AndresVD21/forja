@@ -66,6 +66,7 @@ async function findByName(db: Database, userId: string, input: string): Promise<
   // Normalise once in TypeScript (core's normalizeName is the single definition of "same name", rule 3)
   // and let the indexed alias_normalized column do the lookup. Every exercise's own names are stored as
   // aliases (the catalogue seed and exercises.create both do it), so no extra name comparison is needed.
+  // alias_normalized is trusted as stored: if core's normalizeName ever changes, existing rows need a backfill.
   const wanted = normalizeName(input);
   const rows = await db
     .selectDistinct({ exercise: exercises })

@@ -92,7 +92,8 @@ export const planWeeks = pgTable(
   (t) => [
     unique("plan_weeks_plan_week_unique").on(t.planId, t.weekNumber),
     check("plan_weeks_week_number_positive", sql`${t.weekNumber} >= 1`),
-    // Upper bound so plans.extendWeek can "park" rows on week_number + 100000 without ever colliding.
+    // A sane upper bound for a plan's length (a typo like 10000 weeks is refused). plans.extendWeek relies on
+    // it only loosely: it moves rows one at a time from the last week down, so it never needs spare numbers.
     check("plan_weeks_week_number_max", sql`${t.weekNumber} <= 999`),
     check("plan_weeks_phase_positive", sql`${t.phase} >= 1`),
     check("plan_weeks_target_reps_positive", sql`${t.targetReps} >= 1`),

@@ -40,3 +40,11 @@ describe("seedUserData", () => {
     expect(await counts(t.userB)).toEqual({ locations: 0, days: 0, reference: 0 });
   });
 });
+
+describe("ReferenceWeightsSchema", () => {
+  const entry = (weight: number) => ({ entries: [{ exercise: "bench-press", location: null, weight, unit: "kg" }] });
+  it("rejects more than two decimals and accepts 47.5", () => {
+    expect(ReferenceWeightsSchema.safeParse(entry(47.125)).success).toBe(false);
+    expect(ReferenceWeightsSchema.safeParse(entry(47.5)).success).toBe(true);
+  });
+});

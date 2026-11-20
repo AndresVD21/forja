@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M1 done** — the domain core (`packages/core`) is implemented and tested; the app is still a placeholder page. M2 (database) is next. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M2 done** — the domain core (`packages/core`) and the database layer (`packages/db`: schema, repositories, seeds) are implemented and tested; the app is still a placeholder page. M3 (log a workout) is next. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -162,15 +162,15 @@ Each milestone ends with something that runs. Every task lists which agent role 
 - [x] Unit tests for all of the above, using the sample data as fixtures (*test-engineer*)
 
 ### M2 — Database
-- [ ] Drizzle schema + first migration (*backend-dev*)
-- [ ] Repositories: exercises, locations, workouts, plans (*backend-dev*)
-- [ ] Seed the exercise catalogue, training days and locations from `exercise-catalog.json` (*backend-dev*)
-- [ ] Seed the last known weight per exercise and location from the notes (*backend-dev*)
-- [ ] Repository tests against a local Postgres (*test-engineer*)
+- [x] Drizzle schema + first migration (*backend-dev*)
+- [x] Repositories: exercises, locations, workouts, plans (*backend-dev*)
+- [x] Seed the exercise catalogue, training days and locations from `exercise-catalog.json` (*backend-dev*)
+- [x] Seed the last known weight per exercise and location from the notes (*backend-dev*)
+- [x] Repository tests against Postgres (PGlite, [decision 0002](decisions/0002-pglite-for-database-tests.md)) (*test-engineer*)
 
 ### M3 — Log a workout (first usable version)
 - [ ] App shell, mobile layout, navigation, English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
-- [ ] Sign-in with Better Auth: email + password, Google, invite list (*backend-dev*)
+- [ ] Sign-in with Better Auth: email + password, Google, invite list; adopt the M2 `users` table and route account deletion through `deleteAccount` (checklist in `packages/db/README.md`, "Before M3"); then run the per-user seed for the owner (*backend-dev*)
 - [ ] Exercises and locations screens (*frontend-dev*)
 - [ ] Log workout screen + server actions (*frontend-dev* + *backend-dev*)
 - [ ] History screen with week view, including activities such as volleyball (*frontend-dev*)
@@ -234,3 +234,7 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
 3. Domain and trademark availability of "Forja" has not been checked.
 4. A proposal is returned in the unit of the weight currently used, even if some sets were logged in the other unit.
 5. A barbell proposal lighter than the empty bar is shown as 0 per side (bar only).
+6. A plan target's proposed and chosen weights must use the same unit for now; decide before M4 whether a
+   proposal in kg may be overridden with a weight in lb.
+7. Two simultaneous "add gym" or "add training day" taps with names that differ only in case could create
+   two rows; accepted for now (one user, one phone).

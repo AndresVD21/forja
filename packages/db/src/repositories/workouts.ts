@@ -1,9 +1,9 @@
 import type { SetLog, Weight } from "@forja/core";
 import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
 import type { Database } from "../client";
-import { planWeeks, plans, workoutExercises, workoutSets, workouts } from "../schema";
+import { workoutExercises, workoutSets, workouts } from "../schema";
 import type { DateRange } from "./activities";
-import { NotFoundError, requireExercises, requireLocation, requireTrainingDays, toSetLog } from "./shared";
+import { NotFoundError, requireExercises, requireLocation, requirePlanWeek, requireTrainingDays, toSetLog } from "./shared";
 
 export type WorkoutInput = {
   locationId: string;
@@ -81,14 +81,7 @@ export function workoutRepository(db: Database) {
         await requireLocation(tx, userId, input.locationId);
         await requireExercises(tx, userId, input.exercises.map((e) => e.exerciseId));
         if (input.trainingDayId) await requireTrainingDays(tx, userId, [input.trainingDayId]);
-        if (input.planWeekId) {
-          const [week] = await tx
-            .select({ id: planWeeks.id })
-            .from(planWeeks)
-            .innerJoin(plans, eq(plans.id, planWeeks.planId))
-            .where(and(eq(planWeeks.id, input.planWeekId), eq(plans.userId, userId)));
-          if (!week) throw new NotFoundError("plan week");
-        }
+        if (input.planWeekId) await requirePlanWeek(tx, userId, input.planWeekId);
 
         const [workout] = await tx
           .insert(workouts)

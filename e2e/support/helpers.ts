@@ -17,8 +17,8 @@ export async function signIn(page: Page, labels = { email: "Email", password: "P
 }
 
 /** Every workout card on the history page mentions its gym; activities do not. */
-export function workoutCards(page: Page, title: string | RegExp) {
-  return page.getByRole("listitem").filter({ hasText: "Valle del Lili" }).filter({ hasText: title });
+export function workoutCards(page: Page, title: string | RegExp, gym = "Valle del Lili") {
+  return page.getByRole("listitem").filter({ hasText: gym }).filter({ hasText: title });
 }
 
 /**

@@ -4,7 +4,7 @@ The only package that talks to Postgres. Depends on `@forja/core` (enums and nam
 
 ## Schema, client and catalogue (M2, first half)
 
-- `src/schema/` — Drizzle table definitions: `users` (minimal; Better Auth sessions/accounts arrive in M3),
+- `src/schema/` — Drizzle table definitions: `users`, the Better Auth tables `sessions`, `accounts`, `verifications` and the invite list `allowed_emails` (`auth.ts`),
   `exercises` + `exercise_aliases`, `locations`, `training_days`, `activities`, `plans`, `plan_weeks`,
   `plan_exercises`, `plan_targets`, `workouts`, `workout_exercises`, `workout_sets`, `reference_weights`.
 - `src/migrations/` — generated SQL, append-only. Change the schema, run `pnpm --filter @forja/db db:generate`,
@@ -56,7 +56,33 @@ training days and the reference weights for one user; idempotent, and it never o
 weights. Run after the owner signs up and the catalogue is seeded:
 `DATABASE_URL=... pnpm --filter @forja/db db:seed-user -- <email>`.
 
-Apply migrations to a real database with `DATABASE_URL=... pnpm --filter @forja/db db:migrate`.
+## Local database and scripts (M3)
+
+Entries: `@forja/db` (everything the app uses), `@forja/db/schema` (tables only, for Better Auth's adapter),
+`@forja/db/local` (file-backed PGlite, dev only) and `@forja/db/testing` (in-memory PGlite for tests). The app
+imports `local` only when `DATABASE_URL` is unset outside production, so production never loads PGlite.
+`@electric-sql/pglite` is therefore a regular dependency here (the scripts and `pnpm dev` need it), not a dev one.
+
+Every script works on **Neon when `DATABASE_URL` is set, otherwise on the local folder `.data/pglite`** (repo root,
+git-ignored) and prints which one it uses. PGlite allows one process per folder: **stop `pnpm dev` before running a
+script on the local database**, then start it again.
+
+```
+pnpm --filter @forja/db db:migrate                      apply pending migrations
+pnpm --filter @forja/db db:seed-catalogue               shared exercises and aliases
+pnpm --filter @forja/db db:invite -- you@example.com    allow an email to create an account
+pnpm --filter @forja/web create-user you@example.com "Your Name"   create the account (asks for the password)
+pnpm --filter @forja/db db:seed-user -- you@example.com your gyms, training days and reference weights
+```
+
+Order for a fresh start: migrate, seed-catalogue, invite, create-user, seed-user. To start over locally, delete `.data/`.
+Add `DATABASE_URL=...` in front of a command to run it on Neon.
+
+## Account deletion (off in M3)
+
+Better Auth's `user.deleteUser` is not enabled (no screen is designed). When it is, its `beforeDelete` must call
+`repos.users.clearWorkoutsAndPlans(user.id)` (not `deleteAccount`: Better Auth deletes the user row itself, and
+sessions and accounts cascade). See the comment in `apps/web/src/server/create-auth.ts`.
 
 ## Tests
 
@@ -67,13 +93,13 @@ cross-user test per repository.
 
 What M3 (Better Auth) must check against this package:
 
-- **Model names.** Better Auth calls its tables `user`, `session`, `account`, `verification`; ours is the plural
+- **Model names.** (Done in M3: `usePlural: true` in the adapter.) Better Auth calls its tables `user`, `session`, `account`, `verification`; ours is the plural
   `users`. Map the names in its Drizzle adapter configuration instead of renaming ours.
 - **Ids.** `users.id` is a `uuid` with a database default. Better Auth generates its own string ids by default;
   make it use the database default (or generate uuids) so the id fits the column.
 - **New tables.** `sessions`, `accounts` and `verification` arrive as a NEW migration, with `user_id uuid`
   foreign keys that `ON DELETE CASCADE` from `users`.
-- **Account deletion** must call `repos.users.deleteAccount(userId)`; a bare `DELETE FROM users` fails for
+- **Account deletion** must clear workouts and plans first (`repos.users.clearWorkoutsAndPlans`, or `deleteAccount` outside Better Auth); a bare `DELETE FROM users` fails for
   users with custom exercises in use.
 - **E-mail case.** `scripts/seed-user.ts` looks the user up by exact e-mail; Better Auth lower-cases e-mails,
   so use the lower-case address (or make the script compare case-insensitively).

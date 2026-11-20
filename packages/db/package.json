@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./local": "./src/local.ts",
+    "./testing": "./src/testing.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -13,16 +16,17 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/scripts/migrate.ts",
     "db:seed-catalogue": "tsx src/scripts/seed-catalogue.ts",
-    "db:seed-user": "tsx src/scripts/seed-user.ts"
+    "db:seed-user": "tsx src/scripts/seed-user.ts",
+    "db:invite": "tsx src/scripts/invite.ts"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@forja/core": "workspace:*",
     "@neondatabase/serverless": "^1.2.1",
     "drizzle-orm": "^0.45.4",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.16",
     "@forja/config": "workspace:*",
     "@types/node": "^22",
     "drizzle-kit": "^0.31.11",

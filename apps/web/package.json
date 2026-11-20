@@ -2,16 +2,20 @@
   "name": "@forja/web",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "create-user": "tsx --env-file-if-exists=.env.local scripts/create-user.ts"
   },
   "dependencies": {
     "@forja/core": "workspace:*",
     "@forja/db": "workspace:*",
+    "better-auth": "^1.7.25",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.74.0",
@@ -30,6 +34,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.1.0"
   }
 }

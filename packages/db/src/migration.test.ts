@@ -13,13 +13,13 @@ describe("migrations", () => {
   it("apply cleanly from scratch (createTestDb replays every migration file)", async () => {
     const db = await createTestDb();
     const result = (await db.execute(sql`select count(*)::int as n from information_schema.tables where table_schema = 'public'`)) as { rows: { n: number }[] };
-    expect(result.rows[0]!.n).toBeGreaterThanOrEqual(14);
+    expect(result.rows[0]!.n).toBeGreaterThanOrEqual(18);
   });
 
   it("every table declared in TypeScript exists in the database with the same columns", async () => {
     const db = await createTestDb();
     const tables = Object.values(schema).filter((v) => is(v, PgTable)) as unknown as AnyPgTable[];
-    expect(tables.length).toBe(14);
+    expect(tables.length).toBe(18);
     for (const table of tables) {
       const name = getTableName(table);
       const result = (await db.execute(

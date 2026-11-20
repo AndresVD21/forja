@@ -1,20 +1,22 @@
-// Run with: DATABASE_URL=... pnpm --filter @forja/db db:seed-user -- <email>
-// Meant to run once, after the owner has signed up (M3) and the catalogue is seeded.
+// Run with: pnpm --filter @forja/db db:seed-user -- <email>   (add DATABASE_URL=... for Neon; see target.ts)
+// Meant to run once, after the account exists (create-user script) and the catalogue is seeded.
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { eq } from "drizzle-orm";
-import { createDb } from "../client";
 import { users } from "../schema";
 import { CatalogueSchema } from "../seed/catalogue";
 import { ReferenceWeightsSchema, seedUserData } from "../seed/user";
+import { normalizeEmail } from "../repositories/allowed-emails";
+import { openTarget } from "./target";
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error("DATABASE_URL is not set");
 // pnpm may pass a literal "--" through; ignore it.
-const email = process.argv.slice(2).find((arg) => arg !== "--");
-if (!email) throw new Error("Usage: pnpm --filter @forja/db db:seed-user -- <email>");
+const rawEmail = process.argv.slice(2).find((arg) => arg !== "--");
+if (!rawEmail) throw new Error("Usage: pnpm --filter @forja/db db:seed-user -- <email>");
 
-const db = createDb(databaseUrl);
+// Better Auth stores e-mails lower-case, so compare with the normalised address.
+const email = normalizeEmail(rawEmail);
+const target = await openTarget();
+const db = target.db;
 const [user] = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
 if (!user) throw new Error(`No user with email ${email}. Sign up first, then run this again.`);
 
@@ -25,5 +27,4 @@ const referenceWeights = ReferenceWeightsSchema.parse(await readJson("reference-
 
 await seedUserData(db, user.id, { catalogue, referenceWeights });
 console.log(`Seeded ${email}: ${catalogue.locations.length} locations, ${catalogue.training_days.length} training days, ${referenceWeights.entries.length} reference weights.`);
-// The Neon pool keeps the process alive; exit explicitly.
-process.exit(0);
+await target.close();

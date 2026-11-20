@@ -4,18 +4,101 @@
     "english": "English",
     "spanish": "Español"
   },
+  "Header": {
+    "signOut": "Sign out"
+  },
   "SignIn": {
     "title": "Welcome back",
     "subtitle": "Your training, recorded.",
+    "google": "Continue with Google",
+    "or": "or",
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "submit": "Sign in",
+    "submitting": "Signing in…",
+    "error": "We could not sign you in. Check your email and password and try again.",
     "invitationOnly": "Access is by invitation."
   },
+  "TrainingDays": {
+    "chest": "Chest",
+    "back": "Back",
+    "legs": "Legs",
+    "shoulders-abs": "Shoulders / Abs"
+  },
+  "Activities": {
+    "volleyball": "Volleyball"
+  },
   "Home": {
-    "title": "Training log"
+    "title": "Training log",
+    "weekNav": "Week",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "hasEntries": "has entries",
+    "thisWeek": "This week",
+    "emptyWeek": "Nothing logged this week.",
+    "workoutFallback": "Workout",
+    "activity": "Activity",
+    "exercises": "{count, plural, one {# exercise} other {# exercises}}",
+    "sets": "{count, plural, one {# set} other {# sets}}",
+    "logWorkout": "Log workout"
+  },
+  "Entry": {
+    "back": "Back",
+    "title": "New workout",
+    "date": "Date",
+    "gym": "Gym",
+    "noGyms": "You have no gyms yet, so a workout cannot be saved.",
+    "trainingDay": "Training day",
+    "noTrainingDay": "—",
+    "exerciseName": "Exercise name",
+    "exerciseSearchPlaceholder": "Search exercises",
+    "clearName": "Clear exercise name",
+    "suggestions": "Suggested exercises",
+    "suggestionsAvailable": "{count, plural, one {# suggestion available} other {# suggestions available}}. Use the up and down arrows to review.",
+    "noSuggestions": "No suggestions",
+    "noMatch": "No exercise has that name yet. Choose one of the suggestions to save.",
+    "removeExercise": "Remove exercise {number}",
+    "unitKg": "Kilograms",
+    "unitLb": "Pounds",
+    "plateLabel": "Plates per side · kg / lb",
+    "weightLabel": "Weight · kg / lb",
+    "colSet": "Set",
+    "colSideUnit": "{unit} / side",
+    "colSideMixed": "Per side",
+    "colTotalUnit": "{unit}",
+    "colTotalMixed": "Weight",
+    "colReps": "Reps",
+    "setWeight": "Set {number} weight",
+    "setReps": "Set {number} reps",
+    "addSet": "Add set",
+    "addNote": "Add note",
+    "note": "Note",
+    "addExercise": "Add exercise",
+    "save": "Save workout",
+    "saving": "Saving…",
+    "weightPerSide": "{value} {unit}/side",
+    "weightTotal": "{value} {unit}",
+    "lastWorkoutHere": "Last at this gym: {weight} × {reps}",
+    "lastWorkoutElsewhere": "Last at {gym}: {weight} × {reps}",
+    "referenceNote": "From your notes: {weight}",
+    "referenceNoteElsewhere": "From your notes at {gym}: {weight}",
+    "problems": {
+      "dateInvalid": "Choose a date that is not in the future.",
+      "noGym": "Choose a gym.",
+      "nameEmpty": "Enter an exercise name.",
+      "nameUnmatched": "Choose this exercise from the suggestions.",
+      "noSets": "Enter the weight and reps of at least one set.",
+      "setIncomplete": "Set {number}: enter both weight and reps, or leave both empty.",
+      "setInvalid": "Set {number}: weight and reps must be numbers (weight up to two decimals).",
+      "fixBeforeSaving": "Fix the highlighted problems before saving."
+    },
+    "errors": {
+      "invalid_input": "Something in the workout is not valid. Check the date and the sets, then try again.",
+      "not_found": "The gym, training day or an exercise could not be found. Reload the page and try again.",
+      "save_failed": "The workout could not be saved. Your entries are still here: try again."
+    }
   }
 }

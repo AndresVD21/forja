@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 // shadcn/ui pattern: one function that maps "variant" props to a string of classes.
 // Three looks from the boards: filled (primary), edged (outline) and plain text.
 // min-h-11 = 44 px, the minimum touch target (CLAUDE.md rule 7).
-const buttonVariants = cva(
+// Exported so a <Link> can look like a button (navigation is a link, not a button).
+export const buttonVariants = cva(
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-base font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {

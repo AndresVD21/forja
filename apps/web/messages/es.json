@@ -4,18 +4,101 @@
     "english": "English",
     "spanish": "Español"
   },
+  "Header": {
+    "signOut": "Cerrar sesión"
+  },
   "SignIn": {
     "title": "Bienvenido de nuevo",
     "subtitle": "Tu entrenamiento, registrado.",
+    "google": "Continuar con Google",
+    "or": "o",
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "tu@ejemplo.com",
     "passwordLabel": "Contraseña",
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña",
     "submit": "Iniciar sesión",
+    "submitting": "Entrando…",
+    "error": "No pudimos iniciar tu sesión. Revisa tu correo y tu contraseña e inténtalo de nuevo.",
     "invitationOnly": "El acceso es solo por invitación."
   },
+  "TrainingDays": {
+    "chest": "Pecho",
+    "back": "Espalda",
+    "legs": "Pierna",
+    "shoulders-abs": "Hombro / Abs"
+  },
+  "Activities": {
+    "volleyball": "Voleibol"
+  },
   "Home": {
-    "title": "Registro de entrenamiento"
+    "title": "Registro de entrenamiento",
+    "weekNav": "Semana",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "hasEntries": "tiene registros",
+    "thisWeek": "Esta semana",
+    "emptyWeek": "No hay nada registrado esta semana.",
+    "workoutFallback": "Entrenamiento",
+    "activity": "Actividad",
+    "exercises": "{count, plural, one {# ejercicio} other {# ejercicios}}",
+    "sets": "{count, plural, one {# serie} other {# series}}",
+    "logWorkout": "Registrar entrenamiento"
+  },
+  "Entry": {
+    "back": "Volver",
+    "title": "Nuevo entrenamiento",
+    "date": "Fecha",
+    "gym": "Gimnasio",
+    "noGyms": "Aún no tienes gimnasios, así que no se puede guardar un entrenamiento.",
+    "trainingDay": "Día de entrenamiento",
+    "noTrainingDay": "—",
+    "exerciseName": "Nombre del ejercicio",
+    "exerciseSearchPlaceholder": "Buscar ejercicios",
+    "clearName": "Borrar el nombre del ejercicio",
+    "suggestions": "Ejercicios sugeridos",
+    "suggestionsAvailable": "{count, plural, one {# sugerencia disponible} other {# sugerencias disponibles}}. Usa las flechas arriba y abajo para revisarlas.",
+    "noSuggestions": "Sin sugerencias",
+    "noMatch": "Todavía no hay un ejercicio con ese nombre. Elige una de las sugerencias para guardar.",
+    "removeExercise": "Quitar el ejercicio {number}",
+    "unitKg": "Kilogramos",
+    "unitLb": "Libras",
+    "plateLabel": "Discos por lado · kg / lb",
+    "weightLabel": "Peso · kg / lb",
+    "colSet": "Serie",
+    "colSideUnit": "{unit} / lado",
+    "colSideMixed": "Por lado",
+    "colTotalUnit": "{unit}",
+    "colTotalMixed": "Peso",
+    "colReps": "Reps",
+    "setWeight": "Peso de la serie {number}",
+    "setReps": "Repeticiones de la serie {number}",
+    "addSet": "Añadir serie",
+    "addNote": "Añadir nota",
+    "note": "Nota",
+    "addExercise": "Añadir ejercicio",
+    "save": "Guardar entrenamiento",
+    "saving": "Guardando…",
+    "weightPerSide": "{value} {unit}/lado",
+    "weightTotal": "{value} {unit}",
+    "lastWorkoutHere": "Última vez en este gimnasio: {weight} × {reps}",
+    "lastWorkoutElsewhere": "Última vez en {gym}: {weight} × {reps}",
+    "referenceNote": "De tus notas: {weight}",
+    "referenceNoteElsewhere": "De tus notas en {gym}: {weight}",
+    "problems": {
+      "dateInvalid": "Elige una fecha que no sea futura.",
+      "noGym": "Elige un gimnasio.",
+      "nameEmpty": "Escribe el nombre de un ejercicio.",
+      "nameUnmatched": "Elige este ejercicio de las sugerencias.",
+      "noSets": "Escribe el peso y las repeticiones de al menos una serie.",
+      "setIncomplete": "Serie {number}: escribe peso y repeticiones, o deja ambos vacíos.",
+      "setInvalid": "Serie {number}: el peso y las repeticiones deben ser números (el peso, hasta dos decimales).",
+      "fixBeforeSaving": "Corrige los problemas marcados antes de guardar."
+    },
+    "errors": {
+      "invalid_input": "Algo del entrenamiento no es válido. Revisa la fecha y las series e inténtalo de nuevo.",
+      "not_found": "No se encontró el gimnasio, el día de entrenamiento o algún ejercicio. Recarga la página e inténtalo de nuevo.",
+      "save_failed": "No se pudo guardar el entrenamiento. Tus datos siguen aquí: inténtalo de nuevo."
+    }
   }
 }

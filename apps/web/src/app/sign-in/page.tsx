@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { BrandLogo } from "@/components/brand-logo";
 import { LocaleSwitch } from "@/components/locale-switch";
+import { googleEnabled } from "@/server/auth";
 import { SignInForm } from "./sign-in-form";
 
 // Server Component: static layout and translated text. Only the form needs the browser.
@@ -18,7 +19,7 @@ export default async function SignInPage() {
           <h1 className="mt-6 text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-lg text-muted">{t("subtitle")}</p>
         </div>
-        <SignInForm />
+        <SignInForm googleEnabled={googleEnabled} />
         <p className="text-center text-sm text-muted">{t("invitationOnly")}</p>
       </main>
     </div>

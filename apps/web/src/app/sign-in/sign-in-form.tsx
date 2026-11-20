@@ -1,62 +1,108 @@
 "use client";
-// Client Component: it holds the show/hide-password state and handles the submit event.
+// Client Component: it holds the show/hide-password state, the pending/error state and calls Better Auth.
 
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
+import { GoogleIcon } from "@/components/google-icon";
 import { IconButton } from "@/components/icon-button";
 import { TextField } from "@/components/text-field";
+import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
+import { syncTimeZoneCookie } from "@/lib/time-zone-cookie";
 
-type SignInFormProps = {
-  // A later task passes the real handler. Server pages cannot pass functions to Client
-  // Components, so the page leaves this out and the placeholder below runs.
-  onSubmit?: (values: { email: string; password: string }) => void;
-};
-
-export function SignInForm({ onSubmit }: SignInFormProps) {
+// googleEnabled comes from the server page (it reads the environment); the browser cannot.
+export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
   const t = useTranslations("SignIn");
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // Stop the browser's own page-reloading submit. The browser has already checked required/email.
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const values = { email: String(data.get("email")), password: String(data.get("password")) };
-    // TODO(M3 auth): call Better Auth's email + password sign-in here (or in the page that
-    // passes onSubmit), show failure/loading states once they are designed, then redirect to "/".
-    onSubmit?.(values);
+    setPending(true);
+    setFailed(false);
+    syncTimeZoneCookie();
+    try {
+      const { error } = await authClient.signIn.email({
+        email: String(data.get("email")),
+        password: String(data.get("password")),
+      });
+      if (error) {
+        // One generic message for every failure: never reveal whether an account exists.
+        setFailed(true);
+        setPending(false);
+        return;
+      }
+      router.replace("/");
+      router.refresh();
+    } catch {
+      setFailed(true);
+      setPending(false);
+    }
+  }
+
+  async function handleGoogle() {
+    syncTimeZoneCookie();
+    setPending(true);
+    // Redirects away to Google; on return Better Auth sends the browser to callbackURL.
+    await authClient.signIn.social({ provider: "google", callbackURL: "/" });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <TextField
-        label={t("emailLabel")}
-        name="email"
-        type="email"
-        autoComplete="email"
-        inputMode="email"
-        placeholder={t("emailPlaceholder")}
-        required
-      />
-      <TextField
-        label={t("passwordLabel")}
-        name="password"
-        type={showPassword ? "text" : "password"}
-        autoComplete="current-password"
-        required
-        endAdornment={
-          <IconButton
-            label={showPassword ? t("hidePassword") : t("showPassword")}
-            onClick={() => setShowPassword((shown) => !shown)}
-          >
-            {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
-          </IconButton>
-        }
-      />
-      <Button type="submit" fullWidth>
-        {t("submit")}
-      </Button>
-    </form>
+    <div className="flex flex-col gap-5">
+      {googleEnabled && (
+        <>
+          <Button variant="outline" fullWidth onClick={handleGoogle} disabled={pending}>
+            <GoogleIcon />
+            {t("google")}
+          </Button>
+          <div className="flex items-center gap-3 text-muted">
+            <span className="h-px flex-1 bg-line" />
+            {t("or")}
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <TextField
+          label={t("emailLabel")}
+          name="email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder={t("emailPlaceholder")}
+          required
+        />
+        <TextField
+          label={t("passwordLabel")}
+          name="password"
+          type={showPassword ? "text" : "password"}
+          autoComplete="current-password"
+          required
+          endAdornment={
+            <IconButton
+              label={showPassword ? t("hidePassword") : t("showPassword")}
+              onClick={() => setShowPassword((shown) => !shown)}
+            >
+              {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
+            </IconButton>
+          }
+        />
+        {/* role="alert" makes screen readers announce the message when it appears. */}
+        {failed && (
+          <p role="alert" className="text-base font-medium text-ink">
+            {t("error")}
+          </p>
+        )}
+        <Button type="submit" fullWidth disabled={pending}>
+          {pending ? t("submitting") : t("submit")}
+        </Button>
+      </form>
+    </div>
   );
 }

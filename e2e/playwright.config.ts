@@ -20,7 +20,8 @@ export default defineConfig({
   webServer: {
     // The dev server, not `next start`: production refuses PGlite by design. prepare.mjs first builds a fresh
     // database (see its header for why this is not globalSetup).
-    command: `node e2e/support/prepare.mjs && pnpm --filter @forja/web exec next dev --port ${PORT}`,
+    // `tee` keeps the output visible and also copies it to a file, so a test can assert that no secret was logged.
+    command: `mkdir -p e2e/.data && node e2e/support/prepare.mjs && pnpm --filter @forja/web exec next dev --port ${PORT} 2>&1 | tee e2e/.data/server.log`,
     cwd: "..",
     url: BASE_URL,
     reuseExistingServer: false, // a reused server would point at someone else's database

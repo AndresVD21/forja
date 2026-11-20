@@ -53,7 +53,7 @@ run(["--filter", "@forja/db", "db:seed-user", "--", email]);
 // shares a token with another test, and each test has one per attempt (repeat pass x retry), because a
 // registered or used link cannot be used again. BETTER_AUTH_URL only decides how the link is printed.
 const SLOTS = 4;
-const consuming = ["register", "used-once", "email-taken"];
+const consuming = ["register", "used-once", "email-taken", "sign-out-after-register", "signed-in-opens-link", "server-log"];
 const viewOnly = ["field-checks", "spanish"]; // opened and filled, never successfully submitted
 const inviteEnv = { ...env, BETTER_AUTH_URL: "http://localhost:3100" };
 

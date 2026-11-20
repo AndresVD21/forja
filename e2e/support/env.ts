@@ -11,3 +11,5 @@ export const DB_DIR = fileURLToPath(new URL("../.data/pglite", import.meta.url))
 export const CREDENTIALS_FILE = fileURLToPath(new URL("../.auth/credentials.json", import.meta.url));
 /** Invite tokens made by prepare.mjs, one list per test. Git-ignored. */
 export const INVITES_FILE = fileURLToPath(new URL("../.auth/invites.json", import.meta.url));
+/** Everything the dev server prints, copied here by the webServer command (playwright.config.ts). Git-ignored. */
+export const SERVER_LOG_FILE = fileURLToPath(new URL("../.data/server.log", import.meta.url));

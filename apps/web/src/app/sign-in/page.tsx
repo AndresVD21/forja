@@ -1,0 +1,26 @@
+import { getTranslations } from "next-intl/server";
+import { BrandLogo } from "@/components/brand-logo";
+import { LocaleSwitch } from "@/components/locale-switch";
+import { SignInForm } from "./sign-in-form";
+
+// Server Component: static layout and translated text. Only the form needs the browser.
+export default async function SignInPage() {
+  const t = await getTranslations("SignIn");
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4 sm:px-6">
+      <div className="flex justify-end">
+        <LocaleSwitch />
+      </div>
+      <main className="flex flex-1 flex-col gap-8 py-6">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <BrandLogo size="lg" />
+          <p className="text-3xl font-bold">Forja</p>
+          <h1 className="mt-6 text-3xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-lg text-muted">{t("subtitle")}</p>
+        </div>
+        <SignInForm />
+        <p className="text-center text-sm text-muted">{t("invitationOnly")}</p>
+      </main>
+    </div>
+  );
+}

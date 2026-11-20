@@ -1,0 +1,21 @@
+{
+  "Locale": {
+    "groupLabel": "Idioma",
+    "english": "English",
+    "spanish": "Español"
+  },
+  "SignIn": {
+    "title": "Bienvenido de nuevo",
+    "subtitle": "Tu entrenamiento, registrado.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "submit": "Iniciar sesión",
+    "invitationOnly": "El acceso es solo por invitación."
+  },
+  "Home": {
+    "title": "Registro de entrenamiento"
+  }
+}

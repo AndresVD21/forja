@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M2 done** — the domain core (`packages/core`) and the database layer (`packages/db`: schema, repositories, seeds) are implemented and tested; the app is still a placeholder page. M3 (log a workout) is next. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M3 usable locally** — sign in (invite-only), log a workout and see it in the week history work end to end, tested in CI. Still open in M3: custom exercises and set details (waiting for Codex's designs) and the first deploy. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -171,14 +171,14 @@ Each milestone ends with something that runs. Every task lists which agent role 
 ### M3 — Log a workout (first usable version)
 Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (designs in `docs/assets/m3-pages/`) and [decision 0005](decisions/0005-m3-scope-and-local-database.md) (what M3 builds now and what waits for a design).
 
-- [ ] App shell, mobile layout, light and dark themes (from the phone's setting), English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
-- [ ] Local development database: PGlite file when `DATABASE_URL` is unset ([decision 0005](decisions/0005-m3-scope-and-local-database.md)) (*backend-dev*)
-- [ ] Sign-in with Better Auth: email + password, invite list, Google once the owner adds credentials; adopt the M2 `users` table and route account deletion through `deleteAccount` (checklist in `packages/db/README.md`, "Before M3"); then run the per-user seed for the owner (*backend-dev*)
-- [ ] Log workout screen + server actions, with editable exercise autocomplete over existing exercises (*frontend-dev* + *backend-dev*)
+- [x] App shell, mobile layout, light and dark themes (from the phone's setting), English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
+- [x] Local development database: PGlite file when `DATABASE_URL` is unset ([decision 0005](decisions/0005-m3-scope-and-local-database.md)) (*backend-dev*)
+- [x] Sign-in with Better Auth: email + password, invite list (Google wired; appears once the owner adds credentials); adopts the M2 `users` table; account deletion stays off until it has a screen (*backend-dev*)
+- [x] Log workout screen + server actions, with editable exercise autocomplete over existing exercises (*frontend-dev* + *backend-dev*)
 - [ ] When Codex's designs land: "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete) (*frontend-dev* + *backend-dev*)
-- [ ] History screen with week view, including activities such as volleyball (*frontend-dev*)
-- [ ] E2E test: sign in → log workout → see it in history (*test-engineer*)
-- [ ] **First deploy** to Vercel + Neon (*release-manager*, you approve)
+- [x] History screen with week view, including activities such as volleyball (*frontend-dev*)
+- [x] E2E test: sign in → log workout → see it in history, runs in CI (*test-engineer*)
+- [ ] **First deploy** to Vercel + Neon, then create the owner's account and run the per-user seed there; settle section 8, item 10 first (*release-manager*, you approve)
 
 ### After M3, once designed (Codex + owner first)
 - [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, saved-workout detail, activity entry

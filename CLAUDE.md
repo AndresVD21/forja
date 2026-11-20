@@ -11,10 +11,10 @@ React and Next.js, so **clarity beats cleverness** and every non-obvious decisio
 
 ## Status
 
-Milestone **M2 done**: the workspace installs, lints, typechecks, tests and builds; `packages/core` holds the
-tested domain core (units, weights, plan, proposals, per-side loads, name matching) and `packages/db` the
-schema, repositories and seeds, tested on PGlite; the app is still a placeholder page.
-Next is **M3** (log a workout: app shell, sign-in, logging screens). The owner's decisions are in
+Milestone **M3 usable locally**: sign-in (invite-only), workout entry and the week history work end to end
+(`pnpm dev` uses a local PGlite database; `pnpm db:reset-local` rebuilds it), with unit, integration and
+Playwright tests in CI. Still open in M3: custom exercises and set details (waiting for Codex's designs, decision
+0005) and the first deploy. The owner's decisions are in
 `docs/PLAN.md` section 7; section 8 lists what is still open — do not assume answers to those.
 The app is called **Forja**; packages use the `@forja/*` scope.
 

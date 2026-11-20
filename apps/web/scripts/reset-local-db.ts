@@ -1,6 +1,6 @@
 // Run with: pnpm db:reset-local   (from the repo root)
 // Rebuilds the LOCAL development database from nothing: deletes .data/pglite, migrates, seeds the catalogue,
-// invites DEV_TEST_EMAIL, creates that user with DEV_TEST_PASSWORD and seeds the user's gyms and weights.
+// creates the user DEV_TEST_EMAIL with DEV_TEST_PASSWORD and seeds the user's gyms and weights.
 // Both values come from apps/web/.env.local (git-ignored). Stop `pnpm dev` first.
 import { execFileSync } from "node:child_process";
 import { rmSync } from "node:fs";
@@ -34,7 +34,6 @@ rmSync(`${dir}.lock`, { force: true });
 const db = (...args: string[]) => execFileSync("pnpm", ["--filter", "@forja/db", ...args], { stdio: "inherit" });
 db("db:migrate");
 db("db:seed-catalogue");
-db("db:invite", "--", email);
 
 // Creating the user needs Better Auth (so the password is hashed the way sign-in expects), which lives here.
 const { auth } = await import("../src/server/auth");

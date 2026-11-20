@@ -17,7 +17,9 @@
     "db:migrate": "tsx src/scripts/migrate.ts",
     "db:seed-catalogue": "tsx src/scripts/seed-catalogue.ts",
     "db:seed-user": "tsx src/scripts/seed-user.ts",
-    "db:invite": "tsx src/scripts/invite.ts"
+    "invite": "tsx --env-file-if-exists=../../apps/web/.env.local src/scripts/invite.ts",
+    "invite:list": "tsx --env-file-if-exists=../../apps/web/.env.local src/scripts/invite-list.ts",
+    "invite:revoke": "tsx --env-file-if-exists=../../apps/web/.env.local src/scripts/invite-revoke.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",

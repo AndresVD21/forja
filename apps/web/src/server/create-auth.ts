@@ -1,7 +1,7 @@
 // Builds the Better Auth instance for a given database. Kept apart from auth.ts (which wires the real
 // database and environment) so tests can build the very same configuration on an in-memory PGlite.
 import "server-only";
-import { createRepositories, type Database } from "@forja/db";
+import type { Database } from "@forja/db";
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -12,8 +12,6 @@ import { safeAuthLogger } from "./safe-log";
 export type AuthOptions = {
   secret?: string;
   baseURL?: string;
-  /** Google sign-in is only switched on when both values exist. */
-  google?: { clientId: string; clientSecret: string };
   /**
    * Whether Better Auth wraps multi-row writes (a sign-up writes a user AND an account) in a transaction.
    * Pass `true` on Neon, where a crash between the two inserts would leave a user without a password.
@@ -22,28 +20,19 @@ export type AuthOptions = {
   transactions?: boolean;
 };
 
-// Deliberately vague: it must not say whether the address already has an account.
-const NOT_INVITED = { code: "not_invited", message: "This email cannot create an account." } as const;
-
-type AllowList = Pick<ReturnType<typeof createRepositories>["allowedEmails"], "isAllowed">;
-
 /**
- * The invite-only gate as Better Auth's `user.validateUserInfo` callback. It is the ONLY guard for a first
- * Google sign-in (the `before` hook below only sees /sign-up/email), and it runs for every `source`
- * (create-user, link-account, sign-in; password or OAuth), so it must not look at `source`: no way in
- * without an invitation. Exported so it can be tested without a Google account.
+ * Defence in depth behind the closed sign-up endpoint (decision 0006). Better Auth calls this just before it
+ * creates a user, links an account or signs someone in through a provider. The only way into Forja is email +
+ * password through the invite flow, so anything else is refused: if a social provider or plugin is ever added
+ * without thinking about invites, it cannot quietly start creating accounts. It is a pure function of `source`,
+ * so it needs no database and is easy to test. Exported for that test.
  */
-export function inviteOnly(allowList: AllowList) {
-  return async ({ user }: { user: { email?: unknown } }) => {
-    const email = typeof user.email === "string" ? user.email : "";
-    if (await allowList.isAllowed(email)) return;
-    return { error: NOT_INVITED.code, errorDescription: NOT_INVITED.message };
-  };
+export function emailPasswordOnly({ source }: { source?: { method?: string } }) {
+  if (source?.method === "email-password") return;
+  return { error: "sign_up_closed", errorDescription: "Accounts can only be created with an invite link." };
 }
 
 export function createAuth(db: Database, options: AuthOptions = {}) {
-  const repos = createRepositories(db);
-
   return betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
@@ -57,9 +46,8 @@ export function createAuth(db: Database, options: AuthOptions = {}) {
       // Better Auth thinks in singular names ("user"); our tables and Drizzle exports are plural ("users").
       usePlural: true,
       // Neon (a pool of connections): on, so a user and its account are written together or not at all.
-      // PGlite (ONE connection, local dev and tests): must be off. The invite lookup in validateUserInfo uses
-      // `db`, not the transaction, so it would wait for a transaction that is waiting for it: a deadlock.
-      // server/db.ts knows which driver it opened and passes the answer in, so it is decided in one place.
+      // PGlite (ONE connection, local dev and tests): off, as it always has been there. server/db.ts knows which
+      // driver it opened and passes the answer in, so it is decided in one place.
       transaction: options.transactions ?? true,
     }),
 
@@ -69,23 +57,22 @@ export function createAuth(db: Database, options: AuthOptions = {}) {
     // No email verification: there is no mail service in M3.
     emailAndPassword: { enabled: true },
 
-    socialProviders: options.google ? { google: options.google } : {},
-
     hooks: {
-      // Runs before the /sign-up/email endpoint. Better Auth answers "User already exists" (422) BEFORE it
-      // reaches validateUserInfo, which would reveal that an address has an account. Checking the invite first
-      // gives every non-invited address the same answer, whatever its state.
+      // Public sign-up is closed (decision 0006). Better Auth's `emailAndPassword.disableSignUp` would also
+      // block our own server-side `auth.api.signUpEmail` (the check is inside the endpoint), and that call is
+      // how registerWithInvite creates a user with the password hashed the way sign-in expects. So the door is
+      // closed here instead: a request that arrived over HTTP carries `ctx.request`; a direct call from
+      // server code (auth.api.signUpEmail(...)) does not. Anyone reaching POST /api/auth/sign-up/email is
+      // refused; the invite flow, which runs on the server after claiming an invite, is not.
       before: createAuthMiddleware(async (ctx) => {
-        if (ctx.path !== "/sign-up/email") return;
-        const email = typeof ctx.body?.email === "string" ? ctx.body.email : "";
-        if (!(await repos.allowedEmails.isAllowed(email))) throw new APIError("FORBIDDEN", NOT_INVITED);
+        if (ctx.path === "/sign-up/email" && ctx.request) {
+          throw new APIError("FORBIDDEN", { code: "sign_up_closed", message: "Sign-up is by invitation only." });
+        }
       }),
     },
 
     user: {
-      // Invite-only (ARCHITECTURE 2.14). Better Auth calls this just before it creates a user, links an
-      // account, or signs in through Google, so ONE check covers password sign-up and Google.
-      validateUserInfo: inviteOnly(repos.allowedEmails),
+      validateUserInfo: emailPasswordOnly,
 
       // Account deletion stays OFF in M3 (no screen is designed). When it is switched on, add:
       //   deleteUser: { enabled: true, beforeDelete: (user) => repos.users.clearWorkoutsAndPlans(user.id) }

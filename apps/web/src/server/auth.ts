@@ -4,13 +4,4 @@ import "server-only";
 import { createAuth } from "./create-auth";
 import { db, supportsTransactions } from "./db";
 
-const clientId = process.env.GOOGLE_CLIENT_ID;
-const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-/** True only when both Google variables are set. The sign-in page uses it to decide whether to show the button. */
-export const googleEnabled = Boolean(clientId && clientSecret);
-
-export const auth = createAuth(db, {
-  transactions: supportsTransactions,
-  google: clientId && clientSecret ? { clientId, clientSecret } : undefined,
-});
+export const auth = createAuth(db, { transactions: supportsTransactions });

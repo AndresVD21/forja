@@ -36,7 +36,7 @@ export const sessions = pgTable(
 
 /**
  * One row per way of signing in for a user. Email + password is `provider_id = 'credential'` and keeps
- * the password *hash* in `password`; Google is `provider_id = 'google'` with its tokens.
+ * the password *hash* in `password`; 
  */
 export const accounts = pgTable(
   "accounts",
@@ -60,7 +60,7 @@ export const accounts = pgTable(
   },
   (table) => [
     index("accounts_user_id_idx").on(table.userId),
-    // The same Google identity cannot be attached to two rows.
+    // The same provider identity cannot be attached to two rows.
     uniqueIndex("accounts_provider_account_unique").on(table.providerId, table.accountId),
   ],
 );
@@ -80,12 +80,29 @@ export const verifications = pgTable(
 );
 
 /**
- * The invite list (ARCHITECTURE 2.14). NOT user-scoped on purpose: it is the gate that is checked *before*
- * a user exists, so there is no user_id to filter by. Emails are stored normalised (trimmed, lower-case) by
- * the repository, and `unique` stops the same address being invited twice.
+ * Invite links (decision 0006). NOT user-scoped on purpose: an invite is checked *before* the person has a
+ * user, so there is no user_id to filter by (`used_by_user_id` is only filled in afterwards, as a record of
+ * who used it).
+ *
+ * Only a SHA-256 hash of the token is stored (`token_hash`), never the token: whoever reads this table, a
+ * leaked backup included, cannot rebuild a working link. `unique` gives the hash an index, so looking an
+ * invite up by its token is fast, and refuses two invites with the same hash.
+ *
+ * `used_at` null = still unused. A used invite is kept (not deleted) so the owner can see who joined.
+ * `ON DELETE SET NULL`: if that user is deleted later the invite row stays, it just forgets who used it.
  */
-export const allowedEmails = pgTable("allowed_emails", {
-  id: id(),
-  email: text("email").notNull().unique(),
-  createdAt: createdAt(),
-});
+export const invites = pgTable(
+  "invites",
+  {
+    id: id(),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdAt: createdAt(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    usedByUserId: uuid("used_by_user_id").references(() => users.id, { onDelete: "set null" }),
+    // Free text for the owner ("for Ana"); not used by any logic.
+    note: text("note"),
+  },
+  // Foreign keys are not indexed automatically in Postgres; the ON DELETE SET NULL above looks rows up by it.
+  (table) => [index("invites_used_by_user_id_idx").on(table.usedByUserId)],
+);

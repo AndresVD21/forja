@@ -4,7 +4,7 @@ The only package that talks to Postgres. Depends on `@forja/core` (enums and nam
 
 ## Schema, client and catalogue (M2, first half)
 
-- `src/schema/` — Drizzle table definitions: `users`, the Better Auth tables `sessions`, `accounts`, `verifications` and the invite list `allowed_emails` (`auth.ts`),
+- `src/schema/` — Drizzle table definitions: `users`, the Better Auth tables `sessions`, `accounts`, `verifications` and the one-time registration links `invites` (`auth.ts`, decision 0006),
   `exercises` + `exercise_aliases`, `locations`, `training_days`, `activities`, `plans`, `plan_weeks`,
   `plan_exercises`, `plan_targets`, `workouts`, `workout_exercises`, `workout_sets`, `reference_weights`.
 - `src/migrations/` — generated SQL, append-only. Change the schema, run `pnpm --filter @forja/db db:generate`,
@@ -70,17 +70,29 @@ script on the local database**, then start it again.
 ```
 pnpm --filter @forja/db db:migrate                      apply pending migrations
 pnpm --filter @forja/db db:seed-catalogue               shared exercises and aliases
-pnpm --filter @forja/db db:invite -- you@example.com    allow an email to create an account
 pnpm --filter @forja/web create-user you@example.com "Your Name"   create the account (asks for the password)
 pnpm --filter @forja/db db:seed-user -- you@example.com your gyms, training days and reference weights
 ```
 
-Order for a fresh start: migrate, seed-catalogue, invite, create-user, seed-user. To start over locally, delete `.data/`.
+Order for a fresh start: migrate, seed-catalogue, create-user, seed-user. `create-user` is the owner's own tool and
+needs no invite; friends register through an invite link instead (below).
+
+### Invite links (from the repo root)
+
+```
+pnpm invite [--days 7] [--note "for Ana"]   create a one-time link and print it: <BETTER_AUTH_URL>/sign-up?invite=<token>
+pnpm invite:list                            invites that can still be used (id, expiry, note)
+pnpm invite:revoke <id>                     delete an unused invite
+```
+
+The link is shown once: only a SHA-256 hash of the token is stored, so a lost link is replaced, not recovered.
+It works once and expires after `--days` (default 7). `BETTER_AUTH_URL` is read from `apps/web/.env.local` or the
+environment; the command refuses to run without it. Like the other scripts it uses Neon when `DATABASE_URL` is set
+(including one set in `.env.local`) and otherwise the local folder, and it says which at the start. To start over locally, delete `.data/`.
 Add `DATABASE_URL=...` in front of a command to run it on Neon.
 
 **If the local database breaks** (every query fails with `RuntimeError: Aborted()`), run `pnpm db:reset-local` from
-the repo root with `pnpm dev` stopped. It deletes `.data/pglite`, migrates, seeds the catalogue, then invites and
-creates the user `DEV_TEST_EMAIL` / `DEV_TEST_PASSWORD` from `apps/web/.env.local` and seeds that user. It refuses to
+the repo root with `pnpm dev` stopped. It deletes `.data/pglite`, migrates, seeds the catalogue, then creates the user `DEV_TEST_EMAIL` / `DEV_TEST_PASSWORD` from `apps/web/.env.local` and seeds that user. It refuses to
 run when `DATABASE_URL` is set. The usual cause was a stale `postmaster.pid` left by a process that was stopped
 abruptly; `openLocalDb` (`src/local.ts`) now removes it itself, using its own lock file `.data/pglite.lock` (with a real
 process id) to tell a dead process from one that really holds the folder.

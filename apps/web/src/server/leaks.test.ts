@@ -7,10 +7,8 @@ const hold = vi.hoisted(() => ({ cookie: "" }));
 // getCurrentUser reads `auth` and the request headers: give it the real configuration on a test database.
 vi.mock("./auth", async () => {
   const { createTestDb } = await import("@forja/db/testing");
-  const { createRepositories } = await import("@forja/db");
   const { createAuth } = await import("./create-auth");
   const db = await createTestDb();
-  await createRepositories(db).allowedEmails.invite("leak@example.test");
   const auth = createAuth(db, { transactions: false, secret: "test-secret-test-secret-test-secret-123", baseURL: "http://localhost:3000" });
   return { auth, testDb: db };
 });

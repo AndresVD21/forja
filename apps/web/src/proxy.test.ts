@@ -17,6 +17,10 @@ describe("proxy", () => {
     expect(location(proxy(request("/sign-in")))).toBeNull();
     expect(location(proxy(request("/sign-in", "better-auth.session_token=bogus.value")))).toBeNull();
   });
+  it("lets a visitor with no cookie open /sign-up (the invite page), query string included", () => {
+    expect(location(proxy(request("/sign-up?invite=abc")))).toBeNull();
+    expect(location(proxy(request("/sign-up", "better-auth.session_token=bogus.value")))).toBeNull();
+  });
   it("lets a server action POST through without a cookie (the action answers signed_out; a redirect would lose the draft)", () => {
     expect(location(proxy(request("/workouts/new", undefined, { method: "POST", headers: { "next-action": "abc123" } })))).toBeNull();
   });

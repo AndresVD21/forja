@@ -11,8 +11,11 @@ import { NextResponse, type NextRequest } from "next/server";
 // The sign-in page itself redirects signed-in users to "/", after asking the database
 // (see RedirectIfSignedIn). A stale cookie is left in place: Server Components cannot set cookies, and it
 // is harmless, because signing in replaces it.
+const PUBLIC_PATHS = new Set(["/sign-in", "/sign-up"]);
+
 export function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname === "/sign-in") return NextResponse.next();
+  // Public pages: sign in, and register with an invite link (/sign-up?invite=..., decision 0006).
+  if (PUBLIC_PATHS.has(request.nextUrl.pathname)) return NextResponse.next();
   // A server action is a POST with a `next-action` header, sent from the page the user is on. Redirecting it
   // would turn "your session ended" into a failed fetch and lose the form's draft. The action itself checks
   // the session and answers { error: "signed_out" }, which the form can show while keeping what was typed.

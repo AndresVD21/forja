@@ -1,5 +1,5 @@
 {
-  "id": "1b2382eb-8d8c-4b05-8029-abca31263d74",
+  "id": "fab3f6ec-661c-42a6-b9b8-d4b84b7f0858",
   "prevId": "bb3ed5c4-3d05-472b-bdf9-89b02cf3c5fe",
   "version": "7",
   "dialect": "postgresql",
@@ -149,8 +149,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.allowed_emails": {
-      "name": "allowed_emails",
+    "public.invites": {
+      "name": "invites",
       "schema": "",
       "columns": {
         "id": {
@@ -160,8 +160,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "email": {
-          "name": "email",
+        "token_hash": {
+          "name": "token_hash",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -172,17 +172,71 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "used_at": {
+          "name": "used_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "used_by_user_id": {
+          "name": "used_by_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "invites_used_by_user_id_idx": {
+          "name": "invites_used_by_user_id_idx",
+          "columns": [
+            {
+              "expression": "used_by_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "invites_used_by_user_id_users_id_fk": {
+          "name": "invites_used_by_user_id_users_id_fk",
+          "tableFrom": "invites",
+          "tableTo": "users",
+          "columnsFrom": [
+            "used_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "allowed_emails_email_unique": {
-          "name": "allowed_emails_email_unique",
+        "invites_token_hash_unique": {
+          "name": "invites_token_hash_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "email"
+            "token_hash"
           ]
         }
       },

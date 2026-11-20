@@ -1,8 +1,8 @@
 import type { Database } from "../client";
-import { allowedEmailRepository } from "./allowed-emails";
 import { activityRepository } from "./activities";
 import { exerciseRepository } from "./exercises";
 import { historyRepository } from "./history";
+import { inviteRepository } from "./invites";
 import { locationRepository } from "./locations";
 import { planRepository } from "./plans";
 import { referenceWeightRepository } from "./reference-weights";
@@ -22,7 +22,7 @@ export function createRepositories(db: Database) {
     plans: planRepository(db),
     referenceWeights: referenceWeightRepository(db),
     users: userRepository(db),
-    allowedEmails: allowedEmailRepository(db),
+    invites: inviteRepository(db),
   };
 }
 export type Repositories = ReturnType<typeof createRepositories>;
@@ -36,4 +36,5 @@ export type { WorkoutDetail, WorkoutInput } from "./workouts";
 export type { LastFor } from "./history";
 export type { PlanDetail, PlanInput, PlanWeekRecord, PlanExerciseRecord, PlanTarget } from "./plans";
 export type { ReferenceWeight, ReferenceWeightInput } from "./reference-weights";
-export { normalizeEmail } from "./allowed-emails";
+export { normalizeEmail } from "./invites";
+export type { Invite } from "./invites";

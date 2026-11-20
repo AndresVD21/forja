@@ -1,6 +1,6 @@
 // Run with: pnpm --filter @forja/web create-user <email> <name>
-// Creates an account without a sign-up screen (M3). The address must already be invited:
-//   pnpm --filter @forja/db db:invite -- <email>
+// The owner's admin tool: creates an account directly, with no invite link (friends use `pnpm invite`).
+// It works although public sign-up is closed, because that is closed only for HTTP requests (see create-auth.ts).
 // The password is typed at the prompt (hidden), never passed as an argument, so it does not end up in your
 // shell history or the process list, and it is never printed. It goes through Better Auth's own sign-up, so it
 // is hashed exactly the way sign-in expects. Stop `pnpm dev` first when using the local database folder.
@@ -33,19 +33,13 @@ const password = await askPassword("Password (8 characters or more): ");
 
 // Imported after the checks so a usage error does not open the database.
 const { auth } = await import("../src/server/auth");
-const { db, closeDb } = await import("../src/server/db");
-const { createRepositories } = await import("@forja/db");
+const { closeDb } = await import("../src/server/db");
 const { describeError } = await import("../src/server/safe-log");
 
 try {
-  if (!(await createRepositories(db).allowedEmails.isAllowed(email))) {
-    console.error(`${email} is not invited. Run: pnpm --filter @forja/db db:invite -- ${email}`);
-    process.exitCode = 1;
-  } else {
-    // Returns the result, or throws an APIError (for example a password that is too short).
-    const result = await auth.api.signUpEmail({ body: { email, name, password } });
-    console.log(`Created ${result.user.email} (id ${result.user.id}).`);
-  }
+  // Returns the result, or throws an APIError (for example a password that is too short).
+  const result = await auth.api.signUpEmail({ body: { email, name, password } });
+  console.log(`Created ${result.user.email} (id ${result.user.id}).`);
 } catch (error) {
   console.error(`Could not create the user: ${describeError(error)}`);
   process.exitCode = 1;

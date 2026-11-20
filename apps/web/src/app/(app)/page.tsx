@@ -1,4 +1,3 @@
-import { addDays } from "@forja/core";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import type { DateTimeFormatOptions } from "next-intl";
 import { getFormatter, getMessages, getTranslations } from "next-intl/server";
@@ -26,7 +25,7 @@ const navLinkClasses =
 
 async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const { week } = await searchParams;
-  const [days, today, t, format, messages] = await Promise.all([
+  const [{ days, previousWeek, nextWeek }, today, t, format, messages] = await Promise.all([
     getWeek(typeof week === "string" ? week : undefined),
     getToday(),
     getTranslations("Home"),
@@ -41,6 +40,8 @@ async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
 
   const start = days[0].date;
   const end = days[6].date;
+  // No link where the server says there is no neighbouring week; an empty 44 px slot keeps the layout.
+  const emptySlot = <span aria-hidden className="size-11" />;
   const entries = days
     .toReversed() // newest day first, as on the board
     .flatMap((day) => [
@@ -57,15 +58,23 @@ async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
       </div>
 
       <nav aria-label={t("weekNav")} className="flex items-center justify-between gap-2">
-        <Link href={`/?week=${addDays(start, -7)}`} aria-label={t("previousWeek")} className={navLinkClasses}>
-          <ChevronLeft aria-hidden className="size-5" />
-        </Link>
+        {previousWeek ? (
+          <Link href={`/?week=${previousWeek}`} aria-label={t("previousWeek")} className={navLinkClasses}>
+            <ChevronLeft aria-hidden className="size-5" />
+          </Link>
+        ) : (
+          emptySlot
+        )}
         <span className="text-lg font-semibold tabular-nums">
           {format.dateTimeRange(asDate(start), asDate(end), { day: "numeric", month: "long", timeZone: "UTC" })}
         </span>
-        <Link href={`/?week=${addDays(start, 7)}`} aria-label={t("nextWeek")} className={navLinkClasses}>
-          <ChevronRight aria-hidden className="size-5" />
-        </Link>
+        {nextWeek ? (
+          <Link href={`/?week=${nextWeek}`} aria-label={t("nextWeek")} className={navLinkClasses}>
+            <ChevronRight aria-hidden className="size-5" />
+          </Link>
+        ) : (
+          emptySlot
+        )}
       </nav>
 
       <ul className="grid grid-cols-7 gap-1 text-center">

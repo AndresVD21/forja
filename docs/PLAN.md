@@ -244,3 +244,15 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
    proposal in kg may be overridden with a weight in lb.
 7. Two simultaneous "add gym" or "add training day" taps with names that differ only in case could create
    two rows; accepted for now (one user, one phone).
+
+### Open decisions from the M3 review (2026-11-20)
+
+8. **Invited friends**: they have no gyms until a gym screen is designed, so they cannot log a workout in M3.
+   `seed-user` would give them the owner's gyms and reference weights, which would be wrong for them.
+9. **Revoking an invite** blocks a later Google sign-in of that person but not their password sign-in.
+   Decide whether revoking should lock the account out entirely.
+10. **Before the first deploy**: Better Auth's rate limiter keeps counts in memory per serverless instance
+    (consider database storage); Vercel preview URLs differ from `BETTER_AUTH_URL` (needs `trustedOrigins` or a
+    per-preview URL); decide the session lifetime and cookie renewal (a cookie can expire mid-workout).
+11. `instant = false` in the root layout keeps `<html lang>` correct but turns off Next's static-shell check for
+    the whole app, so dev no longer warns when a page reads request data outside `<Suspense>`.

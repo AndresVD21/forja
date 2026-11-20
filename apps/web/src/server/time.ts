@@ -3,6 +3,7 @@
 // tomorrow) and tests can pass a fixed "now" to `resolveToday`.
 import { todayIn, type IsoDate } from "@forja/core";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 /** Used when the cookie is missing or not a real IANA zone (the owner lives in UTC-5, no daylight saving). */
 export const FALLBACK_TIME_ZONE = "America/Bogota";
@@ -33,10 +34,14 @@ export function resolveToday(timeZone: string, now: Date): IsoDate {
 
 /** The user's zone from the `tz` cookie (the frontend sets it from the browser). Request-time data. */
 export async function getUserTimeZone(): Promise<string> {
+  await connection(); // the zone differs per request: never prerender it
   return resolveTimeZone((await cookies()).get(TIME_ZONE_COOKIE)?.value);
 }
 
 /** The user's "today" as YYYY-MM-DD. The single `new Date()` of the server code. */
 export async function getToday(): Promise<IsoDate> {
+  // "Today" changes by the clock: tell Next this is request-time data, so it is not frozen into a prerender
+  // (and the "unstable value new Date()" warning goes away).
+  await connection();
   return resolveToday(await getUserTimeZone(), new Date());
 }

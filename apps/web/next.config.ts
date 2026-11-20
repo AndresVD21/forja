@@ -7,6 +7,9 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   // Internal packages ship TypeScript source; Next compiles them with the app.
   transpilePackages: ["@forja/core", "@forja/db"],
+  // PGlite (the local dev database) finds its WebAssembly and data files with `new URL(..., import.meta.url)`.
+  // A bundler rewrites those URLs and Node's fs then rejects them; left external, Node loads PGlite untouched.
+  serverExternalPackages: ["@electric-sql/pglite"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

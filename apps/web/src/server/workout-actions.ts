@@ -10,6 +10,8 @@ import { z } from "zod";
 // Codes, not sentences: the UI translates them with next-intl (rule 10).
 export type ErrorCode = "invalid_input" | "not_found" | "save_failed";
 export type ActionError = { ok: false; error: ErrorCode };
+/** Reads have their own unexpected-failure code: "save_failed" would be the wrong word for a lookup. */
+export type ReadErrorCode = "invalid_input" | "not_found" | "server_error";
 
 // ---- saveWorkout ---------------------------------------------------------------------------------------
 
@@ -98,7 +100,7 @@ export type LastTime =
       note: string | null;
     };
 
-export type GetLastTimeResult = { ok: true; lastTime: LastTime | null } | ActionError;
+export type GetLastTimeResult = { ok: true; lastTime: LastTime | null } | { ok: false; error: ReadErrorCode };
 
 export async function getLastTimeFor(db: Database, userId: string, input: unknown): Promise<GetLastTimeResult> {
   const parsed = LastTimeInput.safeParse(input);
@@ -109,7 +111,7 @@ export async function getLastTimeFor(db: Database, userId: string, input: unknow
   } catch (error) {
     if (error instanceof NotFoundError) return { ok: false, error: "not_found" };
     console.error("getLastTime failed:", error instanceof Error ? `${error.name}: ${error.message}` : "unknown error");
-    return { ok: false, error: "save_failed" };
+    return { ok: false, error: "server_error" };
   }
 }
 

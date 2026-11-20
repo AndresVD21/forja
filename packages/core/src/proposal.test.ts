@@ -240,6 +240,18 @@ describe("heaviestSet", () => {
     expect(heaviestSet([a, b], "per_side", bar)).toBe(b);
     expect(heaviestSet([a, b], "per_side", bar)?.weight).toEqual({ value: 45, unit: "lb" });
   });
+  it("total: the larger raw number can be the lighter load", () => {
+    const a = { reps: 8, weight: lb(100) }; // 100 lb = 45.36 kg
+    const b = { reps: 8, weight: kg(50) }; // 50 kg is heavier, though 50 < 100
+    expect(heaviestSet([a, b], "total", bar)).toBe(b);
+    expect(heaviestSet([b, a], "total", bar)).toBe(b);
+  });
+  it("per-side: the larger raw number can be the lighter load", () => {
+    const a = { reps: 8, weight: lb(40) }; // 2 x 18.14 + 20 = 56.29 kg
+    const b = { reps: 8, weight: kg(25) }; // 2 x 25 + 20 = 70 kg, though 25 < 40
+    expect(heaviestSet([a, b], "per_side", bar)).toBe(b);
+    expect(heaviestSet([b, a], "per_side", bar)).toBe(b);
+  });
   it("ties go to more reps, then to the earlier set", () => {
     const first = { reps: 6, weight: kg(50) };
     const moreReps = { reps: 8, weight: kg(50) };

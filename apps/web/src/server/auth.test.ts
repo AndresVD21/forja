@@ -11,7 +11,7 @@ let repos: ReturnType<typeof createRepositories>;
 beforeAll(async () => {
   db = await createTestDb();
   repos = createRepositories(db);
-  auth = createAuth(db, { secret: "test-secret-test-secret-test-secret-123", baseURL: "http://localhost:3000" });
+  auth = createAuth(db, { transactions: false, secret: "test-secret-test-secret-test-secret-123", baseURL: "http://localhost:3000" });
   await repos.allowedEmails.invite("owner@example.test");
 });
 

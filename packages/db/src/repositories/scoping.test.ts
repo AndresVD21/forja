@@ -62,7 +62,7 @@ describe("exercises: scoping", () => {
     expect((await t.repos.exercises.getById(t.userA, id)).userId).toBeNull();
     expect((await t.repos.exercises.getById(t.userB, id)).userId).toBeNull();
     // The repository has no update/delete for exercises at all.
-    expect(Object.keys(t.repos.exercises).sort()).toEqual(["create", "findByName", "getById", "list"]);
+    expect(Object.keys(t.repos.exercises).sort()).toEqual(["create", "findByName", "getById", "list", "listWithAliases"]);
     // create with a catalogue name returns the catalogue row untouched rather than writing to it.
     const before = await t.repos.exercises.getById(t.userB, id);
     const again = await t.repos.exercises.create(t.userB, {

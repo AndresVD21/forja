@@ -1,7 +1,7 @@
 // The app's Better Auth instance: the shared database plus configuration from the environment.
 // Environment: BETTER_AUTH_SECRET and BETTER_AUTH_URL are read by Better Auth itself; see .env.example.
 import { createAuth } from "./create-auth";
-import { db } from "./db";
+import { db, supportsTransactions } from "./db";
 
 const clientId = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -10,5 +10,6 @@ const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 export const googleEnabled = Boolean(clientId && clientSecret);
 
 export const auth = createAuth(db, {
+  transactions: supportsTransactions,
   google: clientId && clientSecret ? { clientId, clientSecret } : undefined,
 });

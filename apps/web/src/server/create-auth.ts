@@ -12,6 +12,12 @@ export type AuthOptions = {
   baseURL?: string;
   /** Google sign-in is only switched on when both values exist. */
   google?: { clientId: string; clientSecret: string };
+  /**
+   * Whether Better Auth wraps multi-row writes (a sign-up writes a user AND an account) in a transaction.
+   * Pass `true` on Neon, where a crash between the two inserts would leave a user without a password.
+   * Pass `false` only on PGlite (see the comment at the adapter). Defaults to true: the safe choice.
+   */
+  transactions?: boolean;
 };
 
 // Deliberately vague: it must not say whether the address already has an account.
@@ -29,11 +35,11 @@ export function createAuth(db: Database, options: AuthOptions = {}) {
       schema,
       // Better Auth thinks in singular names ("user"); our tables and Drizzle exports are plural ("users").
       usePlural: true,
-      // Off on purpose. With `true`, the invite lookup in validateUserInfo (which uses `db`, not the
-      // transaction) would wait for a transaction that is waiting for it: PGlite has ONE connection, so
-      // local dev would hang. Cost: a crash between the user insert and the account insert of a sign-up
-      // leaves a user without a password; the owner can remove that row by hand.
-      transaction: false,
+      // Neon (a pool of connections): on, so a user and its account are written together or not at all.
+      // PGlite (ONE connection, local dev and tests): must be off. The invite lookup in validateUserInfo uses
+      // `db`, not the transaction, so it would wait for a transaction that is waiting for it: a deadlock.
+      // server/db.ts knows which driver it opened and passes the answer in, so it is decided in one place.
+      transaction: options.transactions ?? true,
     }),
 
     // false = Better Auth does not invent ids; Postgres fills `id` with gen_random_uuid(), the column default.

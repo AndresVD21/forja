@@ -286,7 +286,7 @@
       "location": "Cañasgordas",
       "weight": 40,
       "unit": "kg",
-      "note": "plus 75.7 (peso prensa, sled weight)",
+      "note": "peso prensa: the figure includes the sled's own weight, so it is not comparable with other leg press machines",
       "source": "SEMANA 19, Miércoles"
     },
     {
@@ -422,7 +422,7 @@
       "location": "Valle del Lili",
       "weight": 81,
       "unit": "kg",
-      "note": "peso prensa (figure refers to the sled weight)",
+      "note": "peso prensa: the figure includes the sled's own weight, so it is not comparable with other leg press machines",
       "source": "SEMANA 25, Martes"
     },
     {
@@ -430,7 +430,7 @@
       "location": null,
       "weight": 81,
       "unit": "kg",
-      "note": "peso prensa (figure refers to the sled weight)",
+      "note": "peso prensa: the figure includes the sled's own weight, so it is not comparable with other leg press machines",
       "source": "SEMANA 23, Miércoles"
     },
     {

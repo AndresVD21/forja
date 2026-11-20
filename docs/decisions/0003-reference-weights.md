@@ -22,8 +22,26 @@ Options considered:
 - The seed input is `docs/sample-data/reference-weights.json`, derived from the notes and reviewed by the
   owner. The seed for one user is a function that takes that user's id; it runs once the owner has an
   account (M3). The shared exercise catalogue seeds independently of any user.
-- Reference weights are a **starting point only**: "last time" and proposals use real workouts first and
-  fall back to a reference weight when there is none, same location first (rule 11).
+- Reference weights are a **starting point only**, and **the gym comes first** (rule 11, ARCHITECTURE 2.13:
+  machines differ between gyms). "Last time" and proposals look, in this order, at:
+  1. the latest real workout with that exercise **at this gym**;
+  2. the reference weight **at this gym**;
+  3. the latest real workout at **any** gym;
+  4. the reference weight with **no gym recorded**;
+  5. a reference weight at **another** gym.
+  The owner chose this order on 2026-11-19 over "real workouts first", which would let another gym's
+  machine override this gym's number from the notes.
+
+## How `reference-weights.json` was derived
+
+From `README.md`, top to bottom (the "POST VACACIONES" block is the most recent); for each exercise and gym
+only the **latest** occurrence is kept. Names are matched to the catalogue through its aliases, ignoring
+case and accents. The gym is the one named on the day's header; days with no gym are Valle del Lili in
+weeks 1–7 (owner decision 13) and "gym not recorded" (`null`) after that. "Xkg/Ylb" keeps the unit printed
+first; a number with no unit is kg (confirmed by the owner for the Hacienda ab crunch 100 and rope
+pushdown 23.75). A weight-per-set list keeps the last set's weight. "Peso prensa" values include the
+sled's own weight (owner, 2026-11-19). Lines with "Todo" or no weight are skipped. Each entry keeps a
+`source` (week and day) so it can be traced back to the notes.
 
 ## Consequences
 

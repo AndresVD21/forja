@@ -78,6 +78,13 @@ pnpm --filter @forja/db db:seed-user -- you@example.com your gyms, training days
 Order for a fresh start: migrate, seed-catalogue, invite, create-user, seed-user. To start over locally, delete `.data/`.
 Add `DATABASE_URL=...` in front of a command to run it on Neon.
 
+**If the local database breaks** (every query fails with `RuntimeError: Aborted()`), run `pnpm db:reset-local` from
+the repo root with `pnpm dev` stopped. It deletes `.data/pglite`, migrates, seeds the catalogue, then invites and
+creates the user `DEV_TEST_EMAIL` / `DEV_TEST_PASSWORD` from `apps/web/.env.local` and seeds that user. It refuses to
+run when `DATABASE_URL` is set. The usual cause was a stale `postmaster.pid` left by a process that was stopped
+abruptly; `openLocalDb` (`src/local.ts`) now removes it itself, using its own lock file `.data/pglite.lock` (with a real
+process id) to tell a dead process from one that really holds the folder.
+
 ## Account deletion (off in M3)
 
 Better Auth's `user.deleteUser` is not enabled (no screen is designed). When it is, its `beforeDelete` must call

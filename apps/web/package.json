@@ -10,7 +10,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "create-user": "tsx --env-file-if-exists=.env.local scripts/create-user.ts"
+    "create-user": "tsx --env-file-if-exists=.env.local scripts/create-user.ts",
+    "db:reset-local": "tsx --env-file-if-exists=.env.local scripts/reset-local-db.ts"
   },
   "dependencies": {
     "@forja/core": "workspace:*",

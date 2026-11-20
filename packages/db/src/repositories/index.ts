@@ -2,6 +2,7 @@ import type { Database } from "../client";
 import { activityRepository } from "./activities";
 import { exerciseRepository } from "./exercises";
 import { historyRepository } from "./history";
+import { inviteRepository } from "./invites";
 import { locationRepository } from "./locations";
 import { planRepository } from "./plans";
 import { referenceWeightRepository } from "./reference-weights";
@@ -21,6 +22,7 @@ export function createRepositories(db: Database) {
     plans: planRepository(db),
     referenceWeights: referenceWeightRepository(db),
     users: userRepository(db),
+    invites: inviteRepository(db),
   };
 }
 export type Repositories = ReturnType<typeof createRepositories>;
@@ -34,3 +36,5 @@ export type { WorkoutDetail, WorkoutInput } from "./workouts";
 export type { LastFor } from "./history";
 export type { PlanDetail, PlanInput, PlanWeekRecord, PlanExerciseRecord, PlanTarget } from "./plans";
 export type { ReferenceWeight, ReferenceWeightInput } from "./reference-weights";
+export { normalizeEmail } from "./users";
+export type { Invite } from "./invites";

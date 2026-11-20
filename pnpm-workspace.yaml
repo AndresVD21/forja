@@ -6,7 +6,10 @@ packages:
 # Packages allowed (true) or not (false) to run install scripts. sharp and unrs-resolver come from
 # create-next-app's defaults. esbuild (via drizzle-kit, tsx and vite) ships its binary as a platform
 # package, so its install script is not needed; CI's frozen install fails on any package left unlisted.
+# @parcel/watcher and @swc/core (via next-intl) also ship prebuilt platform packages.
 allowBuilds:
+  "@parcel/watcher": false
+  "@swc/core": false
   esbuild: false
   sharp: false
   unrs-resolver: false

@@ -1,4 +1,4 @@
-// Test-only helper. Deliberately NOT exported from src/index.ts, so the app never bundles PGlite.
+// Test-only helper ("@forja/db/testing"). Deliberately NOT exported from src/index.ts, so the app never bundles PGlite.
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";

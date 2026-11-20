@@ -8,7 +8,11 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "invite": "pnpm --filter @forja/db invite",
+    "invite:list": "pnpm --filter @forja/db invite:list",
+    "invite:revoke": "pnpm --filter @forja/db invite:revoke",
+    "db:reset-local": "pnpm --filter @forja/web db:reset-local"
   },
   "devDependencies": {
     "turbo": "^2.11.0"

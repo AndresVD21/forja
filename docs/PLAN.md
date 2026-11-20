@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M2 done** — the domain core (`packages/core`) and the database layer (`packages/db`: schema, repositories, seeds) are implemented and tested; the app is still a placeholder page. M3 (log a workout) is next. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M3 usable locally** — sign in (invite-only), log a workout and see it in the week history work end to end, tested in CI. Still open in M3: custom exercises and set details (waiting for Codex's designs) and the first deploy. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -22,7 +22,7 @@
 | F5 | Weight proposals | Proposed weight when reps drop (10 → 8 → 6), always overridable by hand |
 | F6 | Extend a phase | Repeat a week if the weight is not under control yet |
 | F7 | History | See past workouts and the last values for each exercise |
-| F8 | Sign-in | Email + password and Google. Sign-up is invite-only: the owner plus a few friends |
+| F8 | Sign-in | Email + password. Sign-up only through a one-time invite link: the owner plus a few friends ([decision 0006](decisions/0006-invite-links-no-google.md)) |
 | F9 | Two languages | English and Spanish UI; exercises carry a name in each language |
 | F10 | Training days | A plan has named days (Chest, Back, Legs, Shoulders/Abs), each with its own exercises |
 | F11 | Other activities | Log a non-gym day such as volleyball, so the week view shows why there was no workout |
@@ -73,7 +73,7 @@
 | Styling / UI | Tailwind CSS + shadcn/ui | Mobile-first quickly; components are copied into the repo so they can be read and changed | CSS Modules, MUI |
 | Database | **Postgres on Neon** (free plan) | Relational data (workouts → sets) fits SQL; scales to zero; database branches per preview | Supabase, Turso (SQLite), Cloudflare D1 |
 | ORM | **Drizzle** | Schema is plain TypeScript, queries look like SQL, so SQL is learned rather than hidden | Prisma (more magic, heavier) |
-| Auth | **Better Auth** (email + password, Google; Apple later) | Runs inside the Next app, stores users in our own DB | Clerk (hosted, less to learn), Supabase Auth |
+| Auth | **Better Auth** (email + password, invite links) | Runs inside the Next app, stores users in our own DB | Clerk (hosted, less to learn), Supabase Auth |
 | Translations | **next-intl** (English + Spanish) | Standard for the App Router, works in Server Components, typed message keys | react-i18next |
 | Validation | Zod | One schema validates forms on the client and input on the server | Valibot |
 | Unit tests | Vitest | Fast, same config style as the rest | Jest |
@@ -169,13 +169,20 @@ Each milestone ends with something that runs. Every task lists which agent role 
 - [x] Repository tests against Postgres (PGlite, [decision 0002](decisions/0002-pglite-for-database-tests.md)) (*test-engineer*)
 
 ### M3 — Log a workout (first usable version)
-- [ ] App shell, mobile layout, navigation, English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
-- [ ] Sign-in with Better Auth: email + password, Google, invite list; adopt the M2 `users` table and route account deletion through `deleteAccount` (checklist in `packages/db/README.md`, "Before M3"); then run the per-user seed for the owner (*backend-dev*)
-- [ ] Exercises and locations screens (*frontend-dev*)
-- [ ] Log workout screen + server actions (*frontend-dev* + *backend-dev*)
-- [ ] History screen with week view, including activities such as volleyball (*frontend-dev*)
-- [ ] E2E test: sign in → log workout → see it in history (*test-engineer*)
-- [ ] **First deploy** to Vercel + Neon (*release-manager*, you approve)
+Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (designs in `docs/assets/m3-pages/`) and [decision 0005](decisions/0005-m3-scope-and-local-database.md) (what M3 builds now and what waits for a design).
+
+- [x] App shell, mobile layout, light and dark themes (from the phone's setting), English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
+- [x] Local development database: PGlite file when `DATABASE_URL` is unset ([decision 0005](decisions/0005-m3-scope-and-local-database.md)) (*backend-dev*)
+- [x] Sign-in with Better Auth: email + password; adopts the M2 `users` table; account deletion stays off until it has a screen (*backend-dev*)
+- [ ] Registration by one-time invite link, no Google ([decision 0006](decisions/0006-invite-links-no-google.md)): `invites` table, closed public sign-up, `/sign-up?invite=…` page (*backend-dev* + *frontend-dev*)
+- [x] Log workout screen + server actions, with editable exercise autocomplete over existing exercises (*frontend-dev* + *backend-dev*)
+- [ ] When Codex's designs land: "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete) (*frontend-dev* + *backend-dev*)
+- [x] History screen with week view, including activities such as volleyball (*frontend-dev*)
+- [x] E2E test: sign in → log workout → see it in history, runs in CI (*test-engineer*)
+- [ ] **First deploy** to Vercel + Neon, then create the owner's account and run the per-user seed there; settle section 8, item 10 first (*release-manager*, you approve)
+
+### After M3, once designed (Codex + owner first)
+- [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, saved-workout detail, activity entry
 
 ### M4 — The 6-week plan
 - [ ] Create plan from template, choose exercises and starting weights (*frontend-dev* + *backend-dev*)
@@ -195,7 +202,7 @@ Every milestone closes with a *reviewer* pass and an update of the docs.
 |---|-------|----------|
 | 1 | Name | **Forja**. Folder `forja`, packages in the `@forja/*` scope |
 | 2 | Users | The owner now, a few friends later → multi-user from day one, sign-up by invitation only |
-| 3 | Sign-in | Email + password and Google in the MVP. **Apple is deferred**: Sign in with Apple needs a paid Apple Developer membership (about 99 USD per year), which breaks the zero-cost goal |
+| 3 | Sign-in | Email + password only; friends register through a one-time invite link. **Google removed** on 2026-11-20 so there are no third-party credentials to manage ([decision 0006](decisions/0006-invite-links-no-google.md)). **Apple is deferred**: it needs a paid Apple Developer membership (about 99 USD per year) |
 | 4 | Units | kg by default; any set can be logged in lb |
 | 5 | Training split | Yes — several training days per week, each with its own exercises |
 | 6 | To failure | The user decides in the gym; the app records reps per set and uses the best set |
@@ -238,3 +245,20 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
    proposal in kg may be overridden with a weight in lb.
 7. Two simultaneous "add gym" or "add training day" taps with names that differ only in case could create
    two rows; accepted for now (one user, one phone).
+
+### Open decisions from the M3 review (2026-11-20)
+
+8. **Invited friends**: they have no gyms until a gym screen is designed, so they cannot log a workout in M3.
+   `seed-user` would give them the owner's gyms and reference weights, which would be wrong for them.
+9. **Removing a friend's access**: an unused invite link can be deleted, but there is no way yet to lock out an
+   account that already exists (account deletion has no screen). Decide when that is needed.
+10. **Before the first deploy**: Better Auth's rate limiter keeps counts in memory per serverless instance
+    (consider database storage); Vercel preview URLs differ from `BETTER_AUTH_URL` (needs `trustedOrigins` or a
+    per-preview URL); decide the session lifetime and cookie renewal (a cookie can expire mid-workout).
+11. `instant = false` in the root layout keeps `<html lang>` correct but gives up an instant static shell for the
+    whole app (every page waits for the request). Next still prints dev hints such as "instant-shell-url-data"
+    when a page reads URL data outside `<Suspense>`.
+12. **Invite links in logs**: an unused link (single-use, 7-day expiry) can appear in request logs on Vercel.
+    Accept it, or later move the token into the URL `#fragment`, which browsers never send to the server.
+13. **Probing emails with an invite**: whoever holds a valid link can retry with different emails to learn which
+    ones already have an account, because a taken email gives the link back. Accepted as low risk for a few friends.

@@ -18,4 +18,4 @@ pnpm dev        # http://localhost:3000
 
 Other commands: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
 
-Status: domain core and database layer done (milestone M2). The app is still a placeholder page.
+Status: first usable version runs locally (milestone M3): sign in, log a workout, see it in the week history.

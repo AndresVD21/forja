@@ -3,5 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "dependencies": {}
+  "scripts": {
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@forja/config": "workspace:*",
+    "@playwright/test": "^1",
+    "@types/node": "^22",
+    "typescript": "^5"
+  }
 }

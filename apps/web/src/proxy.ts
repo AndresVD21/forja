@@ -1,18 +1,19 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Next 16's name for "middleware". It only checks that a session COOKIE exists, to save signed-out visitors
-// a round trip to a page that would redirect them anyway. A cookie can be forged or expired, so this is a
+// Next 16's name for "middleware". It only checks that a session COOKIE exists. A cookie can be forged,
+// expired or left over from a session that was revoked or a database that was rebuilt, so this is a
 // convenience and NOT security: the real check is requireUser() in every page and server action.
+//
+// Rule that keeps the two checks from fighting: the proxy may only send people TOWARDS the sign-in page
+// (no cookie at all = certainly signed out). It never sends them away from it. If it did, a stale cookie
+// would loop forever: /sign-in -> proxy -> "/" -> requireUser() finds no real session -> /sign-in -> ...
+// The sign-in page itself redirects signed-in users to "/", after asking the database
+// (see RedirectIfSignedIn). A stale cookie is left in place: Server Components cannot set cookies, and it
+// is harmless, because signing in replaces it.
 export function proxy(request: NextRequest) {
-  const hasSession = Boolean(getSessionCookie(request));
-  const { pathname } = request.nextUrl;
-
-  if (pathname === "/sign-in") {
-    // Already signed in (as far as the cookie says): go to the app.
-    return hasSession ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
-  }
-  if (!hasSession) return NextResponse.redirect(new URL("/sign-in", request.url));
+  if (request.nextUrl.pathname === "/sign-in") return NextResponse.next();
+  if (!getSessionCookie(request)) return NextResponse.redirect(new URL("/sign-in", request.url));
   return NextResponse.next();
 }
 

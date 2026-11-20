@@ -1,7 +1,9 @@
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { googleEnabled } from "@/server/auth";
+import { RedirectIfSignedIn } from "./redirect-if-signed-in";
 import { SignInForm } from "./sign-in-form";
 
 // Server Component: static layout and translated text. Only the form needs the browser.
@@ -9,6 +11,9 @@ export default async function SignInPage() {
   const t = await getTranslations("SignIn");
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-4 sm:px-6">
+      <Suspense>
+        <RedirectIfSignedIn />
+      </Suspense>
       <div className="flex justify-end">
         <LocaleSwitch />
       </div>

@@ -276,7 +276,7 @@ The *test pyramid*: many cheap tests at the bottom, few slow ones at the top.
 
 | Environment | App | Database | Trigger |
 |-------------|-----|----------|---------|
-| Local | `pnpm dev` | Decided in M3; tests use PGlite in memory ([0002](decisions/0002-pglite-for-database-tests.md)) | — |
+| Local | `pnpm dev` | PGlite saved to a git-ignored folder when `DATABASE_URL` is unset ([0005](decisions/0005-m3-scope-and-local-database.md)); unit tests use PGlite in memory ([0002](decisions/0002-pglite-for-database-tests.md)) | — |
 | Preview | Vercel preview URL | Neon branch created for the PR | every pull request |
 | Production | Vercel production | Neon `main` branch | merge to `main` |
 

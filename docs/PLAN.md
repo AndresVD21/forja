@@ -169,13 +169,19 @@ Each milestone ends with something that runs. Every task lists which agent role 
 - [x] Repository tests against Postgres (PGlite, [decision 0002](decisions/0002-pglite-for-database-tests.md)) (*test-engineer*)
 
 ### M3 — Log a workout (first usable version)
-- [ ] App shell, mobile layout, navigation, English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
-- [ ] Sign-in with Better Auth: email + password, Google, invite list; adopt the M2 `users` table and route account deletion through `deleteAccount` (checklist in `packages/db/README.md`, "Before M3"); then run the per-user seed for the owner (*backend-dev*)
-- [ ] Exercises and locations screens (*frontend-dev*)
-- [ ] Log workout screen + server actions (*frontend-dev* + *backend-dev*)
+Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (designs in `docs/assets/m3-pages/`) and [decision 0005](decisions/0005-m3-scope-and-local-database.md) (what M3 builds now and what waits for a design).
+
+- [ ] App shell, mobile layout, light and dark themes (from the phone's setting), English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
+- [ ] Local development database: PGlite file when `DATABASE_URL` is unset ([decision 0005](decisions/0005-m3-scope-and-local-database.md)) (*backend-dev*)
+- [ ] Sign-in with Better Auth: email + password, invite list, Google once the owner adds credentials; adopt the M2 `users` table and route account deletion through `deleteAccount` (checklist in `packages/db/README.md`, "Before M3"); then run the per-user seed for the owner (*backend-dev*)
+- [ ] Log workout screen + server actions, with editable exercise autocomplete over existing exercises (*frontend-dev* + *backend-dev*)
+- [ ] When Codex's designs land: "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete) (*frontend-dev* + *backend-dev*)
 - [ ] History screen with week view, including activities such as volleyball (*frontend-dev*)
 - [ ] E2E test: sign in → log workout → see it in history (*test-engineer*)
 - [ ] **First deploy** to Vercel + Neon (*release-manager*, you approve)
+
+### After M3, once designed (Codex + owner first)
+- [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, saved-workout detail, activity entry
 
 ### M4 — The 6-week plan
 - [ ] Create plan from template, choose exercises and starting weights (*frontend-dev* + *backend-dev*)

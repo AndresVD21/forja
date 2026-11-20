@@ -1,3 +1,4 @@
+import "server-only";
 import type { LoadMode, Unit, Weight } from "@forja/core";
 import { createRepositories, type Database, type Location, type TrainingDay } from "@forja/db";
 

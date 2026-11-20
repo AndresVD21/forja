@@ -3,15 +3,19 @@
 //  - tests can call these with a test database and a made-up user, with no session to fake;
 //  - a "use server" file turns EVERY export into a public endpoint, so a function that takes `userId` as a
 //    parameter must never live there: a browser could call it with someone else's id.
+import "server-only";
 import { IsoDateSchema, WeightSchema, type Unit } from "@forja/core";
 import { createRepositories, NotFoundError, type Database, type LastFor } from "@forja/db";
 import { z } from "zod";
+import { describeError } from "./safe-log";
 
 // Codes, not sentences: the UI translates them with next-intl (rule 10).
-export type ErrorCode = "invalid_input" | "not_found" | "save_failed";
+// "signed_out": the session ended while the form was open. The wrappers in actions.ts return it BEFORE any
+// work, so the browser can keep the draft and ask the user to sign in again (a redirect would lose it).
+export type ErrorCode = "signed_out" | "invalid_input" | "not_found" | "save_failed";
 export type ActionError = { ok: false; error: ErrorCode };
 /** Reads have their own unexpected-failure code: "save_failed" would be the wrong word for a lookup. */
-export type ReadErrorCode = "invalid_input" | "not_found" | "server_error";
+export type ReadErrorCode = "signed_out" | "invalid_input" | "not_found" | "server_error";
 
 // ---- saveWorkout ---------------------------------------------------------------------------------------
 
@@ -71,8 +75,8 @@ export async function saveWorkoutFor(db: Database, userId: string, today: string
 /** A missing id and someone else's id are both NotFoundError, so both give the same code. */
 function toErrorCode(error: unknown): ErrorCode {
   if (error instanceof NotFoundError) return "not_found";
-  // Log the failure for us, without user data: the error class and message only (ids at most).
-  console.error("saveWorkout failed:", error instanceof Error ? `${error.name}: ${error.message}` : "unknown error");
+  // Log without user data: describeError never includes the message (see safe-log.ts).
+  console.error("saveWorkout failed:", describeError(error));
   return "save_failed";
 }
 
@@ -110,7 +114,7 @@ export async function getLastTimeFor(db: Database, userId: string, input: unknow
     return { ok: true, lastTime: last ? toLastTime(last) : null };
   } catch (error) {
     if (error instanceof NotFoundError) return { ok: false, error: "not_found" };
-    console.error("getLastTime failed:", error instanceof Error ? `${error.name}: ${error.message}` : "unknown error");
+    console.error("getLastTime failed:", describeError(error));
     return { ok: false, error: "server_error" };
   }
 }

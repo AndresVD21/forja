@@ -17,8 +17,14 @@ if (!email || !password) {
 }
 
 // The database package knows where the folder is, and importing it does not open anything.
-const { localDbDir } = await import("@forja/db/local");
+const { localDbDir, assertLocalDbFree } = await import("@forja/db/local");
 const dir = localDbDir();
+try {
+  assertLocalDbFree(dir);
+} catch (error) {
+  console.error(`Stop pnpm dev first. ${error instanceof Error ? error.message : ""}`);
+  process.exit(1);
+}
 console.log(`Deleting ${dir}`);
 rmSync(dir, { recursive: true, force: true });
 rmSync(`${dir}.lock`, { force: true });

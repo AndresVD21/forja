@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { openLocalDb } from "./local";
+import { assertLocalDbFree, openLocalDb } from "./local";
 
 const freshDir = () => join(mkdtempSync(join(tmpdir(), "forja-pglite-")), "pglite");
 
@@ -26,5 +26,23 @@ describe("openLocalDb", () => {
     mkdirSync(dir, { recursive: true });
     writeFileSync(`${dir}.lock`, String(process.ppid)); // the parent process is alive and is not us
     expect(() => openLocalDb(dir)).toThrow(/in use by process/);
+  });
+
+  it("the error names the lock file and how to get out of a reused pid", () => {
+    const dir = freshDir();
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(`${dir}.lock`, String(process.ppid));
+    expect(() => openLocalDb(dir)).toThrow(`${dir}.lock`);
+    expect(() => openLocalDb(dir)).toThrow(/delete the lock file/);
+  });
+
+  it("assertLocalDbFree refuses a held folder and accepts a free or stale one", () => {
+    const dir = freshDir();
+    mkdirSync(dir, { recursive: true });
+    expect(() => assertLocalDbFree(dir)).not.toThrow(); // no lock
+    writeFileSync(`${dir}.lock`, "99999999");
+    expect(() => assertLocalDbFree(dir)).not.toThrow(); // dead owner
+    writeFileSync(`${dir}.lock`, String(process.ppid));
+    expect(() => assertLocalDbFree(dir)).toThrow(/in use by process/);
   });
 });

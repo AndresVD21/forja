@@ -13,6 +13,10 @@ import { NextResponse, type NextRequest } from "next/server";
 // is harmless, because signing in replaces it.
 export function proxy(request: NextRequest) {
   if (request.nextUrl.pathname === "/sign-in") return NextResponse.next();
+  // A server action is a POST with a `next-action` header, sent from the page the user is on. Redirecting it
+  // would turn "your session ended" into a failed fetch and lose the form's draft. The action itself checks
+  // the session and answers { error: "signed_out" }, which the form can show while keeping what was typed.
+  if (request.method === "POST" && request.headers.has("next-action")) return NextResponse.next();
   if (!getSessionCookie(request)) return NextResponse.redirect(new URL("/sign-in", request.url));
   return NextResponse.next();
 }

@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { setupDb } from "../test-helpers";
 import { saveWorkoutFor } from "../workout-actions";
 import { loadEntryFormData } from "./entry-form";
-import { loadWeek } from "./week";
+import { loadWeek, resolveWeekStart } from "./week";
 
 let t: Awaited<ReturnType<typeof setupDb>>;
 let gymA: string;
@@ -84,4 +84,17 @@ describe("loadEntryFormData", () => {
     const noWorkouts = await t.repos.locations.lastUsed("00000000-0000-4000-8000-000000000000");
     expect(noWorkouts).toBeUndefined();
   });
+});
+
+describe("resolveWeekStart", () => {
+  const today = IsoDateSchema.parse("2026-11-19"); // a Thursday: its Monday is 2026-11-16
+  it("returns the Monday of a valid requested week", () => {
+    expect(resolveWeekStart("2026-11-25", today)).toBe("2026-11-23");
+  });
+  it.each(["9999-12-31", "1899-12-31", "0100-01-01", "2026-02-30", "junk", "", undefined])(
+    "falls back to the current week for %s",
+    (requested) => {
+      expect(resolveWeekStart(requested, today)).toBe("2026-11-16");
+    },
+  );
 });

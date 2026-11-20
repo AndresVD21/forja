@@ -2,7 +2,7 @@
 import { createRepositories, type Database } from "@forja/db";
 import { createTestDb } from "@forja/db/testing";
 import { beforeAll, describe, expect, it } from "vitest";
-import { createAuth, type Auth } from "./create-auth";
+import { createAuth, inviteOnly, type Auth } from "./create-auth";
 
 let db: Database;
 let auth: Auth;
@@ -63,5 +63,48 @@ describe("invite-only sign-up", () => {
     const existing = await failure(() => signUp("friend@example.test"));
     const unknown = await failure(() => signUp("nobody@example.test"));
     expect(existing).toEqual(unknown);
+  });
+});
+
+describe("inviteOnly (the validateUserInfo guard: the only one a Google sign-in meets)", () => {
+  // Every source Better Auth can pass: it must not matter, nobody gets in without an invitation.
+  const sources = [
+    { action: "create-user", method: "email-password" },
+    { action: "create-user", method: "oauth", oauth: { providerId: "google" } },
+    { action: "link-account", method: "oauth", oauth: { providerId: "google" } },
+    { action: "sign-in", method: "oauth", oauth: { providerId: "google" } },
+  ];
+
+  it.each(sources)("refuses a non-invited email ($action, $method)", async (source) => {
+    const check = inviteOnly({ isAllowed: async () => false });
+    expect(await (check as (a: unknown) => Promise<unknown>)({ user: { email: "stranger@example.test" }, source })).toEqual({
+      error: "not_invited",
+      errorDescription: "This email cannot create an account.",
+    });
+  });
+
+  it.each(sources)("accepts an invited email in any case or spacing ($action, $method)", async (source) => {
+    const check = inviteOnly({ isAllowed: (email) => repos.allowedEmails.isAllowed(email) });
+    for (const email of ["owner@example.test", "  OWNER@Example.TEST "]) {
+      expect(await (check as (a: unknown) => Promise<unknown>)({ user: { email }, source })).toBeUndefined();
+    }
+  });
+
+  it("refuses a missing or non-string email", async () => {
+    const check = inviteOnly({ isAllowed: (email) => repos.allowedEmails.isAllowed(email) });
+    expect(await check({ user: {} })).toMatchObject({ error: "not_invited" });
+    expect(await check({ user: { email: 42 } })).toMatchObject({ error: "not_invited" });
+  });
+
+  it("is what the built auth instance uses", async () => {
+    const validate = auth.options.user?.validateUserInfo;
+    expect(validate).toBeTypeOf("function");
+    const call = (email: string) =>
+      (validate as (data: unknown, ctx: unknown) => Promise<unknown>)(
+        { user: { email }, source: { action: "create-user", method: "oauth", oauth: { providerId: "google" } } },
+        {},
+      );
+    expect(await call("not-invited-google@example.test")).toMatchObject({ error: "not_invited" });
+    expect(await call("Owner@example.test")).toBeUndefined();
   });
 });

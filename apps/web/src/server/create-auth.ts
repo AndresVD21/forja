@@ -1,5 +1,6 @@
 // Builds the Better Auth instance for a given database. Kept apart from auth.ts (which wires the real
 // database and environment) so tests can build the very same configuration on an in-memory PGlite.
+import "server-only";
 import { createRepositories, type Database } from "@forja/db";
 import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
@@ -22,6 +23,22 @@ export type AuthOptions = {
 
 // Deliberately vague: it must not say whether the address already has an account.
 const NOT_INVITED = { code: "not_invited", message: "This email cannot create an account." } as const;
+
+type AllowList = Pick<ReturnType<typeof createRepositories>["allowedEmails"], "isAllowed">;
+
+/**
+ * The invite-only gate as Better Auth's `user.validateUserInfo` callback. It is the ONLY guard for a first
+ * Google sign-in (the `before` hook below only sees /sign-up/email), and it runs for every `source`
+ * (create-user, link-account, sign-in; password or OAuth), so it must not look at `source`: no way in
+ * without an invitation. Exported so it can be tested without a Google account.
+ */
+export function inviteOnly(allowList: AllowList) {
+  return async ({ user }: { user: { email?: unknown } }) => {
+    const email = typeof user.email === "string" ? user.email : "";
+    if (await allowList.isAllowed(email)) return;
+    return { error: NOT_INVITED.code, errorDescription: NOT_INVITED.message };
+  };
+}
 
 export function createAuth(db: Database, options: AuthOptions = {}) {
   const repos = createRepositories(db);
@@ -64,11 +81,7 @@ export function createAuth(db: Database, options: AuthOptions = {}) {
     user: {
       // Invite-only (ARCHITECTURE 2.14). Better Auth calls this just before it creates a user, links an
       // account, or signs in through Google, so ONE check covers password sign-up and Google.
-      validateUserInfo: async ({ user }) => {
-        const email = typeof user.email === "string" ? user.email : "";
-        if (await repos.allowedEmails.isAllowed(email)) return;
-        return { error: NOT_INVITED.code, errorDescription: NOT_INVITED.message };
-      },
+      validateUserInfo: inviteOnly(repos.allowedEmails),
 
       // Account deletion stays OFF in M3 (no screen is designed). When it is switched on, add:
       //   deleteUser: { enabled: true, beforeDelete: (user) => repos.users.clearWorkoutsAndPlans(user.id) }

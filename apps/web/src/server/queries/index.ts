@@ -1,12 +1,12 @@
+import "server-only";
 // Reads for Server Components (ARCHITECTURE 2.2: reads in components, writes in actions). Each takes the user
 // from requireUser(), never from the caller, so a page cannot ask for someone else's data by mistake.
 // Request-time data: call them inside a <Suspense> boundary (Cache Components).
-import { IsoDateSchema, weekStart, type IsoDate } from "@forja/core";
 import { db } from "../db";
 import { requireUser } from "../session";
 import { getToday } from "../time";
 import { loadEntryFormData, type EntryFormData } from "./entry-form";
-import { loadWeek, type WeekDay } from "./week";
+import { loadWeek, resolveWeekStart, type WeekDay } from "./week";
 
 export type { EntryExercise, EntryFormData } from "./entry-form";
 export type { WeekActivity, WeekDay, WeekWorkout } from "./week";
@@ -17,9 +17,7 @@ export type { WeekActivity, WeekDay, WeekWorkout } from "./week";
  */
 export async function getWeek(date?: string): Promise<WeekDay[]> {
   const user = await requireUser();
-  const parsed = IsoDateSchema.safeParse(date);
-  const day: IsoDate = parsed.success ? parsed.data : await getToday();
-  return loadWeek(db, user.id, weekStart(day));
+  return loadWeek(db, user.id, resolveWeekStart(date, await getToday()));
 }
 
 export async function getEntryFormData(): Promise<EntryFormData> {

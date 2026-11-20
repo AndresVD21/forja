@@ -66,6 +66,7 @@ describe("saveWorkout", () => {
     expect(await saveWorkoutFor(t.db, t.userA, TODAY, bad([set(5, 10.125)]))).toEqual({ ok: false, error: "invalid_input" });
     expect(await saveWorkoutFor(t.db, t.userA, TODAY, bad([set(-1, 10)]))).toEqual({ ok: false, error: "invalid_input" });
     expect(await saveWorkoutFor(t.db, t.userA, TODAY, { ...valid(), performedOn: "2026-02-30" })).toEqual({ ok: false, error: "invalid_input" });
+    expect(await saveWorkoutFor(t.db, t.userA, TODAY, { ...valid(), performedOn: "0100-01-01" })).toEqual({ ok: false, error: "invalid_input" });
   });
 
   it("another user's gym, training day or custom exercise gives the same not_found as a missing id", async () => {

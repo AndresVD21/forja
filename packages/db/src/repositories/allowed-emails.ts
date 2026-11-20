@@ -37,7 +37,11 @@ export function allowedEmailRepository(db: Database) {
       return normalized;
     },
 
-    /** Takes an invitation back. Does not touch an account that already exists. */
+    /**
+     * Takes an invitation back. Exactly what this changes: the address can no longer sign up, and an existing
+     * user of that address can no longer sign in WITH GOOGLE (the invite check also runs on a social sign-in).
+     * Signing in with their password still works, and no account, session or data is deleted.
+     */
     async revoke(email: string): Promise<void> {
       await db.delete(allowedEmails).where(eq(allowedEmails.email, normalizeEmail(email)));
     },

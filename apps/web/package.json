@@ -10,8 +10,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "create-user": "tsx --env-file-if-exists=.env.local scripts/create-user.ts",
-    "db:reset-local": "tsx --env-file-if-exists=.env.local scripts/reset-local-db.ts"
+    "create-user": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/create-user.ts",
+    "db:reset-local": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/reset-local-db.ts"
   },
   "dependencies": {
     "@forja/core": "workspace:*",
@@ -25,6 +25,7 @@
     "radix-ui": "^1.8.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
   },

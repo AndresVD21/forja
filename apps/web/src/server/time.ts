@@ -1,6 +1,7 @@
 // The ONLY place the app reads the clock and the user's time zone. Everything else gets "today" from here,
 // so a workout logged at 9 pm in UTC-5 stays on that day (the server clock is UTC, where it is already
 // tomorrow) and tests can pass a fixed "now" to `resolveToday`.
+import "server-only";
 import { todayIn, type IsoDate } from "@forja/core";
 import { cookies } from "next/headers";
 import { connection } from "next/server";

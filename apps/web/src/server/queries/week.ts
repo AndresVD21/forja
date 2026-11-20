@@ -1,6 +1,7 @@
+import "server-only";
 // Reads for the history page. `loadWeek` takes the database and the user explicitly (so tests can call it
 // without a session); the exported `getWeek` in ./index.ts is the three-line wrapper that gets both.
-import { addDays, weekDays, type IsoDate } from "@forja/core";
+import { addDays, IsoDateSchema, weekDays, weekStart, type IsoDate } from "@forja/core";
 import { createRepositories, type Database } from "@forja/db";
 
 export type WeekWorkout = {
@@ -61,4 +62,22 @@ export async function loadWeek(db: Database, userId: string, start: IsoDate): Pr
       hasEntries: dayWorkouts.length > 0 || dayActivities.length > 0,
     };
   });
+}
+
+/**
+ * The Monday of the week to show. `requested` is what the address bar said (`?week=...`): anything that is
+ * not a real date in core's supported years, or whose week cannot be built (the Sunday of 9999-12-31's week
+ * is in year 10000), falls back to the current week. Never throws for user input.
+ */
+export function resolveWeekStart(requested: string | undefined, today: IsoDate): IsoDate {
+  const parsed = IsoDateSchema.safeParse(requested);
+  if (!parsed.success) return weekStart(today);
+  try {
+    const start = weekStart(parsed.data);
+    weekDays(start); // core throws RangeError when a day of the week is out of range; check it here
+    return start;
+  } catch (error) {
+    if (error instanceof RangeError) return weekStart(today); // only this error: anything else is a real bug
+    throw error;
+  }
 }

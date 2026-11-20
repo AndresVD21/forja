@@ -3,7 +3,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { Database } from "./client";
 import * as schema from "./schema";
@@ -40,15 +40,41 @@ function isAlive(pid: number): boolean {
  */
 function claimFolder(dataDir: string): () => void {
   const lockFile = `${dataDir}.lock`;
-  if (existsSync(lockFile)) {
-    const owner = Number.parseInt(readFileSync(lockFile, "utf8"), 10);
-    if (Number.isInteger(owner) && owner !== process.pid && isAlive(owner)) {
-      throw new Error(`The local database ${dataDir} is in use by process ${owner}. Stop it first (PGlite allows one process per folder).`);
+  const release = () => rmSync(lockFile, { force: true });
+  // Creating the file with flag "wx" fails if it exists, and the check and the creation are ONE operation,
+  // so two processes starting together cannot both think they got the lock. A stale lock gets one retry.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const fd = openSync(lockFile, "wx");
+      writeSync(fd, String(process.pid));
+      closeSync(fd);
+      rmSync(`${dataDir}/postmaster.pid`, { force: true });
+      return release;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      assertLockStale(dataDir);
+      rmSync(lockFile, { force: true }); // its owner is dead: take over
     }
   }
-  rmSync(`${dataDir}/postmaster.pid`, { force: true });
-  writeFileSync(lockFile, String(process.pid));
-  return () => rmSync(lockFile, { force: true });
+  throw new Error(`Could not take the lock ${lockFile}; try again.`);
+}
+
+/** Throws when a running process (other than this one) holds the folder. */
+function assertLockStale(dataDir: string): void {
+  const lockFile = `${dataDir}.lock`;
+  if (!existsSync(lockFile)) return;
+  const owner = Number.parseInt(readFileSync(lockFile, "utf8"), 10);
+  if (Number.isInteger(owner) && owner !== process.pid && isAlive(owner)) {
+    // A pid can be reused by an unrelated program after a hard kill, hence the way out in the message.
+    throw new Error(
+      `The local database ${dataDir} is in use by process ${owner} (lock file ${lockFile}). Stop it first: PGlite allows one process per folder. If no Forja process is running, delete the lock file.`,
+    );
+  }
+}
+
+/** For commands that delete or replace the folder: refuses while a running process holds it. */
+export function assertLocalDbFree(dataDir: string = localDbDir()): void {
+  assertLockStale(dataDir);
 }
 
 /**

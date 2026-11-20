@@ -281,7 +281,7 @@ The *test pyramid*: many cheap tests at the bottom, few slow ones at the top.
 | Production | Vercel production | Neon `main` branch | merge to `main` |
 
 - Secrets (`DATABASE_URL`, `BETTER_AUTH_SECRET`) live in Vercel's environment settings and a local,
-  git-ignored `.env.local`. `.env.example` lists the names without values.
+  git-ignored `apps/web/.env.local`. `apps/web/.env.example` lists the names without values.
 - Migrations run as a build step before the new version goes live, so code and schema change together.
 - **Concept**: *continuous integration / continuous deployment* and *environment parity*.
 

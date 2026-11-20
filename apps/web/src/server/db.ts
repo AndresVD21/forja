@@ -8,6 +8,7 @@
 // `next dev` imports server modules in more than one process (a worker that only collects route information
 // next to the one that answers requests). PGlite allows ONE process per folder; two PGlite instances writing
 // the same files at once is what corrupted the local database. A process that never queries never opens it.
+import "server-only";
 import { createDb, type Database } from "@forja/db";
 
 type Opened = { db: Database; close: () => Promise<void> };

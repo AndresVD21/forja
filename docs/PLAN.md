@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M3 usable locally** — sign in (invite-only), log a workout and see it in the week history work end to end, tested in CI. Still open in M3: custom exercises and set details (waiting for Codex's designs) and the first deploy. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M3 usable locally** — sign in (invite-only), log a workout with to-failure sets and custom exercises, and see it in the week history, end to end and tested in CI. Still open in M3: the first deploy (and Codex's remaining designs: sign-in/save states, empty states). All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -176,7 +176,7 @@ Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (desi
 - [x] Sign-in with Better Auth: email + password; adopts the M2 `users` table; account deletion stays off until it has a screen (*backend-dev*)
 - [x] Registration by one-time invite link, no Google ([decision 0006](decisions/0006-invite-links-no-google.md)): `invites` table, closed public sign-up, `/sign-up?invite=…` page (*backend-dev* + *frontend-dev*)
 - [x] Log workout screen + server actions, with editable exercise autocomplete over existing exercises (*frontend-dev* + *backend-dev*)
-- [ ] "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete with Undo) — designs supplied 2026-11-21 in [decision 0004](decisions/0004-m3-page-designs.md) and `docs/assets/m3-pages/README.md`; being built on `feat/m3-sets-and-custom-exercises` (*frontend-dev* + *backend-dev*)
+- [x] "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete with Undo), from the designs in [decision 0004](decisions/0004-m3-page-designs.md) (*frontend-dev* + *backend-dev*)
 - [x] History screen with week view, including activities such as volleyball (*frontend-dev*)
 - [x] E2E test: sign in → log workout → see it in history, runs in CI (*test-engineer*)
 - [ ] **First deploy** to Vercel + Neon, then create the owner's account and run the per-user seed there; settle section 8, item 10 first (*release-manager*, you approve)

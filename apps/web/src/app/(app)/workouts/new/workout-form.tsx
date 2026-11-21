@@ -19,6 +19,36 @@ import { ExerciseCard } from "./exercise-card";
 type Props = { data: EntryFormData; today: string };
 
 export function WorkoutForm({ data, today }: Props) {
+  // Next 16 (Cache Components) keeps a visited page hidden and restores its React state on a client-side return
+  // (docs: preserving-ui-state.md). After a successful save the draft is finished, so we remount the form body
+  // with a new key (the guide's "reset state with a key" pattern): every draft, sheet, announcement and pending
+  // flag starts fresh, and the date field shows `today` again. A full page reload would also work but throws
+  // away the whole client cache for no reason.
+  // NOTE: leaving WITHOUT saving and coming back by a link still restores the unsaved draft. That is on purpose
+  // for now; whether it should be kept is a product question for the owner.
+  const [generation, setGeneration] = useState(0);
+  // The server list is only read when the page loads, so an exercise created in the setup sheet is added here.
+  // It lives outside the keyed body because that exercise is saved for good, even when the draft is reset.
+  const [knownExercises, setKnownExercises] = useState<EntryExercise[]>(data.exercises);
+  return (
+    <WorkoutFormBody
+      key={generation}
+      data={data}
+      today={today}
+      knownExercises={knownExercises}
+      onExercisesChange={setKnownExercises}
+      onSaved={() => setGeneration((g) => g + 1)}
+    />
+  );
+}
+
+type BodyProps = Props & {
+  knownExercises: EntryExercise[];
+  onExercisesChange: (exercises: EntryExercise[]) => void;
+  onSaved: () => void;
+};
+
+function WorkoutFormBody({ data, today, knownExercises, onExercisesChange, onSaved }: BodyProps) {
   const t = useTranslations("Entry");
   const router = useRouter();
   const dateId = useId();
@@ -29,9 +59,6 @@ export function WorkoutForm({ data, today }: Props) {
   const [trainingDayId, setTrainingDayId] = useState("");
   const [exercises, setExercises] = useState<ExerciseDraft[]>([newExercise(1)]);
   const nextKey = useRef(2);
-  // The server list is only read when the page loads, so an exercise created in the setup sheet is added here.
-  // The merged list comes from adoptCreatedExercise (tested, and it skips duplicates).
-  const [knownExercises, setKnownExercises] = useState<EntryExercise[]>(data.exercises);
   // Keys of cards added after the first render: they take focus; the first card must not on page load.
   const [focusKeys, setFocusKeys] = useState<number[]>([]);
 
@@ -63,6 +90,7 @@ export function WorkoutForm({ data, today }: Props) {
       });
       if (result.ok) {
         // Saved for real: only now do we leave. The new workout is in that week's list.
+        onSaved(); // reset first, so a later client-side return to this page shows a blank form
         router.push(`/?week=${result.performedOn}`);
         return;
       }
@@ -130,7 +158,7 @@ export function WorkoutForm({ data, today }: Props) {
           problems={attempted && hasProblems(exerciseProblems[index]) ? exerciseProblems[index] : null}
           onRemove={exercises.length > 1 ? () => setExercises((all) => all.filter((e) => e.key !== draft.key)) : null}
           onChange={updateExercise}
-          onExercisesChange={setKnownExercises}
+          onExercisesChange={onExercisesChange}
           focusOnMount={focusKeys.includes(draft.key)}
           disabled={saving}
         />

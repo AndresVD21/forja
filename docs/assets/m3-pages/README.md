@@ -11,6 +11,8 @@ exercise names with optional suggestions and reusable custom names. See
 | `exercise-autocomplete.png` | Expanded editable-name interaction in both approved themes; takes precedence over overview entry details |
 | `custom-exercise-light.png` | Tall custom-exercise sheet: total-weight and per-side examples, light theme |
 | `custom-exercise-dark.png` | Same two setup states in the approved monochrome theme |
+| `set-details-light.png` | Table with failure badges/Undo, set-details sheet and explicit unit-choice preview, light theme |
+| `set-details-dark.png` | Same three set-detail states in the approved monochrome theme |
 
 ![Light overview](overview-light.png)
 ![Dark overview](overview-dark.png)
@@ -133,7 +135,7 @@ workout inert, not just paint a scrim. Desktop layout is outside this change.
 
 The boards show the completed form, not a working interaction or every error state. The behavioral
 requirements above cover creation pending/failure/cancel; auth/workout-save and set-detail boards remain
-separate follow-ups. All setup labels, option descriptions, errors and live announcements need English
+separate concerns; set-detail boards are now supplied below. All setup labels, option descriptions, errors and live announcements need English
 and Spanish next-intl strings. The original approved overview images remain unchanged; later auth scope
 is controlled by decision 0006 (no Google), not by old provider buttons in those early illustrations.
 
@@ -148,6 +150,122 @@ monochrome counterpart. No API fallback, generated UI code or application edits 
 Visual QA checks required fields, field visibility, selected modes, footer copy and matching geometry;
 Both PNGs decoded at 1448 × 1086 and local Markdown-link checks passed. Static images do not verify actual 44 px targets,
 modal focus, keyboard or Spanish wrapping. Claude Code must validate those in the implementation.
+
+## Set details
+
+Owner choices on 2026-11-21, recorded in [decision 0004](../../decisions/0004-m3-page-designs.md):
+per-row sheet plus exercise failure shortcuts; explicit Keep number/Convert; immediate deletion with
+persistent Undo; no reordering; failure shortcuts affect current rows only. This completes an open design
+in 0004 rather than changing an earlier save policy, so no new numbered record is required.
+
+![Set details — light](set-details-light.png)
+![Set details — monochrome dark](set-details-dark.png)
+
+### Read the three states
+
+1. **Table** shows mixed units, failure badges for the last two sets, per-exercise all/clear actions,
+   trailing … buttons and an inline Undo. Four rows remain after deleting an extra fifth row in this
+   illustrative snapshot; the notice does not imply one of the four visible rows has been deleted.
+2. **Set details** is a medium-height bottom sheet titled Set 4, with the exercise and current values
+   for context, a To failure switch, per-set unit selector, Delete set, and Done. No reorder controls.
+3. **Change unit** is a preview state within the same sheet, not another dialog. The current pair is
+   20 kg/side; the target lb selection is tentative. Keep number: 20 lb/side is initially selected;
+   Convert weight: 44.09 lb/side is optional. Only Apply unit change mutates this row's weight/unit.
+   Cancel unit change returns to the normal sheet unchanged. Apply also returns to the normal sheet.
+
+The first state is a normal undimmed page; only the other two have a scrim. Actual modal implementation
+must make the underlying workout inert, not merely darker. Earlier overview boards' repeated failure
+switches and static row layout are superseded by this design. No generated card shading implies a new
+palette token. Use the existing flat theme tokens, not sampled PNG shades. No new artwork/logo is added.
+
+### Behavior to preserve
+
+- Every new row starts with no failure flag. Mark all sets to failure sets current rows' flags true,
+  including blank rows; Clear failure marks sets those flags false. Neither is a persistent mode, neither
+  affects another exercise, and neither touches values, units or deleted snapshots. Later Add set is false.
+- The text-only Failure badge sits below the set number. It is not clickable, not a completion checkbox,
+  and not an indication the row has been saved. Keep the table calm: individual marking is in the sheet.
+- To failure edits the row in the draft immediately. Done/Escape closes the sheet without rolling back
+  that switch; it is not a Save action. Dismissing a tentative unit preview discards only that preview.
+- The card's current kg/lb switch continues to affect rows with no typed weight only. A row's own filled
+  value requires an explicit unit choice. The card default and other rows are never changed by per-set
+  edits. Keep per-row suffixes; a mixed-unit header must not falsely label all rows kg or lb.
+- Keep number retains the exact weight string, including commas and partial input; only its unit changes
+  after confirmation. Conversion requires a valid source number, uses core, rounds to the nearest 0.01
+  destination unit, validates WeightSchema and previews that exact result. Disable conversion with a
+  readable reason for invalid source or out-of-range result; never clamp or convert repeatedly as units
+  are previewed. On per-side entries convert the entered side quantity, not total load or the bar.
+- Blank weights can change unit directly, without a meaningless conversion choice. Selecting the current
+  unit changes nothing. Reps, failure and the exercise's load mode/bar weight are untouched by unit edits.
+- Delete removes the current row immediately from the draft, closes the sheet, renumbers and focuses
+  Undo. Store its identity, position, raw text, unit and failure flag in per-exercise deletion history.
+  Persistent Undo restores the most recent deleted row and focuses its … button; repeated Undo restores
+  earlier rows. Do not expire Undo with a timer or replace the history on the next deletion.
+- Undo history lasts for the current exercise/workout draft until exhausted, discarded or successfully
+  saved; failed workout saves retain it. Restoring a row does not overwrite unrelated later edits.
+  Removing the final row leaves Add set and the exercise present; existing no-sets validation still applies.
+- There is no set reordering in M3. Stable draft row keys identify controls, focus and snapshots across
+  delete/renumber, while visible numbering follows array order. Keys are not sent to the database.
+- Failure flags alone do not make empty rows saveable. Save workout still validates incomplete rows,
+  skips truly empty rows and persists remaining rows sequentially. Serialize the actual failure flag,
+  not the current hard-coded false. No detail control makes a server call or alters saved history.
+
+### Controls and localized copy
+
+Every action, including …, Undo, Done and the input-unit selector, needs at least a 44 × 44 px target.
+The narrow set column may grow vertically for the badge; preserve 16 px input text and usable numeric
+widths. Let long Spanish labels wrap rather than shrinking controls. Use visible focus and real switch,
+radio and button semantics. Text labels and control states supplement color in both themes.
+
+| Meaning | English | Spanish |
+|---------|---------|---------|
+| Sheet title | Set {number} | Serie {number} |
+| Row status | Failure | Al fallo |
+| Switch | To failure | Al fallo |
+| Switch explanation | No further full rep was possible. | No fue posible hacer otra repetición completa. |
+| All current sets | Mark all sets to failure | Marcar todas las series al fallo |
+| Clear current flags | Clear failure marks | Quitar marcas de fallo |
+| Unit selector | Unit for this set | Unidad de esta serie |
+| Preserve typed text | Keep number | Mantener número |
+| Convert explicitly | Convert weight | Convertir peso |
+| Apply preview | Apply unit change | Aplicar cambio de unidad |
+| Cancel preview | Cancel unit change | Cancelar cambio de unidad |
+| Remove row | Delete set | Eliminar serie |
+| Recovery notice | Set removed | Serie eliminada |
+| Restore row | Undo | Deshacer |
+| Close sheet | Done | Listo |
+
+Copy/format previews with next-intl, e.g. 44.09 lb in English and 44,09 lb in Spanish. Source input is not
+reformatted by Keep number. Translate helper/validation/live-announcement strings too; do not hard-code
+these examples in components. The badge is visible text; also expose it as part of the row description.
+A unit suffix hidden from assistive technology needs an equivalent input description, including per-side
+context. Maintain existing Weight and Reps input accessible names for role/label-based tests.
+
+Example … accessible name: **Set {number} details for {exercise}** / **Detalles de la serie {number} de
+{exercise}**. Switch/unit names identify the set within that exercise; bulk names identify the exercise.
+Delete/restore and bulk-flag changes get polite live announcements with the affected row/count. Restore
+focus by stable identity, not stale array index. The sheet traps focus, supports Escape/keyboard navigation,
+returns focus correctly, scrolls as needed and does not hide controls behind the phone keyboard/safe area.
+When a unit preview is open, Done/Escape must not silently apply it. Other already-applied draft edits stay.
+
+### Implementation handoff and visual checks
+
+`sets-table.tsx`, `exercise-card.tsx` and `draft.ts` were read, not edited. Current rows are keyed by index,
+SetDraft lacks `toFailure`, and `toSaveExercises` hard-codes false. Claude Code adds stable row identity and
+flag propagation through draft, parser and serialization, then integrates the controls. The existing server
+schema and repository already accept per-set units and failure flags and assign sequential set numbers;
+no migration or details endpoint is needed. Use core conversion/rounding/validation helpers. The README
+and decision's Consequences list tests for cancellation, raw text, conversion precision/range, mixed units,
+blank rows, all/clear/new rows, complete repeated Undo, actual persistence, both locales and both themes.
+
+Created with built-in imagegen: a light three-state board (normal table, details sheet, explicit unit-change
+preview), a correction placing badges beneath set numbers and removing the scrim from the table, then a
+palette-only monochrome variant. This uses the previously approved token references; no API fallback or
+UI implementation code was generated. The images are references, not page assets to embed. Visual review
+checks exact example values, mixed-unit suffixes, text badges, default Keep number, Undo and both themes.
+PNG decoding and local Markdown links are checked before handoff. Static images do not prove accessible
+target dimensions, keyboard behavior or working Undo; verify those in the implementation. Auth/save and
+empty-state boards remain separate follow-ups; no RPE, notes per set, timer, pre-fill or reorder is included.
 
 ## Provenance and validation
 

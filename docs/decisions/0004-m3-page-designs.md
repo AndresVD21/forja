@@ -95,8 +95,107 @@ user scoping, per-side barbell loads and bilingual UI in CLAUDE.md.
   it cannot silently lose setup input. Keep the active field visible when the keyboard opens. Never
   squeeze the entire form into one viewport or leave Save workout actionable beneath the modal.
 
-This resolves follow-up 1 only. Set details, auth/workout-save states and empty-state designs remain
-separate conversations in that order. It does not reopen after-M3 management or desktop screens.
+Custom-exercise setup was follow-up 1. Set details are resolved below; auth/workout-save and empty
+states remain subsequent conversations. After-M3 management and desktop screens remain deferred.
+
+### Set details (owner, 2026-11-21)
+
+The owner chose: **per-row sheet + exercise failure shortcuts**, **explicit Keep number / Convert**,
+**delete with persistent Undo**, **no reordering**, and **bulk failure actions affect current rows only**.
+These resolve the open set-detail design, preserving the existing per-row data model and save boundary.
+
+#### Failure marking and sheet
+
+- Add a trailing **…** button to each set row, opening a bottom sheet titled **Set {number}**, with the
+  exercise name and current weight/unit/reps as context. It contains only To failure, the set's unit,
+  and Delete set. No RPE, per-set notes, timer, pre-fill, reorder handles or completed/saved checkboxes.
+- The To failure switch edits that row's `toFailure` in the workout draft immediately. **Done** or
+  Escape closes the sheet, keeping those draft edits; Done is not a server save. Unsaved unit-choice
+  previews are discarded on dismissal, not applied implicitly. Restore focus to the row's … button.
+- Show a small **Failure / Al fallo** text badge beneath the set number when marked, not a color-only
+  highlight and not a separate tiny toggle. Leave normal rows unbadged. The switch description explains
+  reaching the point where no further full rep was possible; do not infer failure from reps or plan week.
+- Above each exercise's table offer **Mark all sets to failure** and **Clear failure marks**. They set
+  flags for that exercise's currently listed rows, including blank rows, without touching weight, reps
+  or units. They do not affect another exercise or deleted-row snapshots. Newly added rows always start
+  `toFailure: false`; this is a one-shot action, never a persistent failure-week mode.
+- Purely marked blank rows remain empty and are skipped on save. Partly entered rows still need the
+  existing incomplete-set validation. Log actual reps, including zero where core allows it. Do not add
+  proposal calculations here: later plan logic consumes the actual saved to-failure sets via core.
+- A direct toggle on every row was considered but crowds numeric entry; a sheet alone was considered
+  but makes all-four failure weeks repetitive. The hybrid preserves a calm table and fast all/none use.
+
+#### One set's unit
+
+- Preserve the current card-level rule: changing kg/lb only changes rows with no entered weight; filled
+  rows keep their own units. Keep each row's unit visible and the header unit-neutral when rows differ.
+- In the sheet, choosing a different unit for a filled row opens a preview in the same sheet. Default
+  radio choice is **Keep number**, showing e.g. **20 kg → 20 lb**. The alternative is **Convert weight**,
+  showing **20 kg → 44.09 lb**. Neither change happens before **Apply unit change**. **Cancel unit change**
+  restores the current unit selection without changing the number, returning to normal set details.
+- Keep number deliberately corrects the unit label while retaining the raw typed weight string (including
+  a comma decimal or half-typed value). It is the user's explicit action, not an automatic reinterpretation.
+  Reps and the failure flag are untouched. Blank weights can change unit directly; there is no quantity
+  to convert. Invalid/partial numbers cannot be converted: retain Keep number and explain why Convert
+  is unavailable until the number is valid. Existing save validation still applies.
+- Convert uses `packages/core` unit conversion, rounds to the nearest 0.01 of the destination unit and
+  previews the exact value that will enter the draft. Use the existing pure core rounding helper with
+  step 0.01, not the exercise's plate/weight step. Validate the result with `WeightSchema`; if out of
+  range, disable Convert with an explanation rather than clamping. This is display/storage precision,
+  not a training-weight proposal. On per-side exercises convert the entered plate quantity only, with
+  no added bar and no doubling; per-side mode and bar weight remain unchanged.
+- Apply updates only the selected set and returns to the normal set-details view. Do not change the
+  card's default unit or any other row. Preview starts from the current stored draft pair, so toggling
+  target units does not repeatedly convert already-rounded previews. Reopening after an applied change
+  uses the now-current pair. No hidden original value or converted value replaces the user-selected pair
+  on Save workout. Formatting/rounding happens only for an explicitly requested conversion.
+- Automatic conversion and relabelling-only were considered. Both are available as explicit choices
+  because the owner wants typed numbers preserved unless conversion is deliberately requested.
+
+#### Delete, Undo and numbering
+
+- **Delete set** immediately removes the row from the workout draft, closes its sheet, and renumbers
+  displayed rows. No confirmation modal. Show a persistent inline **Set removed — Undo** beneath that
+  exercise's table, with a full-size Undo hit area; no timed toast. Move focus to Undo and announce removal.
+- Maintain a per-exercise last-in-first-out deletion history for the current draft. Undo restores the most
+  recently deleted row at its captured position with its stable identity, raw values, unit and failure
+  flag; remaining rows renumber again. Repeated Undo restores earlier deletions. Snapshot data is not
+  changed by later bulk failure marking. Unrelated edits/additions remain untouched.
+- Keep Undo available until the relevant history is exhausted, the exercise/workout draft is discarded,
+  or Save workout succeeds. Failed Save workout retains the draft AND deletion history. While a workout
+  save is pending, disable draft mutation as elsewhere in the form. Undo after successful saving is not
+  a history-editing feature. No timer can silently remove the recovery opportunity.
+- Deleting the last row leaves the exercise and Add set available; never silently delete the exercise or
+  create a replacement row. Existing no-usable-sets validation still applies on save. Empty rows can be
+  deleted just like filled rows. Undo restores focus to the restored row's … control.
+- No reorder UI in M3: the owner never reorders sets when logging. Array order is performance order.
+  Submission skips truly blank rows and the existing repository numbers the remaining saved rows from
+  1. Use stable draft-only row keys rather than array indices for component identity, sheet selection,
+  deletion snapshots and focus; keys are not database IDs and are not submitted.
+- Confirm-every-delete and confirm-only-filled were considered but add friction. Persistent Undo makes
+  removal quick while retaining a recovery path for accidental taps.
+
+#### Save boundary, accessibility and scope
+
+- Every action above changes client draft state only. No repository call or revalidation occurs when a
+  switch, unit or delete control is used. Extend the draft/parser/serialization to carry `toFailure`
+  instead of hard-coding false. Only Save workout persists the resulting set rows. The existing server
+  schema/repository already accept the flag, per-set units and sequential rows; no migration is required.
+- Both approved themes/tokens apply. Every interactive target is at least 44 × 44 px; allow taller rows
+  for the badge and preserve usable weight/reps inputs rather than shrinking a fourth column. Use the
+  existing 16 px input size. A row badge need not be a touch target because it is not interactive.
+- The sheet has a labelled modal dialog, focus trapping/return, keyboard switch/radio/button support and
+  inert background. Only one sheet is open; the conversion preview is inside it, not a nested modal.
+  Give long content a scroll area and avoid keyboard/safe-area overlap. A bare icon, color, unit suffix
+  hidden from assistive technology, or array index alone is not an accessible name.
+- Localize labels, badge text, unit-choice previews, disabled explanations and live announcements in
+  English/Spanish through next-intl. Accessible … names identify both exercise and current set number;
+  To failure and Unit controls identify the set. Bulk names identify the exercise. Keep existing Weight/
+  Reps input labels stable for tests, add unit context through descriptions, and expose switch/radio state.
+- [The asset README](../assets/m3-pages/README.md#set-details) supplies control copy, both theme boards,
+  reference precedence and implementation checks. Auth/workout-save and empty-state design follow-ups
+  remain separate; management/desktop layouts remain after M3. This does not change custom-exercise
+  persistence, which is deliberately independent of the workout.
 
 ### Constraints carried forward
 
@@ -126,9 +225,15 @@ separate conversations in that order. It does not reopen after-M3 management or 
 | `backend-dev` / `apps/web` actions | Add the independently committed Save exercise and use action, using the existing exercise repository and alias/name recheck. | Authenticate → validate → create/reuse → revalidate; required metadata checked; another user's records inaccessible; existing metadata never overwritten on a match. |
 | `test-engineer` / `apps/web`, `packages/db`, `e2e` | Verify custom-setup persistence and conditional metadata. | Cancel creates nothing; explicit total/per-side selection; bar weight/unit validation; failure retains values; saved exercise survives discarded/failed workout; duplicate alias reuse and both locales/themes. |
 | Orchestrator / `docs/PLAN.md` | Mark the custom-exercise design dependency as supplied when merged, without treating set-detail designs as supplied. | Keep implementation checkboxes honest; no M4/M5 scope change. |
-| Codex + owner / `docs/assets` | Next: set details, then auth/workout-save states, then empty states, one at a time. | Custom-exercise setup is supplied; other visual states remain follow-ups. After-M3 screens stay deferred. |
+| `frontend-dev` / `apps/web` | Extend `SetDraft`, `newSet`, `readSet`, `toSaveExercises`, sets-table and exercise-card using these set-detail boards. | Stable row keys; default false; draft flag survives serialization; sheet, text badges and current-row-only all/clear actions; no reorder UI. |
+| `frontend-dev` / `apps/web` | Add per-set unit preview/apply and deletion/Undo draft helpers. | Raw text preserved by Keep number; explicit core conversion/2-decimal validation; only one row changes; persistent per-exercise Undo restores complete rows without losing unrelated edits. |
+| `backend-dev` / `apps/web` server, `packages/db` | Verify existing validated save payload and repository retain `toFailure` and per-set units through the save/read path. | No new per-detail endpoint, server write or schema migration; only Save workout persists; sequential saved set numbers after blank-row filtering. |
+| `domain-dev` / `packages/core` | Reuse conversion, 0.01-step rounding and WeightSchema; retain best-to-failure proposal behavior for later M4. | No conversion maths in components and no change to training proposals or per-side/bar semantics. |
+| `test-engineer` / `apps/web`, `packages/db`, `e2e` | Cover failure, unit choices, delete/Undo and accessible controls in both locales/themes. | Last-two/all/clear; newly added false; flags-only blank rows skipped; cancelled/invalid/overflow conversion; raw comma text; mixed-unit and per-side values; repeated delete/Undo; last-row delete; failure/success save boundaries; correct persisted true flags. |
+| Orchestrator / `docs/PLAN.md` | Reference this set-details design as supplied when merged and schedule its implementation separately from remaining states. | No checkbox is marked implemented just because a design exists; no RPE, timer, notes per set or reorder scope. |
+| Codex + owner / `docs/assets` | Next: auth/workout-save states, then empty states, one at a time. | Custom-exercise and set-detail designs are supplied; other visual states remain follow-ups. After-M3 screens stay deferred. |
 
 No CLAUDE.md rule change is needed. The trade-off is that both themes and editable suggestions require
 more state and accessibility work than one theme and a fixed picker. This is an approved first direction
-plus the custom-exercise setup follow-up, not a claim that every M3 screen and edge state has been
-designed or verified.
+plus the custom-exercise and set-detail follow-ups, not a claim that every M3 screen and edge state
+has been designed or verified.

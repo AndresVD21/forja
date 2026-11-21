@@ -9,6 +9,8 @@ exercise names with optional suggestions and reusable custom names. See
 | `overview-light.png` | Sign-in, history and basic workout-entry hierarchy in the light palette |
 | `overview-dark.png` | The same overview using charcoal/white; supersedes the earlier navy UI |
 | `exercise-autocomplete.png` | Expanded editable-name interaction in both approved themes; takes precedence over overview entry details |
+| `custom-exercise-light.png` | Tall custom-exercise sheet: total-weight and per-side examples, light theme |
+| `custom-exercise-dark.png` | Same two setup states in the approved monochrome theme |
 
 ![Light overview](overview-light.png)
 ![Dark overview](overview-dark.png)
@@ -72,13 +74,80 @@ are not supplied by these first mockups.
   then Save workout. The name is not a static heading. Search may suggest similar names, but a nonmatching
   name remains usable. Exact normalized matches reuse the existing identity per rule 12.
 - Show source-aware last/reference values separately; no values are auto-filled in M3 by this design.
-- Custom exercise setup must collect the existing creation contract's metadata, including load mode; its
-  follow-up UI is not shown. Never infer per-side vs total solely from a typed name.
+- Custom exercise setup now follows the sheet below and the 2026-11-21 update in decision 0004. It
+  collects all creation metadata explicitly and saves the reusable exercise before the workout.
 - Per-row ellipsis opens set details such as To failure; selecting a marker does not mean the set or workout
   has been persisted. The compact unit selector must still support each set's own unit. On mixed-unit
   rows, show the unit beside each value and avoid a misleading global KG header.
 - Translate all interface and accessible text through next-intl in both languages. Custom exercise names
   remain as typed; do not translate them. Existing identities/history are never silently renamed.
+
+## Custom-exercise setup
+
+Owner choice on 2026-11-21: **tall bottom sheet + independent exercise save**. This fills an open item
+in decision 0004, not a replacement for a previously chosen save policy. Decision numbers 0005 and 0006
+already belong to M3 scope and invite-link decisions; neither is overwritten.
+
+![Custom exercise — light](custom-exercise-light.png)
+![Custom exercise — monochrome dark](custom-exercise-dark.png)
+
+### Read the examples
+
+Each board shows two snapshots of the same sheet after explicit choices: total weight (left) and plates
+per side (right). In a newly opened sheet the name is carried in, muscle group/equipment show prompts,
+kg is selected, and neither load-mode radio is selected. Chest/Machine/Barbell and the selected radios
+in the pictures are examples, not values derived from the name or auto-selected defaults.
+
+Fields in order: exercise name, muscle group, equipment, default unit, weight-entry mode, then conditional
+bar weight and its own unit. For muscle/equipment use translated labels for catalogue values (chest,
+back, shoulders, legs, biceps, triceps, forearms, core; barbell, cable, dumbbell, machine, sled), with an
+Other choice for movements outside the current catalogue. Keep user-typed names unchanged. No name
+translation, management screen or weight-step field is added. Other maps to a stable nonempty `other`
+value; equipment still never chooses weight-entry mode for the user.
+
+**Total weight** means the full number recorded for a set; **Plates per side** means plates on one side,
+bar excluded. Per-side reveals an editable 20 kg bar default, following the existing assumption. It is
+visible, not guessed from equipment/name. Exercise default unit and bar unit are independent; bar-unit
+changes convert the displayed quantity through core. Total submits no bar weight. Default kg does not
+prevent mixed-unit set entry later.
+
+Footer copy: **Saving adds this exercise to your list, even if you discard the workout.**
+Primary action: **Save exercise and use**. It persists the personal exercise immediately and independently
+from the workout. Use the returned ID/metadata on success and announce **Exercise saved. Workout not
+saved yet.** A server-returned alias/name match selects the existing ID instead; announce **Existing
+exercise selected.** Do not replace that record's metadata with the sheet's entries.
+
+Before submission, Cancel or Escape closes without creating an exercise, discards sheet changes, and
+returns to the original typed-name field with all workout data intact. Backdrop/drag gestures must not
+silently discard setup. While saving, block repeat submissions and dismissal, expose pending state,
+and keep the workout underneath inert. Failure retains every setup field and gives a readable inline
+message and retry action. No new page or workout save is triggered by finishing setup.
+
+Use the existing palette tokens and Geist. Body/input text remains at least 16 px, targets at least
+44 × 44 px. Modal title/description are programmatic, focus stays in the sheet and returns on close.
+The mobile sheet is tall (roughly 90% of usable viewport height); scroll only its content between the
+header/footer and reserve bottom space so the button covers nothing. Keyboard appearance must not hide
+the active input or trap the user away from Cancel/confirmation. Do not scale the entire PNG down to
+fit. The generated dark backdrop is illustrative; implementation must actually make the underlying
+workout inert, not just paint a scrim. Desktop layout is outside this change.
+
+The boards show the completed form, not a working interaction or every error state. The behavioral
+requirements above cover creation pending/failure/cancel; auth/workout-save and set-detail boards remain
+separate follow-ups. All setup labels, option descriptions, errors and live announcements need English
+and Spanish next-intl strings. The original approved overview images remain unchanged; later auth scope
+is controlled by decision 0006 (no Google), not by old provider buttons in those early illustrations.
+
+### Artwork provenance and checks
+
+Created using built-in imagegen, retaining the existing palette reference. Prompt: two tall-sheet
+snapshots, total and per-side, with all `exercises.create` fields, conditional 20 kg bar, clear Cancel,
+and Save exercise and use; footer explains persistence independently from the workout. A targeted copy
+edit replaced a misleading past-tense footer with future-action text. A palette-only edit produced the
+monochrome counterpart. No API fallback, generated UI code or application edits were used.
+
+Visual QA checks required fields, field visibility, selected modes, footer copy and matching geometry;
+Both PNGs decoded at 1448 × 1086 and local Markdown-link checks passed. Static images do not verify actual 44 px targets,
+modal focus, keyboard or Spanish wrapping. Claude Code must validate those in the implementation.
 
 ## Provenance and validation
 

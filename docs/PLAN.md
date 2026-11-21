@@ -262,3 +262,7 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
     Accept it, or later move the token into the URL `#fragment`, which browsers never send to the server.
 13. **Probing emails with an invite**: whoever holds a valid link can retry with different emails to learn which
     ones already have an account, because a taken email gives the link back. Accepted as low risk for a few friends.
+14. **Unsaved workout draft after leaving the page**: if you leave the entry screen without saving and come back
+    through an in-app link, the unsaved draft is still there (Next keeps the page in memory); a reload or sign-out
+    clears it. After a successful save the form is reset. Decide whether the unsaved draft should be kept (handy
+    mid-workout) or cleared, and whether it should survive a reload.

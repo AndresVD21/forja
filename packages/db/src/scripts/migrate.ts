@@ -7,15 +7,16 @@
 // Any error must end in a non-zero exit code, because that is what makes Vercel stop the deployment: code must
 // never go live against an older schema. `process.exitCode = 1` does that, and `finally` still closes the
 // connection (an open Neon pool would otherwise keep the process alive after the failure).
-import { openTarget } from "./target";
+import { describeFailure, openTarget } from "./target";
 
-const target = await openTarget({ preferDirect: true });
+let target: Awaited<ReturnType<typeof openTarget>> | undefined;
 try {
+  target = await openTarget({ preferDirect: true });
   await target.migrate();
   console.log("Migrations applied.");
 } catch (error) {
-  console.error("Migration failed:", error instanceof Error ? error.message : error);
+  console.error("Migration failed:", describeFailure(error));
   process.exitCode = 1;
 } finally {
-  await target.close();
+  await target?.close();
 }

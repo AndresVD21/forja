@@ -2,12 +2,15 @@
 // Environment: BETTER_AUTH_SECRET is read by Better Auth itself; the address comes from resolveAuthUrls
 // (BETTER_AUTH_URL, or Vercel's own URLs on preview deployments). See .env.example.
 import "server-only";
-import { resolveAuthUrls } from "./auth-settings";
+import { rateLimitEnabled, resolveAuthUrls } from "./auth-settings";
 import { createAuth } from "./create-auth";
 import { db, supportsTransactions } from "./db";
 
+const { warnings, ...urls } = resolveAuthUrls(process.env);
+for (const warning of warnings) console.warn(warning);
+
 export const auth = createAuth(db, {
   transactions: supportsTransactions,
-  ...resolveAuthUrls(process.env),
-  rateLimit: process.env.NODE_ENV === "production",
+  ...urls,
+  rateLimit: rateLimitEnabled(process.env),
 });

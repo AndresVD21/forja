@@ -2,6 +2,7 @@ import "server-only";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "./auth";
+import { sessionReadQuery } from "./auth-settings";
 import { describeError } from "./safe-log";
 
 // Every protected page and EVERY server action must call requireUser() (or getCurrentUser()) itself.
@@ -19,7 +20,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   const requestHeaders = await headers(); // outside the try: it throws Next's own control-flow errors
   let session;
   try {
-    session = await auth.api.getSession({ headers: requestHeaders });
+    // Renewal only inside server actions, which can set the cookie (see sessionReadQuery).
+    session = await auth.api.getSession({ headers: requestHeaders, query: sessionReadQuery(requestHeaders) });
   } catch (error) {
     // A database failure here carries Drizzle's error as `cause`, with the session token in its parameters, and
     // Next would print the whole chain. Log the safe summary and throw a fresh error with no cause.

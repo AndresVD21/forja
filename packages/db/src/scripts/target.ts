@@ -34,8 +34,26 @@ export function chooseDatabaseUrl(
   return undefined;
 }
 
+/**
+ * One line saying why a script failed: the error's message plus its cause's message (the Postgres or network
+ * reason). Those messages do not contain the connection string. Never prints a whole error or event object, which
+ * can carry the URL or the query parameters.
+ */
+export function describeFailure(error: unknown): string {
+  const messageOf = (value: unknown): string | undefined =>
+    value instanceof Error ? value.message : typeof (value as { message?: unknown } | null)?.message === "string" ? (value as { message: string }).message : undefined;
+  const main = messageOf(error) ?? "unknown error";
+  const cause = messageOf((error as { cause?: unknown } | null)?.cause);
+  return cause && cause !== main ? `${main} (${cause})` : main;
+}
+
 export async function openTarget(options: { preferDirect?: boolean } = {}): Promise<Target> {
   const choice = chooseDatabaseUrl(process.env, options.preferDirect ?? false);
+  // On Vercel there is no local folder to fall back to: PGlite would "succeed" on the build machine's disk, the
+  // deployment would go green and the site would have no database. Fail the build instead.
+  if (!choice && process.env.VERCEL) {
+    throw new Error("Running on Vercel but neither DATABASE_URL nor DATABASE_URL_UNPOOLED is set; refusing to use a local database.");
+  }
   if (choice) {
     const databaseUrl = choice.url;
     console.log(

@@ -140,7 +140,11 @@ What M3 (Better Auth) must check against this package:
 - **Catalogue seed in every build** is safe: it upserts only the shared exercises (`user_id` NULL) and their
   aliases, in one transaction, and never touches user data.
 - **Previews** get their own Neon branch (a copy of production), so their migrations never touch production data.
-- **Your account** on production is created once by you, from your terminal, against the pooled address:
+- **Your account** on production is created once by you, from your terminal. The one-off scripts (`create-user`,
+  `db:seed-user`, `invite`) use whatever `DATABASE_URL` holds; give them Neon's **direct** connection string:
   `DATABASE_URL=... pnpm --filter @forja/web create-user you@example.com "Your Name"`, then
   `DATABASE_URL=... pnpm --filter @forja/db db:seed-user -- you@example.com`.
-- **Rate limit** counts live in the `rate_limits` table, so all instances share them. It is on in production only.
+- **Rate limit** counts live in the `rate_limits` table, so all instances share them. It is on whenever
+  `NODE_ENV=production`, which includes Vercel previews, and off in `next dev`, tests and e2e.
+- **Sessions** are renewed only by server actions (they can set the cookie); pages read without renewing.
+- **On Vercel the scripts refuse to run without a database URL** instead of falling back to a local PGlite folder.

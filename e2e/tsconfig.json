@@ -1,0 +1,5 @@
+{
+  "extends": "@forja/config/tsconfig.base.json",
+  "compilerOptions": { "noEmit": true, "types": ["node"] },
+  "include": ["*.ts", "tests", "support"]
+}

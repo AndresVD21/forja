@@ -86,6 +86,12 @@ function slugify(name: string): string {
 
 export function exerciseRepository(db: Database) {
   return {
+    /** Like `list`, plus each exercise's aliases (for an autocomplete that matches alternative names). Two queries. */
+    async listWithAliases(userId: string): Promise<ExerciseWithAliases[]> {
+      const rows = await db.select().from(exercises).where(exerciseVisibleTo(userId)).orderBy(asc(exercises.nameEn));
+      return withAliases(db, rows);
+    },
+
     /** Catalogue plus the user's own exercises, by English name. */
     async list(userId: string): Promise<Exercise[]> {
       const rows = await db.select().from(exercises).where(exerciseVisibleTo(userId)).orderBy(asc(exercises.nameEn));

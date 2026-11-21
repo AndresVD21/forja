@@ -168,9 +168,12 @@ is the set of Server Actions plus `packages/db` and `packages/core`.
 
 ### 2.14 Invite-only sign-up
 
-- **Decision**: an `allowed_emails` table; registration (password or Google) is rejected unless the email is on it.
+- **Decision**: registration only through a **one-time invite link** that expires (7 days by default). The
+  `invites` table stores a hash of each link's token, when it expires and when it was used. Better Auth's
+  public sign-up endpoint is closed; a server action claims the invite and creates the account. No social
+  sign-in providers ([decision 0006](decisions/0006-invite-links-no-google.md)).
 - **Why**: the app is public on the internet but meant for a handful of people, and the free tiers should
-  stay comfortably free.
+  stay comfortably free. A link needs no third-party credentials and no list of emails kept in sync.
 
 ## 3. Data model (second draft)
 
@@ -276,12 +279,12 @@ The *test pyramid*: many cheap tests at the bottom, few slow ones at the top.
 
 | Environment | App | Database | Trigger |
 |-------------|-----|----------|---------|
-| Local | `pnpm dev` | Decided in M3; tests use PGlite in memory ([0002](decisions/0002-pglite-for-database-tests.md)) | — |
+| Local | `pnpm dev` | PGlite saved to a git-ignored folder when `DATABASE_URL` is unset ([0005](decisions/0005-m3-scope-and-local-database.md)); unit tests use PGlite in memory ([0002](decisions/0002-pglite-for-database-tests.md)) | — |
 | Preview | Vercel preview URL | Neon branch created for the PR | every pull request |
 | Production | Vercel production | Neon `main` branch | merge to `main` |
 
 - Secrets (`DATABASE_URL`, `BETTER_AUTH_SECRET`) live in Vercel's environment settings and a local,
-  git-ignored `.env.local`. `.env.example` lists the names without values.
+  git-ignored `apps/web/.env.local`. `apps/web/.env.example` lists the names without values.
 - Migrations run as a build step before the new version goes live, so code and schema change together.
 - **Concept**: *continuous integration / continuous deployment* and *environment parity*.
 

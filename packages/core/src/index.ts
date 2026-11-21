@@ -6,3 +6,4 @@ export * from "./set-log";
 export * from "./proposal";
 export * from "./names";
 export * from "./dates";
+export * from "./exercise-categories";

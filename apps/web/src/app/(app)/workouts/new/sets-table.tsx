@@ -3,7 +3,7 @@
 // keeps a little UI state of its own (which row's sheet is open, the screen-reader announcement, focus moves).
 
 import { Ellipsis, Plus } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 import { IconButton } from "@/components/icon-button";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ const columns = "grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)_2.75rem]";
 
 export function SetsTable({ draft, exerciseName, perSide, problems, disabled, onChange }: Props) {
   const t = useTranslations("Entry");
+  const locale = useLocale();
   const sets = draft.sets;
   const baseId = useId();
 
@@ -233,7 +234,7 @@ export function SetsTable({ draft, exerciseName, perSide, problems, disabled, on
           set={openSet}
           perSide={perSide}
           onToFailureChange={(toFailure) => onChange(updateSet(draft, openSet.key, { toFailure }))}
-          onApplyUnit={(unit, mode) => onChange(applySetUnit(draft, openSet.key, unit, mode))}
+          onApplyUnit={(unit, mode) => onChange(applySetUnit(draft, openSet.key, unit, mode, locale))}
           onDelete={() => handleDelete(openSet.key)}
           onClose={closeSheet}
           onCloseAutoFocus={handleCloseAutoFocus}

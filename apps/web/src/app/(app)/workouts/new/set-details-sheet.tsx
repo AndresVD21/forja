@@ -219,16 +219,27 @@ function UnitChoice({
   preview: string;
   help: string;
 }) {
+  const id = useId();
   return (
-    // The whole card is the label, so the tap target is the full card (well over 44 px).
+    // The whole card is the label, so the tap target is the full card (well over 44 px). The radio's accessible
+    // name is only the title (aria-labelledby); the preview and help are its description, not part of the name.
     <label
       className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3 ${checked ? "border-accent" : "border-field"} ${disabled ? "opacity-60" : ""}`}
     >
-      <input type="radio" name={name} checked={checked} disabled={disabled} onChange={onSelect} className="mt-1 size-5 shrink-0 accent-accent" />
+      <input
+        type="radio"
+        name={name}
+        checked={checked}
+        disabled={disabled}
+        onChange={onSelect}
+        aria-labelledby={`${id}-title`}
+        aria-describedby={preview ? `${id}-preview ${id}-help` : `${id}-help`}
+        className="mt-1 size-5 shrink-0 accent-accent"
+      />
       <span className="flex min-w-0 flex-col">
-        <span className="text-lg font-semibold">{title}</span>
-        {preview && <span className="text-lg tabular-nums">{preview}</span>}
-        <span className="text-base text-muted">{help}</span>
+        <span id={`${id}-title`} className="text-lg font-semibold">{title}</span>
+        {preview && <span id={`${id}-preview`} className="text-lg tabular-nums">{preview}</span>}
+        <span id={`${id}-help`} className="text-base text-muted">{help}</span>
       </span>
     </label>
   );

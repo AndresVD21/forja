@@ -130,17 +130,26 @@ export function previewConversion(set: SetDraft, to: Unit): ConvertPreview {
  * stays exactly as typed, comma or half-typed included) and "convert" replaces it with the converted number.
  * Reps and the failure flag are untouched; the same unit, or a conversion that is not possible, does nothing.
  */
-export function applySetUnit(draft: ExerciseDraft, key: number, unit: Unit, mode: UnitChangeMode): ExerciseDraft {
+export function applySetUnit(draft: ExerciseDraft, key: number, unit: Unit, mode: UnitChangeMode, locale: string): ExerciseDraft {
   const set = draft.sets.find((s) => s.key === key);
   if (!set || set.unit === unit) return draft;
   if (set.weight.trim() === "" || mode === "keep") return updateSet(draft, key, { unit });
   const preview = previewConversion(set, unit);
   if (!preview.ok) return draft;
-  return updateSet(draft, key, { unit, weight: String(preview.weight.value) });
+  return updateSet(draft, key, { unit, weight: formatDecimalInput(preview.weight.value, locale) });
 }
 
 export function chooseExercise(draft: ExerciseDraft, exercise: EntryExercise, displayName: string): ExerciseDraft {
   return { ...changeUnit(draft, exercise.defaultUnit), text: displayName, exerciseId: exercise.id };
+}
+
+/**
+ * A number as it goes into a weight input: with the active language's decimal separator (45,19 in Spanish), so
+ * it matches the preview the person just saw. parseDecimal reads both separators back. The locale comes in as
+ * an argument so this file stays free of React and easy to test.
+ */
+export function formatDecimalInput(value: number, locale: string): string {
+  return new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 2 }).format(value);
 }
 
 /** "22.5" and "22,5" (Spanish keyboards) both work. null = not a plain non-negative number. */

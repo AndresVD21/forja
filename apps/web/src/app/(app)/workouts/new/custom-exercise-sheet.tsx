@@ -4,7 +4,7 @@
 
 import { EQUIPMENT, MUSCLE_GROUPS, type Unit } from "@forja/core";
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { SegmentedControl } from "@/components/segmented-control";
 import { SelectField } from "@/components/select-field";
@@ -36,9 +36,11 @@ export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseA
   const t = useTranslations("Entry");
   const n = useTranslations("Entry.newExercise");
   const loadGroupId = useId();
+  const nameRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<NewExerciseForm>(() => newExerciseForm(initialName));
   const [attempted, setAttempted] = useState(false); // hints show only after a first try, like the workout form
   const [pending, setPending] = useState(false);
+  const [barUnitRefused, setBarUnitRefused] = useState(false); // the last kg/lb switch would leave the allowed range
   const [error, setError] = useState<"invalid_input" | "server_error" | "signed_out" | null>(null);
 
   const problems = checkNewExercise(form);
@@ -82,6 +84,11 @@ export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseA
       dismissOnOutsideClick={false}
       // While the request runs nothing may close the sheet.
       closeBlocked={pending}
+      // Radix would focus Cancel (the first tabbable), where Enter closes the sheet. Start in the name field.
+      onOpenAutoFocus={(event) => {
+        event.preventDefault();
+        nameRef.current?.focus();
+      }}
       onCloseAutoFocus={onCloseAutoFocus}
       headerAction={
         <Button variant="text" onClick={onCancel} disabled={pending} className="px-2">
@@ -92,7 +99,7 @@ export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseA
         <div className="flex flex-col gap-3">
           {error && (
             <p role="alert" className="text-sm font-medium text-ink">
-              {error === "signed_out" ? t("errors.signed_out") : n(error)}
+              {n(error === "signed_out" ? "signedOut" : error)}
             </p>
           )}
           {attempted && Object.keys(problems).length > 0 && (
@@ -115,7 +122,8 @@ export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseA
           label={n("name")}
           value={form.name}
           autoComplete="off"
-          maxLength={200}
+          maxLength={80}
+          ref={nameRef}
           invalid={show("name")}
           hint={show("name") ? n("problemName") : undefined}
           disabled={pending}
@@ -173,6 +181,7 @@ export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseA
             label={n("defaultUnit")}
             value={form.defaultUnit}
             onValueChange={(defaultUnit) => setForm({ ...form, defaultUnit })}
+            disabled={pending}
             options={unitOptions}
           />
         </div>
@@ -213,19 +222,33 @@ export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseA
                 disabled={pending}
                 invalid={show("barWeight")}
                 hint={show("barWeight") ? n("problemBar") : n("barHelp")}
-                onChange={(event) => setForm(setBarValue(form, event.target.value))}
+                onChange={(event) => {
+                  setBarUnitRefused(false);
+                  setForm(setBarValue(form, event.target.value));
+                }}
               />
             </div>
             {/* The bar has its own unit; switching it converts the number (20 kg becomes 44.09 lb). */}
             <SegmentedControl<Unit>
               label={n("barUnit")}
               value={form.barUnit}
-              onValueChange={(unit) => setForm(changeBarUnit(form, unit))}
+              onValueChange={(unit) => {
+                const next = changeBarUnit(form, unit);
+                // changeBarUnit hands back the same object when it refuses (out of range): say so, do not stay silent.
+                setBarUnitRefused(next === form);
+                setForm(next);
+              }}
+              disabled={pending}
               options={unitOptions}
               // Lines up with the input (the label above it is about 2 rem tall).
               className="mt-8"
             />
           </div>
+        )}
+        {form.loadMode === "per_side" && barUnitRefused && (
+          <p role="status" className="text-sm font-medium text-ink">
+            {n("barUnitRefused")}
+          </p>
         )}
       </div>
     </BottomSheet>
@@ -245,13 +268,23 @@ function ModeCard({
   title: string;
   help: string;
 }) {
+  const id = useId();
   return (
-    // The whole card is the label, so the tap target is the full card.
+    // The whole card is the label, so the tap target is the full card. The radio's accessible name is only the
+    // title (aria-labelledby); the help text is its description.
     <label className={cn("flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3", checked ? "border-2 border-accent" : "border-field")}>
-      <input type="radio" name={name} checked={checked} onChange={onSelect} className="mt-1 size-5 shrink-0 accent-accent" />
+      <input
+        type="radio"
+        name={name}
+        checked={checked}
+        onChange={onSelect}
+        aria-labelledby={`${id}-title`}
+        aria-describedby={`${id}-help`}
+        className="mt-1 size-5 shrink-0 accent-accent"
+      />
       <span className="flex min-w-0 flex-col">
-        <span className="text-lg font-semibold">{title}</span>
-        <span className="text-base text-muted">{help}</span>
+        <span id={`${id}-title`} className="text-lg font-semibold">{title}</span>
+        <span id={`${id}-help`} className="text-base text-muted">{help}</span>
       </span>
     </label>
   );

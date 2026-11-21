@@ -29,10 +29,11 @@ export function WorkoutForm({ data, today }: Props) {
   const [trainingDayId, setTrainingDayId] = useState("");
   const [exercises, setExercises] = useState<ExerciseDraft[]>([newExercise(1)]);
   const nextKey = useRef(2);
-  // Exercises created in the setup sheet. The server list is only read when the page loads, so keep them
-  // here too; the id check avoids a duplicate once a refreshed page includes them.
-  const [created, setCreated] = useState<EntryExercise[]>([]);
-  const knownExercises = [...data.exercises, ...created.filter((c) => !data.exercises.some((e) => e.id === c.id))];
+  // The server list is only read when the page loads, so an exercise created in the setup sheet is added here.
+  // The merged list comes from adoptCreatedExercise (tested, and it skips duplicates).
+  const [knownExercises, setKnownExercises] = useState<EntryExercise[]>(data.exercises);
+  // Keys of cards added after the first render: they take focus; the first card must not on page load.
+  const [focusKeys, setFocusKeys] = useState<number[]>([]);
 
   const [attempted, setAttempted] = useState(false); // problems are shown only after a Save attempt
   const [saving, setSaving] = useState(false);
@@ -129,7 +130,8 @@ export function WorkoutForm({ data, today }: Props) {
           problems={attempted && hasProblems(exerciseProblems[index]) ? exerciseProblems[index] : null}
           onRemove={exercises.length > 1 ? () => setExercises((all) => all.filter((e) => e.key !== draft.key)) : null}
           onChange={updateExercise}
-          onExerciseCreated={(exercise) => setCreated((all) => (all.some((e) => e.id === exercise.id) ? all : [...all, exercise]))}
+          onExercisesChange={setKnownExercises}
+          focusOnMount={focusKeys.includes(draft.key)}
           disabled={saving}
         />
       ))}
@@ -138,7 +140,9 @@ export function WorkoutForm({ data, today }: Props) {
         variant="outline"
         fullWidth
         onClick={() => {
-          setExercises((all) => [...all, newExercise(nextKey.current++)]);
+          const key = nextKey.current++;
+          setFocusKeys((all) => [...all, key]);
+          setExercises((all) => [...all, newExercise(key)]);
         }}
       >
         <Plus aria-hidden className="size-5" />

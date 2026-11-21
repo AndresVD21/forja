@@ -10,6 +10,7 @@ import {
   lastDeleted,
   newExercise,
   parseDecimal,
+  formatDecimalInput,
   previewConversion,
   readSet,
   setAllFailure,
@@ -186,18 +187,25 @@ describe("deleteSet and undoDelete", () => {
 describe("applySetUnit", () => {
   it("changes only the unit for a blank weight, whatever the mode", () => {
     const draft = exerciseWith({ reps: "5" });
-    expect(applySetUnit(draft, 1, "lb", "convert").sets[0]).toMatchObject({ unit: "lb", weight: "", reps: "5" });
+    expect(applySetUnit(draft, 1, "lb", "convert", "en").sets[0]).toMatchObject({ unit: "lb", weight: "", reps: "5" });
   });
   it("keeps the typed text exactly, comma and half-typed included", () => {
-    expect(applySetUnit(exerciseWith({ weight: "22,5" }), 1, "lb", "keep").sets[0]).toMatchObject({ weight: "22,5", unit: "lb" });
-    expect(applySetUnit(exerciseWith({ weight: "22," }), 1, "lb", "keep").sets[0]).toMatchObject({ weight: "22,", unit: "lb" });
+    expect(applySetUnit(exerciseWith({ weight: "22,5" }), 1, "lb", "keep", "en").sets[0]).toMatchObject({ weight: "22,5", unit: "lb" });
+    expect(applySetUnit(exerciseWith({ weight: "22," }), 1, "lb", "keep", "en").sets[0]).toMatchObject({ weight: "22,", unit: "lb" });
   });
   it("converts to the nearest 0.01 and touches only that row, reps and flag", () => {
     const draft = exerciseWith({ weight: "20", reps: "8", toFailure: true }, { weight: "20" });
-    const changed = applySetUnit(draft, 1, "lb", "convert");
+    const changed = applySetUnit(draft, 1, "lb", "convert", "en");
     expect(changed.sets[0]).toMatchObject({ weight: "44.09", unit: "lb", reps: "8", toFailure: true });
     expect(changed.sets[1]).toEqual(draft.sets[1]);
     expect(changed.unit).toBe(draft.unit);
+  });
+  it("writes the converted number with the active language's decimal separator", () => {
+    const draft = exerciseWith({ weight: "20,5" });
+    expect(applySetUnit(draft, 1, "lb", "convert", "es").sets[0].weight).toBe("45,19");
+    expect(applySetUnit(draft, 1, "lb", "convert", "en").sets[0].weight).toBe("45.19");
+    expect(formatDecimalInput(1234.5, "es")).toBe("1234,5");
+    expect(formatDecimalInput(44, "en")).toBe("44");
   });
   it("converts a comma number and never converts from a previous preview", () => {
     const set = row({ weight: "20,5" });
@@ -211,17 +219,17 @@ describe("applySetUnit", () => {
     for (const weight of ["22,", "abc", "20,555"]) {
       expect(previewConversion(row({ weight }), "lb")).toEqual({ ok: false, reason: "invalid_number" });
       const draft = exerciseWith({ weight });
-      expect(applySetUnit(draft, 1, "lb", "convert")).toBe(draft);
+      expect(applySetUnit(draft, 1, "lb", "convert", "en")).toBe(draft);
     }
   });
   it("reports out_of_range instead of clamping, and does not apply it", () => {
     const draft = exerciseWith({ weight: "9999" }); // 9999 kg is 22044.x lb
     expect(previewConversion(draft.sets[0], "lb")).toEqual({ ok: false, reason: "out_of_range" });
-    expect(applySetUnit(draft, 1, "lb", "convert")).toBe(draft);
+    expect(applySetUnit(draft, 1, "lb", "convert", "en")).toBe(draft);
   });
   it("does nothing when the unit is the same", () => {
     const draft = exerciseWith({ weight: "20" });
-    expect(applySetUnit(draft, 1, "kg", "convert")).toBe(draft);
+    expect(applySetUnit(draft, 1, "kg", "convert", "en")).toBe(draft);
     expect(previewConversion(draft.sets[0], "kg")).toEqual({ ok: false, reason: "same_unit" });
   });
 });

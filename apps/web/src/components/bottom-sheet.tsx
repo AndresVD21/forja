@@ -1,7 +1,8 @@
 "use client";
 // Client Component: the dialog tracks open/closed, traps focus and listens for Escape and outside taps.
-// Radix Dialog does that work (focus trap, Escape, aria-modal, hiding the page behind from screen readers
-// and blocking taps on it), so we only add the look and the two dismissal modes below.
+// Radix Dialog does that work (focus trap, Escape, hiding the page behind from screen readers and blocking taps
+// on it). It does not set aria-modal, so Dialog.Content below sets it explicitly. We add the look and the two
+// dismissal modes.
 
 import { Dialog } from "radix-ui";
 import type { ReactNode } from "react";
@@ -32,6 +33,11 @@ type BottomSheetProps = {
    * event.preventDefault() and focus something else when the opener is gone (e.g. the row was deleted).
    */
   onCloseAutoFocus?: (event: Event) => void;
+  /**
+   * Runs when the sheet opens, before Radix focuses its first tabbable element (often a Cancel button). Call
+   * event.preventDefault() and focus the field the person should type in.
+   */
+  onOpenAutoFocus?: (event: Event) => void;
   children: ReactNode;
 };
 
@@ -46,6 +52,7 @@ export function BottomSheet({
   dismissOnOutsideClick = true,
   closeBlocked = false,
   onCloseAutoFocus,
+  onOpenAutoFocus,
   children,
 }: BottomSheetProps) {
   return (
@@ -55,7 +62,9 @@ export function BottomSheet({
         <Dialog.Content
           // Radix warns in the console when there is no Description; "undefined" says that is intended.
           {...(description ? {} : { "aria-describedby": undefined })}
+          aria-modal="true"
           onCloseAutoFocus={onCloseAutoFocus}
+          onOpenAutoFocus={onOpenAutoFocus}
           onPointerDownOutside={(event) => {
             if (!dismissOnOutsideClick) event.preventDefault();
           }}

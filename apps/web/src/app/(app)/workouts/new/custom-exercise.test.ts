@@ -69,6 +69,14 @@ describe("changeBarUnit", () => {
     const there = changeBarUnit(newExerciseForm("X"), "lb");
     expect(changeBarUnit(there, "kg")).toMatchObject({ barValue: "20", barUnit: "kg" });
   });
+  it("converts from the original, not from the shown rounded number", () => {
+    // 133.7 lb is 60.65 kg when shown; converting that shown number back would give 133.71, the original 133.7.
+    const lb = { ...setBarValue(newExerciseForm("X"), "133.7"), barUnit: "lb" } as const;
+    const typed = setBarValue(lb, "133.7");
+    const inKg = changeBarUnit(typed, "kg");
+    expect(inKg).toMatchObject({ barValue: "60.65", barUnit: "kg" });
+    expect(changeBarUnit(inKg, "lb")).toMatchObject({ barValue: "133.7", barUnit: "lb" });
+  });
   it("treats a newly typed number as the new original", () => {
     const typed = setBarValue(changeBarUnit(newExerciseForm("X"), "lb"), "45");
     expect(changeBarUnit(typed, "kg")).toMatchObject({ barValue: "20.41", barUnit: "kg" });

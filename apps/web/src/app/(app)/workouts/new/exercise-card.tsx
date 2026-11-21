@@ -29,13 +29,15 @@ type Props = {
   /** null = this is the only card, so it cannot be removed. */
   onRemove: (() => void) | null;
   onChange: (draft: ExerciseDraft) => void;
-  /** The server saved a new exercise: the form adds it to the list suggestions come from. */
-  onExerciseCreated: (exercise: EntryExercise) => void;
+  /** The server saved a new exercise: the form takes the merged list suggestions come from. */
+  onExercisesChange: (exercises: EntryExercise[]) => void;
+  /** True for a card added with "Add exercise": its name field takes focus once, when it first appears. */
+  focusOnMount: boolean;
   /** True while the workout is saving: the set controls that edit the draft are switched off. */
   disabled: boolean;
 };
 
-export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange, onExerciseCreated, disabled }: Props) {
+export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange, onExercisesChange, focusOnMount, disabled }: Props) {
   const t = useTranslations("Entry");
   const locale = useLocale();
   const noteId = useId();
@@ -46,12 +48,19 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
   const [setupName, setSetupName] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const fieldRef = useRef<HTMLInputElement>(null);
+  const pendingAnnouncement = useRef("");
+
+  // Runs once on mount. A card that exists on page load must not steal focus, so only added cards ask for it.
+  useEffect(() => {
+    if (focusOnMount) fieldRef.current?.focus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleCreated(result: Extract<CreateExerciseResult, { ok: true }>) {
     const adopted = adoptCreatedExercise(draft, exercises, result, exerciseDisplayName(result.exercise, locale));
-    onExerciseCreated(result.exercise);
+    onExercisesChange(adopted.exercises);
     onChange(adopted.draft);
-    setAnnouncement(t(adopted.announcement === "saved" ? "newExercise.savedAnnouncement" : "newExercise.existingAnnouncement"));
+    // Announced after the sheet has closed (see onCloseAutoFocus below), when the page is no longer hidden.
+    pendingAnnouncement.current = t(adopted.announcement === "saved" ? "newExercise.savedAnnouncement" : "newExercise.existingAnnouncement");
     setSetupName(null);
   }
 
@@ -151,6 +160,8 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
             // Back to the exercise field (the sheet's opener), with the typed name and the draft as they were.
             event.preventDefault();
             fieldRef.current?.focus();
+            setAnnouncement(pendingAnnouncement.current);
+            pendingAnnouncement.current = "";
           }}
         />
       )}

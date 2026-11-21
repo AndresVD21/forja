@@ -80,3 +80,24 @@ export function roundToNearestStep(value: number, step: number): number {
   assertValid(value, step);
   return clean(Math.round(stepsIn(value, step)) * step);
 }
+
+export type ConvertExactlyResult =
+  | { ok: true; weight: Weight }
+  | { ok: false; reason: "same_unit" | "out_of_range" };
+
+/**
+ * Explicit conversion chosen by the user ("Convert weight" in set details). Rounds to the nearest 0.01
+ * of the destination unit, not to the exercise's weight step: this is storage/display precision, not a
+ * training proposal. It converts the number it is given: for per-side exercises that is the plate
+ * quantity on one side, with no bar added and no doubling.
+ *
+ * Rounding makes the result lossy, so the UI must always convert from the stored original pair, never
+ * from a previous (already rounded) preview. Converting from the original twice never drifts.
+ * Out-of-range results are reported, never clamped.
+ */
+export function convertWeightExactly(weight: Weight, to: Unit): ConvertExactlyResult {
+  if (weight.unit === to) return { ok: false, reason: "same_unit" };
+  const value = roundToNearestStep(convert(weight.value, weight.unit, to), 0.01);
+  const parsed = WeightSchema.safeParse({ value, unit: to });
+  return parsed.success ? { ok: true, weight: parsed.data } : { ok: false, reason: "out_of_range" };
+}

@@ -20,6 +20,8 @@ type SegmentedControlProps<T extends string> = {
   value: T;
   onValueChange: (value: T) => void;
   className?: string;
+  /** Greys out and blocks every segment (e.g. while a save is pending). */
+  disabled?: boolean;
 };
 
 export function SegmentedControl<T extends string>({
@@ -28,11 +30,13 @@ export function SegmentedControl<T extends string>({
   value,
   onValueChange,
   className,
+  disabled,
 }: SegmentedControlProps<T>) {
   return (
     <ToggleGroup.Root
       type="single"
       aria-label={label}
+      disabled={disabled}
       value={value}
       // Radix sends "" when the selected item is tapped again; a segmented control must always
       // have one choice, so we ignore that.
@@ -44,7 +48,7 @@ export function SegmentedControl<T extends string>({
           key={option.value}
           value={option.value}
           aria-label={option.label}
-          className="min-h-11 min-w-11 rounded-[10px] px-3 text-base font-semibold text-ink data-[state=on]:bg-accent data-[state=on]:text-accent-ink"
+          className="min-h-11 min-w-11 rounded-[10px] px-3 text-base font-semibold text-ink disabled:opacity-60 data-[state=on]:bg-accent data-[state=on]:text-accent-ink"
         >
           {option.text}
         </ToggleGroup.Item>

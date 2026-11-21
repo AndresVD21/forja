@@ -109,7 +109,7 @@ test.describe("validation keeps the draft and saves nothing", () => {
     await fillSets(page, [["20", "10"]]);
     await page.getByRole("button", { name: "Save workout" }).click();
 
-    await expect(page.getByRole("alert").filter({ hasText: "Choose this exercise from the suggestions." })).toBeVisible();
+    await expect(page.getByRole("alert").filter({ hasText: "Choose a suggestion or save this name as a new exercise." })).toBeVisible();
     await expect(page.getByRole("alert").filter({ hasText: "Fix the highlighted problems before saving." })).toBeVisible();
     await expect(page).toHaveURL(/\/workouts\/new$/);
     // The draft is still there.

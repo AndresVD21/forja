@@ -3,7 +3,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { IconButton } from "@/components/icon-button";
 import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,10 @@ import { Label } from "@/components/ui/label";
 import { heaviestSet, type Unit } from "@forja/core";
 import type { EntryExercise } from "@/server/queries";
 import type { LastTime } from "@/server/workout-actions";
+import type { CreateExerciseResult } from "@/server/exercise-actions";
 import { getLastTime } from "./actions";
+import { CustomExerciseSheet } from "./custom-exercise-sheet";
+import { adoptCreatedExercise } from "./custom-exercise";
 import { changeUnit, chooseExercise, type ExerciseDraft, type ExerciseProblems } from "./draft";
 import { ExerciseCombobox, exerciseDisplayName } from "./exercise-combobox";
 import { SetsTable } from "./sets-table";
@@ -26,14 +29,40 @@ type Props = {
   /** null = this is the only card, so it cannot be removed. */
   onRemove: (() => void) | null;
   onChange: (draft: ExerciseDraft) => void;
+  /** The server saved a new exercise: the form takes the merged list suggestions come from. */
+  onExercisesChange: (exercises: EntryExercise[]) => void;
+  /** True for a card added with "Add exercise": its name field takes focus once, when it first appears. */
+  focusOnMount: boolean;
+  /** True while the workout is saving: the set controls that edit the draft are switched off. */
+  disabled: boolean;
 };
 
-export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange }: Props) {
+export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange, onExercisesChange, focusOnMount, disabled }: Props) {
   const t = useTranslations("Entry");
   const locale = useLocale();
   const noteId = useId();
   const exercise = exercises.find((e) => e.id === draft.exerciseId);
   const perSide = exercise?.loadMode === "per_side";
+
+  // The setup sheet: the name carried into it, or null when closed.
+  const [setupName, setSetupName] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const fieldRef = useRef<HTMLInputElement>(null);
+  const pendingAnnouncement = useRef("");
+
+  // Runs once on mount. A card that exists on page load must not steal focus, so only added cards ask for it.
+  useEffect(() => {
+    if (focusOnMount) fieldRef.current?.focus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleCreated(result: Extract<CreateExerciseResult, { ok: true }>) {
+    const adopted = adoptCreatedExercise(draft, exercises, result, exerciseDisplayName(result.exercise, locale));
+    onExercisesChange(adopted.exercises);
+    onChange(adopted.draft);
+    // Announced after the sheet has closed (see onCloseAutoFocus below), when the page is no longer hidden.
+    pendingAnnouncement.current = t(adopted.announcement === "saved" ? "newExercise.savedAnnouncement" : "newExercise.existingAnnouncement");
+    setSetupName(null);
+  }
 
   const lastTime = useLastTime(draft.exerciseId, locationId);
 
@@ -47,7 +76,12 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
             selectedId={draft.exerciseId}
             problem={problems?.name ? t(`problems.${problems.name}`) : undefined}
             // Editing the text forgets the chosen exercise: the id must never outlive the name it was picked for.
-            onTextChange={(text) => onChange({ ...draft, text, exerciseId: null })}
+            onTextChange={(text) => {
+              setAnnouncement("");
+              onChange({ ...draft, text, exerciseId: null });
+            }}
+            inputRef={fieldRef}
+            onUseName={setSetupName}
             onSelect={(picked) => onChange(chooseExercise(draft, picked, exerciseDisplayName(picked, locale)))}
           />
         </div>
@@ -57,6 +91,11 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
           </IconButton>
         )}
       </div>
+
+      {/* Polite, visually hidden: the result of "Save exercise and use", gone as soon as the name is edited. */}
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
 
       <div className="flex items-center justify-between gap-3">
         <span className="font-medium">{perSide ? t("plateLabel") : t("weightLabel")}</span>
@@ -76,16 +115,17 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
       {lastTime?.lastTime && exercise && <LastTimeLine lastTime={lastTime.lastTime} exercise={exercise} />}
 
       <SetsTable
-        sets={draft.sets}
-        unit={draft.unit}
+        draft={draft}
+        exerciseName={draft.text.trim() || t("unnamedExercise", { number })}
         perSide={perSide}
+        disabled={disabled}
         problems={Object.fromEntries(
           Object.entries(problems?.sets ?? {}).map(([index, problem]) => [
             index,
             t(problem === "incomplete" ? "problems.setIncomplete" : "problems.setInvalid", { number: Number(index) + 1 }),
           ]),
         )}
-        onChange={(sets) => onChange({ ...draft, sets })}
+        onChange={onChange}
       />
       {problems?.noSets && (
         <p role="alert" className="text-sm font-medium text-ink">
@@ -110,6 +150,20 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
             className="w-full rounded-xl border border-field bg-surface px-3 py-2 text-base text-ink"
           />
         </div>
+      )}
+      {setupName !== null && (
+        <CustomExerciseSheet
+          initialName={setupName}
+          onCreated={handleCreated}
+          onCancel={() => setSetupName(null)}
+          onCloseAutoFocus={(event) => {
+            // Back to the exercise field (the sheet's opener), with the typed name and the draft as they were.
+            event.preventDefault();
+            fieldRef.current?.focus();
+            setAnnouncement(pendingAnnouncement.current);
+            pendingAnnouncement.current = "";
+          }}
+        />
       )}
     </section>
   );

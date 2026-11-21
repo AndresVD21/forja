@@ -1,6 +1,6 @@
 import "server-only";
 import type { LoadMode, Unit, Weight } from "@forja/core";
-import { createRepositories, type Database, type Location, type TrainingDay } from "@forja/db";
+import { createRepositories, type Database, type ExerciseWithAliases, type Location, type TrainingDay } from "@forja/db";
 
 export type EntryExercise = {
   id: string;
@@ -24,6 +24,20 @@ export type EntryFormData = {
   exercises: EntryExercise[];
 };
 
+/** The one mapping from a repository exercise to what the form needs. createExercise returns the same shape. */
+export function toEntryExercise(e: ExerciseWithAliases): EntryExercise {
+  return {
+    id: e.id,
+    nameEn: e.nameEn,
+    nameEs: e.nameEs,
+    aliases: e.aliases,
+    loadMode: e.loadMode,
+    defaultUnit: e.defaultUnit,
+    weightStep: e.weightStep,
+    barWeight: e.barWeight,
+  };
+}
+
 export async function loadEntryFormData(db: Database, userId: string): Promise<EntryFormData> {
   const repos = createRepositories(db);
   const [locations, trainingDays, lastUsed, exercises] = await Promise.all([
@@ -36,15 +50,6 @@ export async function loadEntryFormData(db: Database, userId: string): Promise<E
     locations,
     trainingDays,
     defaultLocationId: lastUsed?.id ?? null,
-    exercises: exercises.map((e) => ({
-      id: e.id,
-      nameEn: e.nameEn,
-      nameEs: e.nameEs,
-      aliases: e.aliases,
-      loadMode: e.loadMode,
-      defaultUnit: e.defaultUnit,
-      weightStep: e.weightStep,
-      barWeight: e.barWeight,
-    })),
+    exercises: exercises.map(toEntryExercise),
   };
 }

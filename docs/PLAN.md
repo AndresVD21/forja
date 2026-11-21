@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M3 usable locally** — sign in (invite-only), log a workout and see it in the week history work end to end, tested in CI. Still open in M3: custom exercises and set details (waiting for Codex's designs) and the first deploy. All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M3 usable locally** — sign in (invite-only), log a workout with to-failure sets and custom exercises, and see it in the week history, end to end and tested in CI. Still open in M3: the first deploy (and Codex's remaining designs: sign-in/save states, empty states). All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -174,9 +174,9 @@ Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (desi
 - [x] App shell, mobile layout, light and dark themes (from the phone's setting), English/Spanish switch; logo, favicon and Apple touch icon from `docs/assets/logo/` ([decision 0001](decisions/0001-metallic-barbell-logo.md)) (*frontend-dev*)
 - [x] Local development database: PGlite file when `DATABASE_URL` is unset ([decision 0005](decisions/0005-m3-scope-and-local-database.md)) (*backend-dev*)
 - [x] Sign-in with Better Auth: email + password; adopts the M2 `users` table; account deletion stays off until it has a screen (*backend-dev*)
-- [ ] Registration by one-time invite link, no Google ([decision 0006](decisions/0006-invite-links-no-google.md)): `invites` table, closed public sign-up, `/sign-up?invite=…` page (*backend-dev* + *frontend-dev*)
+- [x] Registration by one-time invite link, no Google ([decision 0006](decisions/0006-invite-links-no-google.md)): `invites` table, closed public sign-up, `/sign-up?invite=…` page (*backend-dev* + *frontend-dev*)
 - [x] Log workout screen + server actions, with editable exercise autocomplete over existing exercises (*frontend-dev* + *backend-dev*)
-- [ ] When Codex's designs land: "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete) (*frontend-dev* + *backend-dev*)
+- [x] "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete with Undo), from the designs in [decision 0004](decisions/0004-m3-page-designs.md) (*frontend-dev* + *backend-dev*)
 - [x] History screen with week view, including activities such as volleyball (*frontend-dev*)
 - [x] E2E test: sign in → log workout → see it in history, runs in CI (*test-engineer*)
 - [ ] **First deploy** to Vercel + Neon, then create the owner's account and run the per-user seed there; settle section 8, item 10 first (*release-manager*, you approve)
@@ -262,3 +262,7 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
     Accept it, or later move the token into the URL `#fragment`, which browsers never send to the server.
 13. **Probing emails with an invite**: whoever holds a valid link can retry with different emails to learn which
     ones already have an account, because a taken email gives the link back. Accepted as low risk for a few friends.
+14. **Unsaved workout draft after leaving the page**: if you leave the entry screen without saving and come back
+    through an in-app link, the unsaved draft is still there (Next keeps the page in memory); a reload or sign-out
+    clears it. After a successful save the form is reset. Decide whether the unsaved draft should be kept (handy
+    mid-workout) or cleared, and whether it should survive a reload.

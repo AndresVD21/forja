@@ -5,9 +5,9 @@
 // time; the highlighted option is announced through aria-activedescendant instead of moving focus.
 // The name is free text: suggestions help, but nothing is forced until Save (rule 12 handled on blur).
 
-import { Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useId, useState, type KeyboardEvent } from "react";
+import { useId, useState, type KeyboardEvent, type RefObject } from "react";
 import { IconButton } from "@/components/icon-button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -26,10 +26,14 @@ type Props = {
   /** Typing: the parent also forgets any chosen exercise, so an old id never stays on edited text. */
   onTextChange: (text: string) => void;
   onSelect: (exercise: EntryExercise) => void;
+  /** "Use “name”": the person wants a new exercise. Opens the setup sheet; nothing is created here. */
+  onUseName: (name: string) => void;
   selectedId: string | null;
+  /** So the card can put focus back here when the setup sheet closes. */
+  inputRef: RefObject<HTMLInputElement | null>;
 };
 
-export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSelect, selectedId }: Props) {
+export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSelect, onUseName, selectedId, inputRef }: Props) {
   const t = useTranslations("Entry");
   const locale = useLocale();
   const id = useId();
@@ -40,9 +44,11 @@ export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSel
 
   // Right after a pick the text equals the chosen name; no need to suggest it again.
   const suggestions = selectedId === null ? filterExercises(text, exercises, locale) : [];
-  const open = focused && !dismissed && suggestions.length > 0;
-  const nothingMatches = selectedId === null && text.trim() !== "" && suggestions.length === 0;
-  const activeIndex = Math.min(active, suggestions.length - 1);
+  // A name that is not exactly an existing exercise can be saved as a new one: one extra option at the end.
+  const canUseName = selectedId === null && text.trim() !== "" && !findExactMatch(text, exercises);
+  const optionCount = suggestions.length + (canUseName ? 1 : 0);
+  const open = focused && !dismissed && optionCount > 0;
+  const activeIndex = Math.min(active, optionCount - 1);
   const optionId = (index: number) => `${id}-option-${index}`;
 
   function pick(exercise: EntryExercise) {
@@ -51,18 +57,29 @@ export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSel
     setActive(-1);
   }
 
+  function openSetup() {
+    onUseName(text.trim());
+    setDismissed(true);
+    setActive(-1);
+  }
+
+  function chooseOption(index: number) {
+    if (index < suggestions.length) pick(suggestions[index]);
+    else openSetup();
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      if (suggestions.length === 0) return;
+      if (optionCount === 0) return;
       event.preventDefault();
       setDismissed(false);
-      const last = suggestions.length - 1;
+      const last = optionCount - 1;
       if (event.key === "ArrowDown") setActive(activeIndex >= last ? 0 : activeIndex + 1);
       else setActive(activeIndex <= 0 ? last : activeIndex - 1);
     } else if (event.key === "Enter") {
       // Never let Enter do anything else here (and an open list means "choose the highlighted one").
       event.preventDefault();
-      if (open && activeIndex >= 0) pick(suggestions[activeIndex]);
+      if (open && activeIndex >= 0) chooseOption(activeIndex);
     } else if (event.key === "Escape" && open) {
       event.preventDefault();
       setDismissed(true);
@@ -87,6 +104,7 @@ export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSel
         <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted" />
         <input
           id={id}
+          ref={inputRef}
           role="combobox"
           type="text"
           aria-expanded={open}
@@ -149,14 +167,34 @@ export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSel
             {exerciseDisplayName(exercise, locale)}
           </li>
         ))}
+        {canUseName && (
+          <li
+            id={optionId(suggestions.length)}
+            role="option"
+            aria-selected={suggestions.length === activeIndex}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={openSetup}
+            className={cn(
+              "flex min-h-11 cursor-pointer items-center gap-3 px-4 py-2",
+              suggestions.length > 0 && "border-t border-line",
+              suggestions.length === activeIndex ? "bg-accent text-accent-ink" : "text-ink hover:bg-page",
+            )}
+          >
+            <Plus aria-hidden className="size-5 shrink-0" />
+            <span className="flex min-w-0 flex-col">
+              <span className="break-words text-base font-semibold">{t("useName", { name: text.trim() })}</span>
+              <span className="text-sm">{t("useNameHelp")}</span>
+            </span>
+          </li>
+        )}
       </ul>
 
       {/* Screen readers hear how many suggestions there are as they type. */}
       <p role="status" className="sr-only">
-        {open ? t("suggestionsAvailable", { count: suggestions.length }) : focused && nothingMatches ? t("noSuggestions") : ""}
+        {open ? t("suggestionsAvailable", { count: optionCount }) : ""}
       </p>
 
-      {nothingMatches && <p className="text-sm text-muted">{t("noMatch")}</p>}
+      {canUseName && <p className="text-sm text-muted">{t("noMatch")}</p>}
       {problem && (
         <p id={`${id}-problem`} role="alert" className="text-sm font-medium text-ink">
           {problem}

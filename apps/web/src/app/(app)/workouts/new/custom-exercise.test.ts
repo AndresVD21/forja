@@ -62,24 +62,30 @@ describe("toCreateExerciseInput", () => {
 
 describe("changeBarUnit", () => {
   it("converts the shown number instead of relabelling it", () => {
-    const form = changeBarUnit(newExerciseForm("X"), "lb");
+    const form = changeBarUnit(newExerciseForm("X"), "lb", "en");
     expect(form).toMatchObject({ barValue: "44.09", barUnit: "lb" });
   });
   it("converts from the original, so going back does not drift", () => {
-    const there = changeBarUnit(newExerciseForm("X"), "lb");
-    expect(changeBarUnit(there, "kg")).toMatchObject({ barValue: "20", barUnit: "kg" });
+    const there = changeBarUnit(newExerciseForm("X"), "lb", "en");
+    expect(changeBarUnit(there, "kg", "en")).toMatchObject({ barValue: "20", barUnit: "kg" });
   });
   it("converts from the original, not from the shown rounded number", () => {
     // 133.7 lb is 60.65 kg when shown; converting that shown number back would give 133.71, the original 133.7.
     const lb = { ...setBarValue(newExerciseForm("X"), "133.7"), barUnit: "lb" } as const;
     const typed = setBarValue(lb, "133.7");
-    const inKg = changeBarUnit(typed, "kg");
+    const inKg = changeBarUnit(typed, "kg", "en");
     expect(inKg).toMatchObject({ barValue: "60.65", barUnit: "kg" });
-    expect(changeBarUnit(inKg, "lb")).toMatchObject({ barValue: "133.7", barUnit: "lb" });
+    expect(changeBarUnit(inKg, "lb", "en")).toMatchObject({ barValue: "133.7", barUnit: "lb" });
+  });
+  it("writes the converted bar with the language's decimal separator, and reads it back exactly", () => {
+    const es = changeBarUnit(newExerciseForm("X"), "lb", "es");
+    expect(es).toMatchObject({ barValue: "44,09", barUnit: "lb" });
+    expect(changeBarUnit(es, "kg", "es")).toMatchObject({ barValue: "20", barUnit: "kg" });
+    expect(changeBarUnit(newExerciseForm("X"), "lb", "en").barValue).toBe("44.09");
   });
   it("treats a newly typed number as the new original", () => {
-    const typed = setBarValue(changeBarUnit(newExerciseForm("X"), "lb"), "45");
-    expect(changeBarUnit(typed, "kg")).toMatchObject({ barValue: "20.41", barUnit: "kg" });
+    const typed = setBarValue(changeBarUnit(newExerciseForm("X"), "lb", "en"), "45");
+    expect(changeBarUnit(typed, "kg", "en")).toMatchObject({ barValue: "20.41", barUnit: "kg" });
   });
   it("is not affected by the default unit (a different field)", () => {
     const form = { ...newExerciseForm("X"), defaultUnit: "lb" } as const;
@@ -87,9 +93,9 @@ describe("changeBarUnit", () => {
     expect(form.barValue).toBe("20");
   });
   it("only relabels text that is not a number, and refuses out-of-range results", () => {
-    expect(changeBarUnit(setBarValue(newExerciseForm("X"), "20,"), "lb")).toMatchObject({ barValue: "20,", barUnit: "lb" });
+    expect(changeBarUnit(setBarValue(newExerciseForm("X"), "20,"), "lb", "en")).toMatchObject({ barValue: "20,", barUnit: "lb" });
     const huge = setBarValue(newExerciseForm("X"), "9999");
-    expect(changeBarUnit(huge, "lb")).toBe(huge);
+    expect(changeBarUnit(huge, "lb", "en")).toBe(huge);
   });
 });
 

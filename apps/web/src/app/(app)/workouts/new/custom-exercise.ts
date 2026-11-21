@@ -11,7 +11,7 @@ import {
 } from "@forja/core";
 import type { CreateExerciseInput, CreateExerciseResult } from "@/server/exercise-actions";
 import type { EntryExercise } from "@/server/queries";
-import { chooseExercise, parseDecimal, type ExerciseDraft } from "./draft";
+import { chooseExercise, formatDecimalInput, parseDecimal, type ExerciseDraft } from "./draft";
 
 export type NewExerciseForm = {
   name: string;
@@ -54,9 +54,10 @@ export function setBarValue(form: NewExerciseForm, value: string): NewExerciseFo
  * The bar's own kg/lb switch. A number is converted (20 kg -> 44.09 lb) from the original, not relabelled. The
  * exercise's default unit is a different field and never reaches this function. Text that is not a number
  * cannot be converted, so only the unit changes (the field then shows its hint); a result outside the allowed
- * range leaves everything as it was.
+ * range leaves everything as it was. The converted number is written with the active language's decimal
+ * separator (44,09 in Spanish), like the set rows.
  */
-export function changeBarUnit(form: NewExerciseForm, unit: Unit): NewExerciseForm {
+export function changeBarUnit(form: NewExerciseForm, unit: Unit, locale: string): NewExerciseForm {
   if (unit === form.barUnit) return form;
   const { value: originText, unit: originUnit } = form.barOrigin;
   if (unit === originUnit) return { ...form, barUnit: unit, barValue: originText };
@@ -66,7 +67,7 @@ export function changeBarUnit(form: NewExerciseForm, unit: Unit): NewExerciseFor
   }
   const converted = convertWeightExactly({ value: number, unit: originUnit }, unit);
   if (!converted.ok) return form;
-  return { ...form, barUnit: unit, barValue: String(converted.weight.value) };
+  return { ...form, barUnit: unit, barValue: formatDecimalInput(converted.weight.value, locale) };
 }
 
 export type NewExerciseField = "name" | "muscleGroup" | "equipment" | "loadMode" | "barWeight";

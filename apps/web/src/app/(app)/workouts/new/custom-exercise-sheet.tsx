@@ -3,7 +3,7 @@
 // It is rendered only while open, so Cancel / Escape throw the edits away and the next open starts fresh.
 
 import { EQUIPMENT, MUSCLE_GROUPS, type Unit } from "@forja/core";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { BottomSheet } from "@/components/bottom-sheet";
 import { SegmentedControl } from "@/components/segmented-control";
@@ -35,6 +35,7 @@ type Props = {
 export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseAutoFocus }: Props) {
   const t = useTranslations("Entry");
   const n = useTranslations("Entry.newExercise");
+  const locale = useLocale();
   const loadGroupId = useId();
   const nameRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<NewExerciseForm>(() => newExerciseForm(initialName));
@@ -233,7 +234,7 @@ export function CustomExerciseSheet({ initialName, onCreated, onCancel, onCloseA
               label={n("barUnit")}
               value={form.barUnit}
               onValueChange={(unit) => {
-                const next = changeBarUnit(form, unit);
+                const next = changeBarUnit(form, unit, locale);
                 // changeBarUnit hands back the same object when it refuses (out of range): say so, do not stay silent.
                 setBarUnitRefused(next === form);
                 setForm(next);

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
@@ -13,6 +13,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// On phones that support it, the page (and a bottom sheet) shrinks when the keyboard opens, so the focused
+// field stays visible instead of hiding behind the keyboard.
+export const viewport: Viewport = { interactiveWidget: "resizes-content" };
 
 export const metadata: Metadata = {
   title: "Forja",

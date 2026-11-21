@@ -1,12 +1,19 @@
 // The form's draft (what the user has typed so far) and the pure helpers that work on it. No React here, so
 // it is easy to read and to test. Weight rules (limits, decimals) come from @forja/core.
-import { WeightSchema, normalizeName, type Unit } from "@forja/core";
+import { WeightSchema, convertWeightExactly, normalizeName, type Unit } from "@forja/core";
 import type { EntryExercise } from "@/server/queries";
 
 export const DEFAULT_SET_COUNT = 4; // the owner always does 4
 
-/** Text as typed, so half-typed values like "22," survive while the user types. */
-export type SetDraft = { weight: string; reps: string; unit: Unit };
+/**
+ * Text as typed, so half-typed values like "22," survive while the user types.
+ * `key` identifies the row inside its exercise (React key, open sheet, undo history, focus). It is draft-only:
+ * never sent to the server, never a position in the array (positions change when rows are deleted).
+ */
+export type SetDraft = { key: number; weight: string; reps: string; unit: Unit; toFailure: boolean };
+
+/** A row removed with "Delete set", kept so Undo can put it back where it was. */
+export type DeletedSet = { set: SetDraft; position: number };
 
 export type ExerciseDraft = {
   /** Stable React key; a counter, because random ids would differ between server and browser render. */
@@ -17,12 +24,16 @@ export type ExerciseDraft = {
   /** The unit new and still-empty rows get. Rows with a weight keep their own (rule 4). */
   unit: Unit;
   sets: SetDraft[];
+  /** The key the next added row gets. Only ever grows, so a key is never reused after a delete. */
+  nextSetKey: number;
+  /** Deleted rows, oldest first: Undo takes the last one (last in, first out). Lives and dies with the draft. */
+  deleted: DeletedSet[];
   /** null = the note field is hidden. */
   note: string | null;
 };
 
-export function newSet(unit: Unit): SetDraft {
-  return { weight: "", reps: "", unit };
+export function newSet(key: number, unit: Unit): SetDraft {
+  return { key, weight: "", reps: "", unit, toFailure: false };
 }
 
 export function newExercise(key: number): ExerciseDraft {
@@ -31,9 +42,21 @@ export function newExercise(key: number): ExerciseDraft {
     text: "",
     exerciseId: null,
     unit: "kg",
-    sets: Array.from({ length: DEFAULT_SET_COUNT }, () => newSet("kg")),
+    sets: Array.from({ length: DEFAULT_SET_COUNT }, (_, index) => newSet(index + 1, "kg")),
+    nextSetKey: DEFAULT_SET_COUNT + 1,
+    deleted: [],
     note: null,
   };
+}
+
+/** Add set: always a fresh row, never marked to failure, in the card's current unit. */
+export function addSet(draft: ExerciseDraft): ExerciseDraft {
+  return { ...draft, sets: [...draft.sets, newSet(draft.nextSetKey, draft.unit)], nextSetKey: draft.nextSetKey + 1 };
+}
+
+/** Edit one row, found by key. */
+export function updateSet(draft: ExerciseDraft, key: number, patch: Partial<Omit<SetDraft, "key">>): ExerciseDraft {
+  return { ...draft, sets: draft.sets.map((set) => (set.key === key ? { ...set, ...patch } : set)) };
 }
 
 /** The toggle only changes rows that are still empty: a row with a weight keeps the unit it was typed in. */
@@ -43,6 +66,77 @@ export function changeUnit(draft: ExerciseDraft, unit: Unit): ExerciseDraft {
     unit,
     sets: draft.sets.map((set) => (set.weight.trim() === "" ? { ...set, unit } : set)),
   };
+}
+
+// ---- Set details: failure marks, per-set unit, delete and undo ----------------------------------------------
+
+/**
+ * "Mark all sets to failure" / "Clear failure marks": one-shot, for the rows listed right now (blank ones
+ * included). Values and units stay; rows added later start unmarked; deleted snapshots are not touched.
+ */
+export function setAllFailure(draft: ExerciseDraft, toFailure: boolean): ExerciseDraft {
+  return { ...draft, sets: draft.sets.map((set) => ({ ...set, toFailure })) };
+}
+
+/** Remove a row and remember it (with its position) for Undo. An unknown key changes nothing. */
+export function deleteSet(draft: ExerciseDraft, key: number): ExerciseDraft {
+  const position = draft.sets.findIndex((set) => set.key === key);
+  if (position === -1) return draft;
+  return {
+    ...draft,
+    sets: draft.sets.filter((set) => set.key !== key),
+    deleted: [...draft.deleted, { set: draft.sets[position], position }],
+  };
+}
+
+/** The row Undo would restore next (the most recently deleted one), if any. */
+export function lastDeleted(draft: ExerciseDraft): SetDraft | undefined {
+  return draft.deleted.at(-1)?.set;
+}
+
+/**
+ * Put the most recently deleted row back at the position it had, with its own key, text, unit and flag. The
+ * position is clamped because rows may have been deleted or added since; other rows are not touched.
+ */
+export function undoDelete(draft: ExerciseDraft): ExerciseDraft {
+  const last = draft.deleted.at(-1);
+  if (!last) return draft;
+  const sets = [...draft.sets];
+  sets.splice(Math.min(last.position, sets.length), 0, last.set);
+  return { ...draft, sets, deleted: draft.deleted.slice(0, -1) };
+}
+
+export type UnitChangeMode = "keep" | "convert";
+
+export type ConvertPreview =
+  | { ok: true; weight: { value: number; unit: Unit } }
+  | { ok: false; reason: "same_unit" | "invalid_number" | "out_of_range" };
+
+/**
+ * What "Convert weight" would give for this row in `to`. It always starts from the row's current stored
+ * text and unit, never from an earlier preview, so flipping kg/lb in the sheet cannot drift through rounding.
+ * Per-side rows convert the plate number as typed (no bar, no doubling): this function never sees the bar.
+ */
+export function previewConversion(set: SetDraft, to: Unit): ConvertPreview {
+  const value = parseDecimal(set.weight);
+  if (value === null || !WeightSchema.safeParse({ value, unit: set.unit }).success) {
+    return { ok: false, reason: "invalid_number" };
+  }
+  return convertWeightExactly({ value, unit: set.unit }, to);
+}
+
+/**
+ * Change one row's unit. A blank weight just changes unit. With a weight, "keep" relabels it (the typed text
+ * stays exactly as typed, comma or half-typed included) and "convert" replaces it with the converted number.
+ * Reps and the failure flag are untouched; the same unit, or a conversion that is not possible, does nothing.
+ */
+export function applySetUnit(draft: ExerciseDraft, key: number, unit: Unit, mode: UnitChangeMode): ExerciseDraft {
+  const set = draft.sets.find((s) => s.key === key);
+  if (!set || set.unit === unit) return draft;
+  if (set.weight.trim() === "" || mode === "keep") return updateSet(draft, key, { unit });
+  const preview = previewConversion(set, unit);
+  if (!preview.ok) return draft;
+  return updateSet(draft, key, { unit, weight: String(preview.weight.value) });
 }
 
 export function chooseExercise(draft: ExerciseDraft, exercise: EntryExercise, displayName: string): ExerciseDraft {
@@ -61,7 +155,7 @@ export function parseReps(text: string): number | null {
 }
 
 export type SetProblem = "incomplete" | "invalid";
-export type ParsedSet = { weight: { value: number; unit: Unit }; reps: number };
+export type ParsedSet = { weight: { value: number; unit: Unit }; reps: number; toFailure: boolean };
 
 /** "empty" rows are skipped on save; anything else is either a usable set or a problem to show. */
 export function readSet(set: SetDraft): "empty" | SetProblem | ParsedSet {
@@ -74,7 +168,7 @@ export function readSet(set: SetDraft): "empty" | SetProblem | ParsedSet {
   if (value === null || reps === null || reps > 1000) return "invalid";
   // Core's schema owns the limits (0..9999.99, two decimals).
   const weight = WeightSchema.safeParse({ value, unit: set.unit });
-  return weight.success ? { weight: weight.data, reps } : "invalid";
+  return weight.success ? { weight: weight.data, reps, toFailure: set.toFailure } : "invalid";
 }
 
 /** Which exercise the typed text names, if exactly one: its name in either language or an alias (rule 12). */
@@ -147,8 +241,7 @@ export function toSaveExercises(drafts: ExerciseDraft[]) {
     sets: draft.sets
       .map(readSet)
       .filter((set): set is ParsedSet => typeof set === "object")
-      // Weights are sent exactly as entered (value + unit); per side stays per side.
-      // TODO(set details): "To failure" is not in M3 (waits for Codex's set-details design); every set is false.
-      .map((set) => ({ weight: set.weight, reps: set.reps, toFailure: false })),
+      // Weights are sent exactly as entered (value + unit); per side stays per side. The row key is not sent.
+      .map((set) => ({ weight: set.weight, reps: set.reps, toFailure: set.toFailure })),
   }));
 }

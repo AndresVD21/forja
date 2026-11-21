@@ -26,9 +26,11 @@ type Props = {
   /** null = this is the only card, so it cannot be removed. */
   onRemove: (() => void) | null;
   onChange: (draft: ExerciseDraft) => void;
+  /** True while the workout is saving: the set controls that edit the draft are switched off. */
+  disabled: boolean;
 };
 
-export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange }: Props) {
+export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange, disabled }: Props) {
   const t = useTranslations("Entry");
   const locale = useLocale();
   const noteId = useId();
@@ -76,16 +78,17 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
       {lastTime?.lastTime && exercise && <LastTimeLine lastTime={lastTime.lastTime} exercise={exercise} />}
 
       <SetsTable
-        sets={draft.sets}
-        unit={draft.unit}
+        draft={draft}
+        exerciseName={draft.text.trim() || t("unnamedExercise", { number })}
         perSide={perSide}
+        disabled={disabled}
         problems={Object.fromEntries(
           Object.entries(problems?.sets ?? {}).map(([index, problem]) => [
             index,
             t(problem === "incomplete" ? "problems.setIncomplete" : "problems.setInvalid", { number: Number(index) + 1 }),
           ]),
         )}
-        onChange={(sets) => onChange({ ...draft, sets })}
+        onChange={onChange}
       />
       {problems?.noSets && (
         <p role="alert" className="text-sm font-medium text-ink">

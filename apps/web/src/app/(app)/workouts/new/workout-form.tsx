@@ -125,6 +125,7 @@ export function WorkoutForm({ data, today }: Props) {
           problems={attempted && hasProblems(exerciseProblems[index]) ? exerciseProblems[index] : null}
           onRemove={exercises.length > 1 ? () => setExercises((all) => all.filter((e) => e.key !== draft.key)) : null}
           onChange={updateExercise}
+          disabled={saving}
         />
       ))}
 

@@ -291,12 +291,13 @@ The *test pyramid*: many cheap tests at the bottom, few slow ones at the top.
 | Environment | App | Database | Trigger |
 |-------------|-----|----------|---------|
 | Local | `pnpm dev` | PGlite saved to a git-ignored folder when `DATABASE_URL` is unset ([0005](decisions/0005-m3-scope-and-local-database.md)); unit tests use PGlite in memory ([0002](decisions/0002-pglite-for-database-tests.md)) | — |
-| Preview | Vercel preview URL | Neon branch created for the PR | every pull request |
-| Production | Vercel production | Neon `main` branch | merge to `main` |
+| Preview | Vercel preview URL | Neon branch `preview/<git-branch>`, made by Neon's Vercel integration | every pull request |
+| Production | Vercel production (functions in `iad1`) | Neon production branch, AWS us-east-1 | merge to `main` |
 
 - Secrets (`DATABASE_URL`, `BETTER_AUTH_SECRET`) live in Vercel's environment settings and a local,
   git-ignored `apps/web/.env.local`. `apps/web/.env.example` lists the names without values.
-- Migrations run as a build step before the new version goes live, so code and schema change together.
+- Migrations run as a build step before the new version goes live, so code and schema change together; they use
+  Neon's direct connection, the app uses the pooled one ([decision 0007](decisions/0007-first-deploy-setup.md)).
 - **Concept**: *continuous integration / continuous deployment* and *environment parity*.
 
 ## 7. Decision records

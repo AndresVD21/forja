@@ -253,7 +253,7 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
 9. **Removing a friend's access**: an unused invite link can be deleted, but there is no way yet to lock out an
    account that already exists (account deletion has no screen). Decide when that is needed.
 10. ~~Before the first deploy~~ — decided 2026-11-21 in [decision 0007](decisions/0007-first-deploy-setup.md):
-    rate-limit counts in the database, previews trust their own Vercel URL, 30-day sessions renewed daily.
+    rate-limit counts in the database, previews trust their own Vercel URL, 30-day sessions renewed by the first save of the day.
 11. `instant = false` in the root layout keeps `<html lang>` correct but gives up an instant static shell for the
     whole app (every page waits for the request). Next still prints dev hints such as "instant-shell-url-data"
     when a page reads URL data outside `<Suspense>`.

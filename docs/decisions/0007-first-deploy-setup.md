@@ -14,7 +14,10 @@ architecture (section 6) already says migrations run as a build step and preview
   so previews work without extra configuration.
 - **Rate limiting**: Better Auth stores its counts **in the database**, so the limit holds across Vercel's serverless
   instances (in-memory counts are per instance). One new migration.
-- **Sessions**: **30 days**, extended at most once a day while the app is used.
+- **Sessions**: **30 days**, extended at most once a day — by the first **save** of the day (any server action),
+  not by merely opening a page: a page cannot set a cookie, so letting pages extend the session in the database
+  would leave the phone's cookie expiring on the old date (found in review). Opening the app without saving
+  anything for 30 days means signing in again.
 - **Region**: Neon in **AWS us-east-1**, Vercel functions in **iad1** (Washington DC, Vercel's default) — close
   to Colombia and next to each other, so each query is a short hop.
 - **Build**: on Vercel the build runs, in order, the migrations (over Neon's **direct** connection, as Neon advises for

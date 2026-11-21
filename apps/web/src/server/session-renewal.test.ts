@@ -1,11 +1,11 @@
 // A session that is due for renewal: a page read must leave it alone, a server-action read must renew the database
 // row AND hand back a cookie with the new expiry (otherwise the browser's cookie would still expire 30 days after
-// sign-in). Uses the same query flag as session.ts (sessionReadQuery).
+// sign-in). Goes through readSession, the same helper session.ts uses.
 import type { Database } from "@forja/db";
 import { sessions } from "@forja/db/schema";
 import { createTestDb } from "@forja/db/testing";
 import { beforeAll, describe, expect, it } from "vitest";
-import { sessionReadQuery } from "./auth-settings";
+import { readSession } from "./read-session";
 import { createAuth, type Auth } from "./create-auth";
 
 let db: Database;
@@ -25,10 +25,7 @@ beforeAll(async () => {
 
 // Sign-up and sign-in each created a session; the cookie is for the newest, which is the one that renews.
 const expiry = async () => Math.max(...(await db.select().from(sessions)).map((row) => row.expiresAt.getTime()));
-const read = (extra: Record<string, string>) => {
-  const requestHeaders = new Headers({ cookie, ...extra });
-  return auth.api.getSession({ headers: requestHeaders, query: sessionReadQuery(requestHeaders), returnHeaders: true });
-};
+const read = (extra: Record<string, string>) => readSession(auth, new Headers({ cookie, ...extra }));
 
 describe("session renewal", () => {
   it("a page read leaves an aged session alone; a server-action read renews it and sets the cookie", async () => {

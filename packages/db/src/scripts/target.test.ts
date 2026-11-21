@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { chooseDatabaseUrl, describeFailure, openTarget } from "./target";
@@ -25,13 +28,17 @@ describe("chooseDatabaseUrl", () => {
 describe("openTarget on Vercel", () => {
   it("refuses to fall back to a local database", async () => {
     const saved = { ...process.env };
+    // A scratch folder, so that if the guard ever regresses the test cannot touch the real .data/pglite.
+    const scratch = mkdtempSync(join(tmpdir(), "forja-target-test-"));
     try {
+      process.env.FORJA_LOCAL_DB_DIR = scratch;
       process.env.VERCEL = "1";
       delete process.env.DATABASE_URL;
       delete process.env.DATABASE_URL_UNPOOLED;
       await expect(openTarget({ preferDirect: true })).rejects.toThrow(/Vercel/);
     } finally {
       process.env = saved;
+      rmSync(scratch, { recursive: true, force: true });
     }
   });
 });

@@ -29,8 +29,9 @@ export function rateLimitEnabled(env: { NODE_ENV?: string }): boolean {
 /**
  * Rate limits, stored in the `rate_limits` table so every Vercel instance shares one count (decision 0007).
  * Better Auth keys each count by client IP + path. The IP comes from its default, the `x-forwarded-for` header
- * (single address only, no `trustedProxies`). That assumes Vercel sets the header itself; if a proxy ever sits in
- * front of Vercel, everyone would share one bucket, which fails closed (too strict), not open. Only requests that arrive over HTTP are counted: our invite
+ * (single address only, no `trustedProxies`). That assumes Vercel sets the header itself; if a proxy ever sits
+ * in front of Vercel, everyone would share one bucket, which fails closed (too strict), not open.
+ * Only requests that arrive over HTTP are counted: our invite
  * registration calls `auth.api.signUpEmail` directly from a server action, which never passes through the HTTP
  * router, so it is not rate limited by this (it is protected by the one-time invite token instead).
  *
@@ -52,7 +53,6 @@ export function rateLimitConfig(enabled: boolean) {
   };
 }
 
-// The variables we read; `process.env` fits (it is a string-to-string map), and so does a plain object in tests.
 // The variables we read; `process.env` fits (it is a string-to-string map), and so does a plain object in tests.
 type VercelEnv = Partial<
   Record<"VERCEL_ENV" | "BETTER_AUTH_URL" | "VERCEL_URL" | "VERCEL_BRANCH_URL" | "VERCEL_PROJECT_PRODUCTION_URL", string | undefined>

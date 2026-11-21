@@ -10,7 +10,7 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { translatedOrTyped } from "@/i18n/labels";
-import type { EntryFormData } from "@/server/queries";
+import type { EntryExercise, EntryFormData } from "@/server/queries";
 import type { ErrorCode } from "@/server/workout-actions";
 import { saveWorkout } from "./actions";
 import { checkExercise, hasProblems, newExercise, toSaveExercises, type ExerciseDraft } from "./draft";
@@ -29,6 +29,10 @@ export function WorkoutForm({ data, today }: Props) {
   const [trainingDayId, setTrainingDayId] = useState("");
   const [exercises, setExercises] = useState<ExerciseDraft[]>([newExercise(1)]);
   const nextKey = useRef(2);
+  // Exercises created in the setup sheet. The server list is only read when the page loads, so keep them
+  // here too; the id check avoids a duplicate once a refreshed page includes them.
+  const [created, setCreated] = useState<EntryExercise[]>([]);
+  const knownExercises = [...data.exercises, ...created.filter((c) => !data.exercises.some((e) => e.id === c.id))];
 
   const [attempted, setAttempted] = useState(false); // problems are shown only after a Save attempt
   const [saving, setSaving] = useState(false);
@@ -120,11 +124,12 @@ export function WorkoutForm({ data, today }: Props) {
           key={draft.key}
           draft={draft}
           number={index + 1}
-          exercises={data.exercises}
+          exercises={knownExercises}
           locationId={locationId}
           problems={attempted && hasProblems(exerciseProblems[index]) ? exerciseProblems[index] : null}
           onRemove={exercises.length > 1 ? () => setExercises((all) => all.filter((e) => e.key !== draft.key)) : null}
           onChange={updateExercise}
+          onExerciseCreated={(exercise) => setCreated((all) => (all.some((e) => e.id === exercise.id) ? all : [...all, exercise]))}
           disabled={saving}
         />
       ))}

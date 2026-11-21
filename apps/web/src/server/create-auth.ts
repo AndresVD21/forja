@@ -7,11 +7,16 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import * as schema from "@forja/db/schema";
+import { rateLimitConfig, SESSION } from "./auth-settings";
 import { safeAuthLogger } from "./safe-log";
 
 export type AuthOptions = {
   secret?: string;
   baseURL?: string;
+  /** Origins (besides baseURL) allowed to call the auth endpoints, e.g. a Vercel preview's own address. */
+  trustedOrigins?: string[];
+  /** Turns on the database-backed rate limit. Off unless asked: auth.ts passes true in production only. */
+  rateLimit?: boolean;
   /**
    * Whether Better Auth wraps multi-row writes (a sign-up writes a user AND an account) in a transaction.
    * Pass `true` on Neon, where a crash between the two inserts would leave a user without a password.
@@ -36,6 +41,7 @@ export function createAuth(db: Database, options: AuthOptions = {}) {
   return betterAuth({
     secret: options.secret,
     baseURL: options.baseURL,
+    trustedOrigins: options.trustedOrigins,
 
     // Better Auth's default logger prints raw errors, whose messages contain query parameters (the session token).
     logger: safeAuthLogger,
@@ -53,6 +59,11 @@ export function createAuth(db: Database, options: AuthOptions = {}) {
 
     // false = Better Auth does not invent ids; Postgres fills `id` with gen_random_uuid(), the column default.
     advanced: { database: { generateId: false } },
+
+    session: { ...SESSION },
+
+    // Counts live in the `rate_limits` table (usePlural maps Better Auth's `rateLimit` model to it).
+    rateLimit: rateLimitConfig(options.rateLimit ?? false),
 
     // No email verification: there is no mail service in M3.
     emailAndPassword: { enabled: true },

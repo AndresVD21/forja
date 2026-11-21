@@ -112,18 +112,35 @@ cross-user test per repository.
 
 What M3 (Better Auth) must check against this package:
 
-- **Model names.** (Done in M3: `usePlural: true` in the adapter.) Better Auth calls its tables `user`, `session`, `account`, `verification`; ours is the plural
+- **Model names.** (Done in M3: `usePlural: true` in the adapter; the rate-limit model `rateLimit` maps to `rate_limits`.) Better Auth calls its tables `user`, `session`, `account`, `verification`; ours is the plural
   `users`. Map the names in its Drizzle adapter configuration instead of renaming ours.
-- **Ids.** `users.id` is a `uuid` with a database default. Better Auth generates its own string ids by default;
+- **Ids.** (Done: `advanced.database.generateId: false`.) `users.id` is a `uuid` with a database default. Better Auth generates its own string ids by default;
   make it use the database default (or generate uuids) so the id fits the column.
-- **New tables.** `sessions`, `accounts` and `verification` arrive as a NEW migration, with `user_id uuid`
+- **New tables.** (Done: migration 0001, plus `rate_limits` in 0002.) `sessions`, `accounts` and `verification` arrive as a NEW migration, with `user_id uuid`
   foreign keys that `ON DELETE CASCADE` from `users`.
-- **Account deletion** must clear workouts and plans first (`repos.users.clearWorkoutsAndPlans`, or `deleteAccount` outside Better Auth); a bare `DELETE FROM users` fails for
+- **Account deletion** (still open: switched off in M3) must clear workouts and plans first (`repos.users.clearWorkoutsAndPlans`, or `deleteAccount` outside Better Auth); a bare `DELETE FROM users` fails for
   users with custom exercises in use.
-- **E-mail case.** `scripts/seed-user.ts` looks the user up by exact e-mail; Better Auth lower-cases e-mails,
+- **E-mail case.** (Open.) `scripts/seed-user.ts` looks the user up by exact e-mail; Better Auth lower-cases e-mails,
   so use the lower-case address (or make the script compare case-insensitively).
-- **Postgres version.** Neon must run Postgres 15 or newer: `reference_weights` uses `NULLS NOT DISTINCT`.
-- **Migrations** are applied with `pnpm --filter @forja/db db:migrate` (Neon WebSocket migrator).
-- **Constraint errors.** Server actions must translate database errors into friendly messages, at least
+- **Postgres version.** (Check when creating the Neon project.) Neon must run Postgres 15 or newer: `reference_weights` uses `NULLS NOT DISTINCT`.
+- **Migrations** (Done) are applied with `pnpm --filter @forja/db db:migrate` (Neon WebSocket migrator).
+- **Constraint errors.** (Open, per action.) Server actions must translate database errors into friendly messages, at least
   `plans_one_active_per_user` (a second active plan) and duplicate names (`locations_user_name_unique`,
   `training_days_user_name_unique`).
+
+## Deploy (Vercel + Neon, decision 0007)
+
+- **Build order** (`apps/web/vercel.json`): `db:migrate`, then `db:seed-catalogue`, then `next build`. A failed
+  migration or seed exits non-zero and stops the deployment, so new code never runs against an older schema.
+  With nothing to migrate, `db:migrate` does nothing and succeeds.
+- **Direct vs pooled.** The running app uses `DATABASE_URL` (Neon's pooled connection: many short-lived serverless
+  instances share a few real connections). `db:migrate` and `db:seed-catalogue` use `DATABASE_URL_UNPOOLED` (the
+  direct connection) when it is set, because the pooler does not support everything schema changes may need; they
+  fall back to `DATABASE_URL`. They log which kind they use, never the address.
+- **Catalogue seed in every build** is safe: it upserts only the shared exercises (`user_id` NULL) and their
+  aliases, in one transaction, and never touches user data.
+- **Previews** get their own Neon branch (a copy of production), so their migrations never touch production data.
+- **Your account** on production is created once by you, from your terminal, against the pooled address:
+  `DATABASE_URL=... pnpm --filter @forja/web create-user you@example.com "Your Name"`, then
+  `DATABASE_URL=... pnpm --filter @forja/db db:seed-user -- you@example.com`.
+- **Rate limit** counts live in the `rate_limits` table, so all instances share them. It is on in production only.

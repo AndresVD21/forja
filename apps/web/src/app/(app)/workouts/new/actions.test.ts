@@ -15,6 +15,7 @@ const uuid = "22222222-2222-4222-8222-222222222222";
 // Valid-shaped input for every action, so a failure can only be about authentication.
 const input = {
   performedOn: "2026-11-19", locationId: uuid, exerciseId: uuid,
+  name: "Cable row", muscleGroup: "back", equipment: "cable", defaultUnit: "kg", loadMode: "total",
   exercises: [{ exerciseId: uuid, sets: [{ reps: 5, weight: { value: 10, unit: "kg" } }] }],
 };
 
@@ -22,7 +23,7 @@ describe("actions.ts", () => {
   const exported = Object.entries(actions);
 
   it("exports the actions we expect (a new one should be added to this thinking, not slip in)", () => {
-    expect(exported.map(([name]) => name).sort()).toEqual(["getLastTime", "saveWorkout"]);
+    expect(exported.map(([name]) => name).sort()).toEqual(["createExercise", "getLastTime", "saveWorkout"]);
   });
 
   it.each(exported)("%s returns signed_out when there is no user, without touching the database", async (_name, action) => {

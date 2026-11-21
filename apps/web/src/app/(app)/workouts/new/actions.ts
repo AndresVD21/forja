@@ -5,6 +5,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/session";
+import { createExerciseFor, type CreateExerciseInput, type CreateExerciseResult } from "@/server/exercise-actions";
 import { getToday } from "@/server/time";
 import {
   getLastTimeFor,
@@ -30,4 +31,14 @@ export async function getLastTime(input: LastTimeInput): Promise<GetLastTimeResu
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: "signed_out" };
   return getLastTimeFor(db, user.id, input);
+}
+
+/** "Save exercise and use": adds a private exercise (or returns the existing one with the same name or alias). */
+export async function createExercise(input: CreateExerciseInput): Promise<CreateExerciseResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "signed_out" };
+  const result = await createExerciseFor(db, user.id, input);
+  // Even when nothing new was made the page's data is still correct; only a real insert needs refreshing.
+  if (result.ok && result.created) revalidatePath("/workouts/new");
+  return result;
 }

@@ -40,4 +40,13 @@ later as a nullable owner column if someone asks for them.
 | backend-dev / apps/web actions | `createGym({ name })`: authenticate → validate → `findOrCreate` → revalidate only when a gym was created. |
 | frontend-dev / apps/web | An "Add a gym" control next to the Gym menu, opening a small sheet with one name field; on success the new (or existing) gym is selected. English and Spanish. |
 | test-engineer / e2e | Seeded names become "SmartFit …". Cover adding a gym, adding an existing name in another case or accent (selects the existing one), and an empty name. |
+| frontend-dev / apps/web | A user with no workouts yet starts with no gym selected ("Choose a gym"), so nobody saves a workout at someone else's gym by accident. |
 | owner | Run `pnpm --filter @forja/db db:migrate` once on the local database after merge. Production migrates during the Vercel build. Deleting an account no longer deletes the gyms it added. |
+| owner, before merging | The migration makes **every existing gym name visible to every user**, including names typed when gyms were private. Check the PR's preview deployment (its Neon branch is a copy of production and runs the migration first): the gym list should hold only names you are happy to share. |
+| owner, during the deploy | The migration runs at the start of the production build while the previous version is still serving; for those few minutes the old version cannot read gyms, so do not log a workout until the new deployment is live. |
+
+## Not done yet
+
+- **No way to rename or remove a shared gym.** A typo added by anyone stays in everyone's list until the owner
+  fixes it in the database. Gym management belongs to the "Settings" work listed in `docs/PLAN.md`.
+- Gyms are matched by name only, so two different gyms with the same name in different cities would be one row.

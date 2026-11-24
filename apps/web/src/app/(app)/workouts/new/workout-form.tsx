@@ -180,7 +180,7 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   const start = saved?.initial.draft;
   const [date, setDate] = useState(start?.date ?? startDate);
   const gyms = mergeGyms(data.locations, addedGyms);
-  const [locationId, setLocationId] = useState(start?.locationId ?? data.defaultLocationId ?? data.locations[0]?.id ?? "");
+  const [locationId, setLocationId] = useState(start?.locationId ?? data.defaultLocationId ?? "");
   const [addGymOpen, setAddGymOpen] = useState(false);
   const gymSelect = useRef<HTMLSelectElement>(null);
   const [trainingDayId, setTrainingDayId] = useState(start?.trainingDayId ?? "");
@@ -246,6 +246,11 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [changed, saving]);
+
+  // Next keeps a left page hidden and runs effect cleanups when it hides. Closing the Add-a-gym sheet then means
+  // the person comes back to the form, not to a half-typed sheet. The sheet is closed when this mounts, so React's
+  // dev-only mount/cleanup/mount check is harmless.
+  useEffect(() => () => setAddGymOpen(false), []);
 
   function handleCancel() {
     if (saved && changed) setDiscardOpen(true);
@@ -366,6 +371,12 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <SelectField ref={gymSelect} label={t("gym")} value={locationId} aria-invalid={attempted && gymProblem ? true : undefined} aria-describedby={gymProblem ? gymProblemId : undefined} onChange={(event) => setLocationId(event.target.value)}>
+            {/* No gym until the person picks one: gyms are shared, so the first A-Z may be someone else's. */}
+            {locationId === "" && (
+              <option value="" disabled>
+                {t("chooseGym")}
+              </option>
+            )}
             {gyms.map((location) => (
               <option key={location.id} value={location.id}>
                 {location.name}

@@ -25,7 +25,7 @@ export function AddGymSheet({ onAdded, onCancel, onCloseAutoFocus }: Props) {
   const [name, setName] = useState("");
   const [problem, setProblem] = useState<"empty" | "tooLong" | null>(null);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<"server_error" | "signed_out" | null>(null);
+  const [error, setError] = useState<"server_error" | "signed_out" | "invalid_input" | null>(null);
 
   async function handleAdd() {
     setError(null);
@@ -45,8 +45,8 @@ export function AddGymSheet({ onAdded, onCancel, onCloseAutoFocus }: Props) {
         return;
       }
       if (result.error === "invalid_input") {
-        setProblem("tooLong");
-        nameRef.current?.focus();
+        // The client check passed, so the server's reason is unknown: say so rather than guess "too long".
+        setError("invalid_input");
       } else {
         setError(result.error);
       }
@@ -73,7 +73,7 @@ export function AddGymSheet({ onAdded, onCancel, onCloseAutoFocus }: Props) {
         <div className="flex flex-col gap-3">
           {error && (
             <p role="alert" className="text-sm font-medium text-ink">
-              {t(error === "signed_out" ? "signedOut" : "serverError")}
+              {t(error === "signed_out" ? "signedOut" : error === "invalid_input" ? "invalidName" : "serverError")}
             </p>
           )}
           <div className="flex gap-3">

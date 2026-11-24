@@ -228,7 +228,9 @@
     "draftResume": "Retomar borrador",
     "draftDiscard": "Descartar borrador e iniciar otro entrenamiento",
     "draftDiscarded": "Borrador descartado. Nuevo entrenamiento del {date}.",
+    "chooseGym": "Elige un gimnasio",
     "addGym": {
+      "invalidName": "Revisa el nombre del gimnasio.",
       "open": "Agregar un gimnasio",
       "title": "Agregar un gimnasio",
       "name": "Nombre del gimnasio",

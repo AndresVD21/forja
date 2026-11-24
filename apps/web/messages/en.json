@@ -228,7 +228,9 @@
     "draftResume": "Resume draft",
     "draftDiscard": "Discard draft and start new workout",
     "draftDiscarded": "Draft discarded. New workout for {date}.",
+    "chooseGym": "Choose a gym",
     "addGym": {
+      "invalidName": "Check the gym name.",
       "open": "Add a gym",
       "title": "Add a gym",
       "name": "Gym name",

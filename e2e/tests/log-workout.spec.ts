@@ -8,7 +8,7 @@ const FOUR_SETS: Array<[string, string]> = [
   ["22,5", "7"],
 ];
 
-/** "Thursday, November 19" for today in Bogota: what the history's screen-reader text says for the dot. */
+/** "Thursday, November 19" for today in Bogota: what the history's day button says for the dot. */
 function todayLongDate() {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Bogota",
@@ -83,7 +83,8 @@ test("sign in, log a workout, see it in the history, then see it as last time", 
   await expect(cards).toHaveCount(before + 1);
   await expect(cards.first()).toContainText("Valle del Lili · 1 exercise · 4 sets");
   await expect(
-    page.getByRole("listitem").filter({ hasText: todayLongDate() }).filter({ hasText: "has entries" }),
+    // The day is a button now (decision 0009); its accessible name carries the date and the dot's meaning.
+    page.getByRole("button", { name: new RegExp(`^${todayLongDate()}, today, has entries`) }),
   ).toHaveCount(1);
 
   // The next entry now takes its reference from the saved workout, at this gym.

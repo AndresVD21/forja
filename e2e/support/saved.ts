@@ -67,7 +67,7 @@ export async function logWorkout(
   const day = opts.day ?? "Chest";
   const name = uniqueName(opts.label ?? "saved");
   await openEntry(page, gym);
-  await page.getByLabel("Date", { exact: true }).fill(date);
+  await page.getByLabel("Workout date", { exact: true }).fill(date);
   await page.getByLabel("Training day", { exact: true }).selectOption({ label: day });
   await createExerciseThroughSheet(page, name, "per_side");
   const sets = opts.sets ?? [["40", "10"], ["90", "8"], ["40", "6"]];

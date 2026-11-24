@@ -35,18 +35,25 @@
     "previousWeek": "Semana anterior",
     "nextWeek": "Semana siguiente",
     "hasEntries": "tiene registros",
+    "today": "hoy",
     "thisWeek": "Esta semana",
     "emptyWeek": "No hay nada registrado esta semana.",
     "workoutFallback": "Entrenamiento",
     "activity": "Actividad",
     "exercises": "{count, plural, one {# ejercicio} other {# ejercicios}}",
     "sets": "{count, plural, one {# serie} other {# series}}",
-    "logWorkout": "Registrar entrenamiento"
+    "logWorkout": "Registrar entrenamiento",
+    "weekDays": "Días de la semana",
+    "daySelected": "seleccionado",
+    "clearSelection": "Quitar selección de fecha",
+    "logWorkoutFor": "Registrar entrenamiento del {date}",
+    "dayChosen": "{date} seleccionado.",
+    "selectionCleared": "Selección de fecha quitada."
   },
   "Entry": {
     "back": "Volver",
-    "title": "Nuevo entrenamiento",
-    "date": "Fecha",
+    "title": "Registrar entrenamiento",
+    "date": "Fecha del entrenamiento",
     "gym": "Gimnasio",
     "noGyms": "Aún no tienes gimnasios, así que no se puede guardar un entrenamiento.",
     "trainingDay": "Día de entrenamiento",
@@ -213,7 +220,12 @@
       "signed_out": "Se cerró tu sesión. Inicia sesión de nuevo en otra pestaña y toca Guardar cambios: tus ediciones siguen aquí.",
       "stale": "Este entrenamiento se cambió en otro lugar. Carga la versión guardada para verlo; tus ediciones aquí se descartarán.",
       "save_failed": "No se pudieron guardar los cambios. Tus ediciones siguen aquí: inténtalo de nuevo."
-    }
+    },
+    "draftTitle": "¿Retomar el borrador del entrenamiento?",
+    "draftText": "Tienes cambios sin guardar del {draftDate}. Retoma ese borrador, o descártalo e inicia un entrenamiento nuevo del {newDate}.",
+    "draftResume": "Retomar borrador",
+    "draftDiscard": "Descartar borrador e iniciar otro entrenamiento",
+    "draftDiscarded": "Borrador descartado. Nuevo entrenamiento del {date}."
   },
   "SignUp": {
     "title": "Crea tu cuenta",

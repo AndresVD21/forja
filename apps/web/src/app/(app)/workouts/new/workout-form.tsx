@@ -203,6 +203,9 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   // Derived from the draft on every render, so a message disappears as soon as the user fixes the problem.
   const dateProblem = !IsoDateSchema.safeParse(date).success || date > today;
   const gymProblem = locationId === "";
+  // A new user starts with no gym chosen; saying "Choose a gym." in red before they have even tried to save reads as
+  // a mistake. The "no gyms yet" note is guidance, so it shows straight away.
+  const showGymProblem = gymProblem && (attempted || gyms.length === 0);
   const exerciseProblems = exercises.map(checkExercise);
   const canSave = !dateProblem && !gymProblem && !exerciseProblems.some(hasProblems);
   const problemCount = countProblems({ dateProblem, gymProblem, exercises: exerciseProblems });
@@ -370,7 +373,7 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <SelectField ref={gymSelect} label={t("gym")} value={locationId} aria-invalid={attempted && gymProblem ? true : undefined} aria-describedby={gymProblem ? gymProblemId : undefined} onChange={(event) => setLocationId(event.target.value)}>
+          <SelectField ref={gymSelect} label={t("gym")} value={locationId} aria-invalid={attempted && gymProblem ? true : undefined} aria-describedby={showGymProblem ? gymProblemId : undefined} onChange={(event) => setLocationId(event.target.value)}>
             {/* No gym until the person picks one: gyms are shared, so the first A-Z may be someone else's. */}
             {locationId === "" && (
               <option value="" disabled>
@@ -398,7 +401,7 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
           ))}
         </SelectField>
       </div>
-      {gymProblem && (
+      {showGymProblem && (
         <FieldError id={gymProblemId}>
           {gyms.length === 0 ? t("noGyms") : t("problems.noGym")}
         </FieldError>

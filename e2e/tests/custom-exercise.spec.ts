@@ -39,7 +39,7 @@ test.describe("custom exercise sheet", () => {
     await expect(sheet.getByLabel("Equipment", { exact: true })).toHaveValue("");
     await expect(sheet.getByRole("radiogroup", { name: "Default unit" }).getByRole("radio", { name: "Kilograms" })).toBeChecked();
     // Neither weight mode is chosen, and no bar field is shown yet.
-    await expect(sheet.getByRole("radio", { name: /^Total weight/ })).not.toBeChecked();
+    await expect(sheet.getByRole("radio", { name: /^Entered weight/ })).not.toBeChecked();
     await expect(sheet.getByRole("radio", { name: /^Plates per side/ })).not.toBeChecked();
     await expect(sheet.getByLabel("Bar weight", { exact: true })).toHaveCount(0);
 
@@ -55,7 +55,7 @@ test.describe("custom exercise sheet", () => {
     // Choosing equipment does not choose the weight mode (a barbell is not assumed to be per side).
     await sheet.getByLabel("Muscle group", { exact: true }).selectOption({ label: "Chest" });
     await sheet.getByLabel("Equipment", { exact: true }).selectOption({ label: "Barbell" });
-    await expect(sheet.getByRole("radio", { name: /^Total weight/ })).not.toBeChecked();
+    await expect(sheet.getByRole("radio", { name: /^Entered weight/ })).not.toBeChecked();
     await expect(sheet.getByRole("radio", { name: /^Plates per side/ })).not.toBeChecked();
     await expect(sheet.getByText("Choose a muscle group.")).toHaveCount(0);
     await expect(sheet.getByText("Choose how you enter weight.")).toBeVisible();
@@ -63,7 +63,7 @@ test.describe("custom exercise sheet", () => {
     await expect(sheet).toBeVisible(); // still blocked: no mode
 
     // A blank name is blocked too.
-    await sheet.getByRole("radio", { name: /^Total weight/ }).check();
+    await sheet.getByRole("radio", { name: /^Entered weight/ }).check();
     await sheet.getByLabel("Exercise name", { exact: true }).fill("   ");
     await sheet.getByRole("button", { name: "Save exercise and use" }).click();
     await expect(sheet.getByText("Enter a name (up to 80 characters).")).toBeVisible();
@@ -84,7 +84,7 @@ test.describe("custom exercise sheet", () => {
     await expect(sheet.getByRole("radiogroup", { name: "Default unit" }).getByRole("radio", { name: "Kilograms" })).toBeChecked();
 
     // Switching back to total hides the bar.
-    await sheet.getByRole("radio", { name: /^Total weight/ }).check();
+    await sheet.getByRole("radio", { name: /^Entered weight/ }).check();
     await expect(bar).toHaveCount(0);
   });
 
@@ -159,7 +159,7 @@ test.describe("custom exercise sheet", () => {
       await expect(again).toBeVisible();
       await expect(again.getByLabel("Exercise name", { exact: true })).toHaveValue(name);
       await expect(again.getByLabel("Muscle group", { exact: true })).toHaveValue("");
-      await expect(again.getByRole("radio", { name: /^Total weight/ })).not.toBeChecked();
+      await expect(again.getByRole("radio", { name: /^Entered weight/ })).not.toBeChecked();
       await page.keyboard.press("Escape");
 
       // Nothing was created: a new entry only offers "Use ..." for both names.

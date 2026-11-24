@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import type { TestInfo } from "@playwright/test";
 import { INVITES_FILE } from "./env";
 
-export type InviteKey = "register" | "used-once" | "email-taken" | "field-checks" | "spanish" | "expired" | "sign-out-after-register" | "signed-in-opens-link" | "server-log" | "other-user";
+export type InviteKey = "register" | "used-once" | "email-taken" | "field-checks" | "spanish" | "expired" | "sign-out-after-register" | "signed-in-opens-link" | "server-log" | "other-user" | "owner-scope";
 
 /**
  * The token made by prepare.mjs for this test. Consuming tests have one token per attempt, indexed by

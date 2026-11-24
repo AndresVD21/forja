@@ -122,7 +122,8 @@
       "convertOutOfRange": "The converted weight would be outside the allowed range.",
       "apply": "Apply unit change",
       "cancel": "Cancel unit change",
-      "previewNote": "Workout is not saved yet."
+      "previewNote": "Workout is not saved yet.",
+      "draftNoteEdit": "Changes stay in this draft until Save changes."
     },
     "useName": "Use “{name}”",
     "useNameHelp": "Save as a new exercise for future workouts",
@@ -195,6 +196,23 @@
       "signed_out": "You were signed out. Sign in again in another tab, then tap Save: your workout is still here.",
       "server_error": "The previous result could not be loaded.",
       "save_failed": "The workout could not be saved. Your entries are still here: try again."
+    },
+    "editTitle": "Edit workout",
+    "saveChanges": "Save changes",
+    "cancelEdit": "Cancel",
+    "changesSaved": "Changes saved.",
+    "discardTitle": "Discard changes?",
+    "discardText": "Your changes to this workout have not been saved.",
+    "keepEditing": "Keep editing",
+    "discard": "Discard changes",
+    "savedLoaded": "Saved version loaded.",
+    "reloadSaved": "Load the saved version",
+    "editErrors": {
+      "invalid_input": "Something in the workout is not valid. Check the date and the sets, then try again.",
+      "not_found": "The workout, gym, training day or an exercise could not be found. Reload the page and try again.",
+      "signed_out": "You were signed out. Sign in again in another tab, then tap Save changes: your edits are still here.",
+      "stale": "This workout was changed elsewhere. Load the saved version to see it; your edits here will be discarded.",
+      "save_failed": "The changes could not be saved. Your edits are still here: try again."
     }
   },
   "SignUp": {
@@ -218,5 +236,36 @@
     "invalidInvite": "This invitation link is invalid, expired or already used. Ask for a new one.",
     "signInLink": "Go to sign in",
     "signInInstead": "Sign in"
+  },
+  "Detail": {
+    "backToHistory": "Back to history",
+    "options": "Workout options",
+    "edit": "Edit workout",
+    "notes": "Notes",
+    "note": "Note: {note}",
+    "colSet": "Set",
+    "colWeight": "Weight",
+    "colReps": "Reps",
+    "setsFor": "Sets for {exercise}",
+    "weight": "{value} {unit}",
+    "weightPerSide": "{value} {unit} / side",
+    "failure": "Failure",
+    "deleteWorkout": "Delete workout",
+    "deleteTitle": "Delete workout?",
+    "deleteContext": "{hasName, select, yes {This will delete the {workout} workout on {date} and all its sets.} other {This will delete the workout on {date} and all its sets.}}",
+    "cancel": "Cancel",
+    "deleting": "Deleting…",
+    "deleted": "Workout deleted.",
+    "savedLoaded": "Saved version loaded.",
+    "reload": "Reload",
+    "deleteErrors": {
+      "stale": "This workout was changed elsewhere. Reload to see the latest version.",
+      "not_found": "This workout no longer exists. Go back to the history.",
+      "signed_out": "You were signed out. Sign in again in another tab, then try again.",
+      "delete_failed": "The workout could not be deleted. Try again."
+    },
+    "notFoundTitle": "Workout not found",
+    "notFoundText": "It may have been deleted, or it does not exist.",
+    "workoutFallback": "Workout"
   }
 }

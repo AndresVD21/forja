@@ -164,6 +164,11 @@ export const workouts = pgTable(
     planWeekId: uuid("plan_week_id").references(() => planWeeks.id, { onDelete: "set null" }),
     performedOn: date("performed_on", { mode: "string" }).notNull(),
     notes: text("notes"),
+    // Edit counter for stale-write protection (decision 0008). Every update/delete says which version it read
+    // ("WHERE version = 3") and every update bumps it. If someone else saved in between, the WHERE matches
+    // nothing and we report "changed elsewhere" instead of silently overwriting. An integer rather than a
+    // timestamp: comparing integers is exact, while timestamps can tie or lose precision on the way to the browser.
+    version: integer("version").notNull().default(1),
     createdAt: createdAt(),
   },
   (t) => [

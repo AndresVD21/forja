@@ -46,7 +46,7 @@ describe("workouts", () => {
     const may = await t.repos.workouts.listForUser(t.userA, { from: "2026-05-01", to: "2026-05-31" });
     expect(may.map((w) => w.performedOn)).toEqual(["2026-05-01", "2026-05-02"]);
     const withSets = may[1]!;
-    await t.repos.workouts.delete(t.userA, withSets.id);
+    await t.repos.workouts.delete(t.userA, withSets.id, withSets.version);
     const [sets] = await t.db.select({ n: count() }).from(workoutSets);
     expect(sets?.n).toBe(0);
   });
@@ -80,7 +80,7 @@ describe("workouts", () => {
     const mine = await t.repos.workouts.create(t.userA, { locationId, performedOn: "2026-08-01", exercises: [] });
     await expectNotFound(t.repos.workouts.getById(t.userB, mine.id), "workout");
     await expectNotFound(t.repos.workouts.getById(t.userB, MISSING_ID), "workout");
-    await expectNotFound(t.repos.workouts.delete(t.userB, mine.id), "workout");
+    await expectNotFound(t.repos.workouts.delete(t.userB, mine.id, mine.version), "workout");
     expect(await t.repos.workouts.listForUser(t.userB, { from: "2000-01-01", to: "2100-01-01" })).toEqual([]);
 
     // B tries to log a workout at A's location, and with A's custom exercise.

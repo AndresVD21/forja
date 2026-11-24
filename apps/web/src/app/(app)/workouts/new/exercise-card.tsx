@@ -17,6 +17,7 @@ import { CustomExerciseSheet } from "./custom-exercise-sheet";
 import { adoptCreatedExercise } from "./custom-exercise";
 import { changeUnit, chooseExercise, type ExerciseDraft, type ExerciseProblems } from "./draft";
 import { ExerciseCombobox, exerciseDisplayName } from "./exercise-combobox";
+import { lastTimeExerciseId } from "./saved-draft";
 import { SetsTable } from "./sets-table";
 
 type Props = {
@@ -35,9 +36,11 @@ type Props = {
   focusOnMount: boolean;
   /** True while the workout is saving: the set controls that edit the draft are switched off. */
   disabled: boolean;
+  /** True in the saved-workout editor: no "last time" line (decision 0008) and the sheet says "Save changes". */
+  editing?: boolean;
 };
 
-export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange, onExercisesChange, focusOnMount, disabled }: Props) {
+export function ExerciseCard({ draft, number, exercises, locationId, problems, onRemove, onChange, onExercisesChange, focusOnMount, disabled, editing = false }: Props) {
   const t = useTranslations("Entry");
   const locale = useLocale();
   const noteId = useId();
@@ -82,7 +85,7 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
     setSetupName(null);
   }
 
-  const lastTime = useLastTime(draft.exerciseId, locationId);
+  const lastTime = useLastTime(lastTimeExerciseId(editing, draft.exerciseId), locationId);
 
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-4">
@@ -136,6 +139,7 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
         draft={draft}
         exerciseName={draft.text.trim() || t("unnamedExercise", { number })}
         perSide={perSide}
+        editing={editing}
         disabled={disabled}
         problems={Object.fromEntries(
           Object.entries(problems?.sets ?? {}).map(([index, problem]) => [

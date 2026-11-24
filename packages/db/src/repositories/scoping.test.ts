@@ -123,12 +123,26 @@ describe("workouts: scoping", () => {
       () => t.repos.workouts.getById(t.userB, RANDOM_ID),
       "workout",
     );
-    await expectIndistinguishable(
-      () => t.repos.workouts.delete(t.userB, aWorkoutId),
-      () => t.repos.workouts.delete(t.userB, RANDOM_ID),
-      "workout",
-    );
+    for (const version of [1, 99]) {
+      await expectIndistinguishable(
+        () => t.repos.workouts.delete(t.userB, aWorkoutId, version),
+        () => t.repos.workouts.delete(t.userB, RANDOM_ID, version),
+        "workout",
+      );
+    }
     expect((await t.repos.workouts.getById(t.userA, aWorkoutId)).exercises).toHaveLength(2);
+  });
+  it("update: A's workout looks like a random uuid to B, with the right or a wrong version, and A's is untouched", async () => {
+    const mine = { locationId: b.location.id, performedOn: "2026-03-01", exercises: [{ exerciseId: b.exercise.id, sets: oneSet }] };
+    for (const version of [1, 99]) {
+      await expectIndistinguishable(
+        () => t.repos.workouts.update(t.userB, aWorkoutId, version, mine),
+        () => t.repos.workouts.update(t.userB, RANDOM_ID, version, mine),
+        "workout",
+      );
+    }
+    const unchanged = await t.repos.workouts.getById(t.userA, aWorkoutId);
+    expect(unchanged).toMatchObject({ performedOn: "2026-02-02", version: 1 });
   });
   it("listForUser never includes A's workouts for B", async () => {
     expect(await t.repos.workouts.listForUser(t.userB, range)).toEqual([]);

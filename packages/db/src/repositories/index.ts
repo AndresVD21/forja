@@ -27,7 +27,7 @@ export function createRepositories(db: Database) {
 }
 export type Repositories = ReturnType<typeof createRepositories>;
 
-export { NotFoundError } from "./shared";
+export { NotFoundError, StaleWriteError } from "./shared";
 export type { Exercise, ExerciseWithAliases, CreateExerciseInput } from "./exercises";
 export type { Location } from "./locations";
 export type { TrainingDay } from "./training-days";

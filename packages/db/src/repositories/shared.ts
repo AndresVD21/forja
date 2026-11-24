@@ -18,6 +18,18 @@ export class NotFoundError extends Error {
   }
 }
 
+/**
+ * An update or delete that carried an out-of-date `version`: the workout exists and is the user's, but another
+ * save changed it after the caller read it. Only thrown AFTER ownership is confirmed, so it never reveals that
+ * someone else's workout exists.
+ */
+export class StaleWriteError extends Error {
+  constructor(what: string) {
+    super(`${what} was changed elsewhere`);
+    this.name = "StaleWriteError";
+  }
+}
+
 /** The one place where the `weight` + `unit` columns become a core `Weight` (rule 4: stored as entered). */
 export function toWeight(value: number, unit: Unit): Weight {
   return { value, unit };

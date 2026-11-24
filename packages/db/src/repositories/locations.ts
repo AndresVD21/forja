@@ -46,7 +46,9 @@ export function locationRepository(db: Database) {
       const clean = LocationNameSchema.parse(name).replace(/\s+/g, " ");
       const nameKey = normalizeName(clean);
       // ON CONFLICT DO NOTHING makes two simultaneous adds of the same gym safe: one inserts, the other gets no row
-      // back and reads the winner's row instead (a select-then-insert would race).
+      // back and reads the winner's row instead (a select-then-insert would race). The follow-up select relies on
+      // READ COMMITTED (Postgres' default): it must see the winner's row committed after our insert started. Do not
+      // wrap this function in a REPEATABLE READ transaction, whose snapshot would not contain it.
       const [inserted] = await db
         .insert(locations)
         .values({ createdBy: userId, name: clean, nameKey })

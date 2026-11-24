@@ -53,9 +53,10 @@ export async function seedUserData(
       let locationId: string | null = null;
       if (entry.location !== null) {
         // The owner's file predates the SmartFit rename and says "Hacienda": accept that old short name as an
-        // alias of "SmartFit Hacienda" (decision 0011) rather than rewriting the history file.
+        // alias of "SmartFit Hacienda" (decision 0011). The SmartFit spelling is tried FIRST so that an unrelated
+        // gym someone later adds as plain "Hacienda" does not catch the owner's reference weights.
         const wanted = entry.location;
-        const location = locationRows.find((l) => namesMatch(l.name, wanted)) ?? locationRows.find((l) => namesMatch(l.name, `SmartFit ${wanted}`));
+        const location = locationRows.find((l) => namesMatch(l.name, `SmartFit ${wanted}`)) ?? locationRows.find((l) => namesMatch(l.name, wanted));
         if (!location) throw new Error(`reference weights: unknown location "${entry.location}" (normalized "${normalizeName(entry.location)}")`);
         locationId = location.id;
       }

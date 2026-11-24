@@ -65,11 +65,18 @@ describe("locations (shared)", () => {
     const names = (list: { name: string }[]) => list.map((l) => l.name);
     const forB = names(await t.repos.locations.listForUser(t.userB));
     expect(forB.slice(0, 2)).toEqual(["SmartFit Hacienda", "SmartFit Pasoancho"]);
-    const rest = forB.slice(2);
-    expect(rest).toEqual([...rest].sort((a, b) => a.localeCompare(b)));
+    const rest = forB.slice(2).filter((n) => n.startsWith("SmartFit")); // other tests add gyms to this database
+    // Explicit array: the first letters after "SmartFit " (C, M, V) sort the same under C and locale collation.
+    expect(rest).toEqual(["SmartFit Cañasgordas", "SmartFit Mall Plaza", "SmartFit Valle del Lili"]);
     expect(forB).toHaveLength((await t.repos.locations.list()).length); // unused gyms are included, not dropped
 
     const forA = names(await t.repos.locations.listForUser(t.userA));
     expect(forA[0]).toBe("SmartFit Mall Plaza");
+  });
+
+  it("two users adding the same gym at the same moment get one row: same id, exactly one created", async () => {
+    const [a, b] = await Promise.all([t.repos.locations.findOrCreate(t.userA, "X Gym"), t.repos.locations.findOrCreate(t.userB, "x gym")]);
+    expect(a.id).toBe(b.id);
+    expect([a.created, b.created].filter(Boolean)).toHaveLength(1);
   });
 });

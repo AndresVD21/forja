@@ -3,6 +3,7 @@
 // we apply 0000-0003, insert old-style rows with raw SQL, then apply 0004 and look at what is left.
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { normalizeName } from "@forja/core";
 import { PGlite } from "@electric-sql/pglite";
 import { describe, expect, it } from "vitest";
 
@@ -108,5 +109,41 @@ describe("migration 0004_shared_gyms", () => {
     await apply(pg, only(4));
     await pg.exec("insert into locations (name, name_key) values ('Gym', 'gym')");
     await expect(pg.exec("insert into locations (name, name_key) values ('GYM', 'gym')")).rejects.toThrow(/locations_name_key_unique/);
+  });
+
+  it("a user who has both 'Hacienda' and 'SmartFit Hacienda' does not trip the old per-user unique constraint", async () => {
+    const pg = await oldDatabase();
+    await pg.exec(`
+      insert into users (id, name, email) values ('00000000-0000-4000-8000-00000000000a', 'A', 'a@x.test');
+      insert into locations (id, user_id, name, created_at) values
+        ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-00000000000a', 'Hacienda', '2026-01-01'),
+        ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-00000000000a', 'SmartFit Hacienda', '2026-01-02'),
+        ('00000000-0000-4000-8000-0000000000a3', '00000000-0000-4000-8000-00000000000a', 'Valle  del Lili', '2026-01-03');
+    `);
+    await apply(pg, only(4));
+    expect(await rows(pg, "select name, name_key from locations order by name")).toEqual([
+      { name: "SmartFit Hacienda", name_key: "smartfit hacienda" }, // merged into the older row
+      { name: "SmartFit Valle del Lili", name_key: "smartfit valle del lili" }, // whitespace collapsed
+    ]);
+  });
+
+  it("the SQL name_key expression gives exactly core's normalizeName for tricky strings", async () => {
+    // Run the real statement from the migration file (step 3) on a throwaway table, so the test cannot drift from it.
+    const step3 = readFileSync(`${folder}/${only(4)}`, "utf8")
+      .split("--> statement-breakpoint")
+      .find((s) => s.includes('SET "name_key"'))!;
+    const battery = [
+      "Hacienda", "  Hacienda  ", "Valle  del   Lili", "tab\tseparated", "line\nbreak", "cr\r\nlf", "\u00a0nbsp\u00a0gym\u00a0",
+      "em\u2003space", "ideographic\u3000space", "narrow\u202fnbsp", "\ufeffbom gym", "\u2028line\u2029sep", "form\ffeed\vvtab",
+      "Cañasgordas", "Cañasgordas".normalize("NFD"), "CAÑASGORDAS", "Ñandú", "Ñandú".normalize("NFD"), "Pasoancho", "ÁÉÍÓÚ üñ",
+      "a\u0310b", "a\u1ab0b", "a\u1dc0b", "a\u20d0b", "a\ufe20b", "e\u0301\u0302\u0303", "", "   ", " \t\n ", "x",
+    ];
+    const pg = new PGlite();
+    await pg.exec('create table "locations" ("name" text, "name_key" text)');
+    for (const name of battery) await pg.query('insert into "locations" ("name") values ($1)', [name]);
+    await pg.exec(step3);
+    const got = await rows<{ name: string; name_key: string }>(pg, 'select "name", "name_key" from "locations"');
+    expect(got.map((r) => r.name_key).sort()).toEqual(battery.map(normalizeName).sort());
+    for (const r of got) expect(r.name_key, JSON.stringify(r.name)).toBe(normalizeName(r.name));
   });
 });

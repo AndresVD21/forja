@@ -47,4 +47,15 @@ describe("ReferenceWeightsSchema", () => {
     expect(ReferenceWeightsSchema.safeParse(entry(47.125)).success).toBe(false);
     expect(ReferenceWeightsSchema.safeParse(entry(47.5)).success).toBe(true);
   });
+
+  it("a plain gym called 'Hacienda' does not catch the owner's reference weights: 'SmartFit Hacienda' is tried first", async () => {
+    const [u] = await t.db.insert((await import("../schema")).users).values({ name: "F", email: "f@example.com" }).returning();
+    const plain = await t.repos.locations.findOrCreate(u!.id, "Hacienda");
+    const smartfit = (await t.repos.locations.list()).find((l) => l.name === "SmartFit Hacienda")!;
+    const entry = data.referenceWeights.entries.find((e) => e.location === "Hacienda")!;
+    await seedUserData(t.db, u!.id, { ...data, referenceWeights: { entries: [entry] } });
+    const refs = await t.repos.referenceWeights.list(u!.id);
+    expect(refs.map((r) => r.locationId)).toEqual([smartfit.id]);
+    expect(refs.some((r) => r.locationId === plain.id)).toBe(false);
+  });
 });

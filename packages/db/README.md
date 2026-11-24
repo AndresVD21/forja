@@ -40,9 +40,10 @@ takes `userId` first** (rule 1) and filters by it.
 - **Deleting an account** goes through `repos.users.deleteAccount(userId)`, never a bare `DELETE FROM users`:
   a custom exercise used by a workout or a plan blocks the cascade (those foreign keys are RESTRICT), so the
   function deletes workouts and plans first, then the user, in one transaction.
-- **Names** of gyms and training days are compared with core's `namesMatch`: `locations.findOrCreate` and
-  `trainingDays.create` return the existing row for "pierna" / "Pierna", and the per-user seed skips gyms
-  and days the user already has.
+- **Names.** Gyms are ONE shared list (decision 0011): `locations` has no `user_id`, only `created_by`.
+  `locations.findOrCreate` normalises the name with core's `normalizeName`, stores it in `name_key` (unique) and
+  uses `INSERT ... ON CONFLICT DO NOTHING`, so "smartfit HACIENDA" returns the existing gym even when two
+  users add it at once. Training days are still per user and compared with `namesMatch`.
 - **`plans.extendWeek`** locks the plan row (`FOR UPDATE`), asks core's `extendWeek` what the plan must look
   like, and applies it by id; weeks are numbered 1..n (`plans.create` refuses anything else; the schema caps
   week numbers at 999). `plans.setTarget` leaves a weight unchanged when it is `undefined` and clears it
@@ -51,8 +52,9 @@ takes `userId` first** (rule 1) and filters by it.
 
 ## Per-user seed
 
-`seedUserData(db, userId, { catalogue, referenceWeights })` (`src/seed/user.ts`) adds the catalogue's gyms and
-training days and the reference weights for one user; idempotent, and it never overwrites edited reference
+`seedUserData(db, userId, { catalogue, referenceWeights })` (`src/seed/user.ts`) adds the catalogue's training days and
+the reference weights for one user (gyms are shared and come from `seedCatalogue`; the old short name "Hacienda" in the
+weights file resolves to "SmartFit Hacienda"); idempotent, and it never overwrites edited reference
 weights. Run after the owner signs up and the catalogue is seeded:
 `DATABASE_URL=... pnpm --filter @forja/db db:seed-user -- <email>`.
 

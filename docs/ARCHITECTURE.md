@@ -125,6 +125,9 @@ is the set of Server Actions plus `packages/db` and `packages/core`.
 - **Decision**: each exercise has a `load_mode`: `total` (machines, cables, dumbbells) or `per_side` (barbells),
   plus a `bar_weight` (default 20 kg). For `per_side` exercises the stored and displayed number is the plates on
   one side, exactly as the owner remembers it.
+  The sheet labels `total` **Entered weight** and explains that for dumbbells this is the
+  weight of one dumbbell. Existing records and progression use the entered value as before
+  ([decision 0010](decisions/0010-dumbbell-weight-copy.md)).
 - **Why it needs care**: the proposal formula works on the weight actually lifted. 20 kg per side is really
   `2 × 20 + 20 = 60 kg`. Applying a percentage to "20" instead of "60" would give increases that are far too
   small or too large. So `core` converts to total load, does the maths, converts back, and rounds to plates

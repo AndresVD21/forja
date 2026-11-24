@@ -8,6 +8,7 @@
 import { Plus, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useId, useState, type KeyboardEvent, type RefObject } from "react";
+import { FieldError, invalidFieldClasses } from "@/components/field-error";
 import { IconButton } from "@/components/icon-button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -126,7 +127,7 @@ export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSel
           onFocus={() => setFocused(true)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="h-12 w-full rounded-xl border border-field bg-surface pl-10 pr-14 text-base text-ink placeholder:text-muted"
+          className={cn("h-12 w-full rounded-xl border border-field bg-surface pl-10 pr-14 text-base text-ink placeholder:text-muted", invalidFieldClasses)}
         />
         {text !== "" && (
           <div className="absolute inset-y-0 right-1 flex items-center">
@@ -196,9 +197,7 @@ export function ExerciseCombobox({ exercises, text, problem, onTextChange, onSel
 
       {canUseName && <p className="text-sm text-muted">{t("noMatch")}</p>}
       {problem && (
-        <p id={`${id}-problem`} role="alert" className="text-sm font-medium text-ink">
-          {problem}
-        </p>
+        <FieldError id={`${id}-problem`}>{problem}</FieldError>
       )}
     </div>
   );

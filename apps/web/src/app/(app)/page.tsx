@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import type { DateTimeFormatOptions } from "next-intl";
 import { getFormatter, getMessages, getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -41,6 +41,8 @@ async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const end = days[6].date;
   // No link where the server says there is no neighbouring week; an empty 44 px slot keeps the layout.
   const emptySlot = <span aria-hidden className="size-11" />;
+  // The week shown holds today, or not. Only when not, a way back is offered.
+  const isCurrentWeek = days.some((day) => day.date === today);
   const entries = days
     .toReversed() // newest day first, as on the board
     .flatMap((day) => [
@@ -74,23 +76,36 @@ async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
         <p className="text-lg text-muted">{fmt(days[3].date, { month: "long", year: "numeric" })}</p>
       </div>
 
-      <nav aria-label={t("weekNav")} className="flex items-center justify-between gap-2">
-        {previousWeek ? (
-          <Link href={`/?week=${previousWeek}`} aria-label={t("previousWeek")} className={navLinkClasses}>
-            <ChevronLeft aria-hidden className="size-5" />
+      <nav aria-label={t("weekNav")} className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          {previousWeek ? (
+            <Link href={`/?week=${previousWeek}`} aria-label={t("previousWeek")} className={navLinkClasses}>
+              <ChevronLeft aria-hidden className="size-5" />
+            </Link>
+          ) : (
+            emptySlot
+          )}
+          <span className="text-lg font-semibold tabular-nums">
+            {format.dateTimeRange(asDate(start), asDate(end), { day: "numeric", month: "long", timeZone: "UTC" })}
+          </span>
+          {nextWeek ? (
+            <Link href={`/?week=${nextWeek}`} aria-label={t("nextWeek")} className={navLinkClasses}>
+              <ChevronRight aria-hidden className="size-5" />
+            </Link>
+          ) : (
+            emptySlot
+          )}
+        </div>
+        {!isCurrentWeek && (
+          // Plain "/" is the current week; it only navigates and selects no day. Centred under the arrows, where
+          // a thumb already is, and 44 px tall.
+          <Link
+            href="/"
+            className="inline-flex min-h-11 items-center justify-center gap-2 self-center rounded-xl border border-field bg-surface px-5 text-base font-semibold text-ink"
+          >
+            <CalendarDays aria-hidden className="size-5" />
+            {t("goToToday")}
           </Link>
-        ) : (
-          emptySlot
-        )}
-        <span className="text-lg font-semibold tabular-nums">
-          {format.dateTimeRange(asDate(start), asDate(end), { day: "numeric", month: "long", timeZone: "UTC" })}
-        </span>
-        {nextWeek ? (
-          <Link href={`/?week=${nextWeek}`} aria-label={t("nextWeek")} className={navLinkClasses}>
-            <ChevronRight aria-hidden className="size-5" />
-          </Link>
-        ) : (
-          emptySlot
         )}
       </nav>
 

@@ -35,6 +35,7 @@
     "previousWeek": "Previous week",
     "nextWeek": "Next week",
     "hasEntries": "has entries",
+    "goToToday": "Today",
     "today": "today",
     "thisWeek": "This week",
     "emptyWeek": "Nothing logged this week.",
@@ -195,7 +196,7 @@
       "noSets": "Enter the weight and reps of at least one set.",
       "setIncomplete": "Set {number}: enter both weight and reps, or leave both empty.",
       "setInvalid": "Set {number}: weight and reps must be numbers (weight up to two decimals).",
-      "fixBeforeSaving": "Fix the highlighted problems before saving."
+      "problemsToFix": "{count, plural, one {# problem to fix before saving.} other {# problems to fix before saving.}}"
     },
     "errors": {
       "invalid_input": "Something in the workout is not valid. Check the date and the sets, then try again.",
@@ -205,6 +206,7 @@
       "save_failed": "The workout could not be saved. Your entries are still here: try again."
     },
     "editTitle": "Edit workout",
+    "noChanges": "No changes to save.",
     "saveChanges": "Save changes",
     "cancelEdit": "Cancel",
     "changesSaved": "Changes saved.",

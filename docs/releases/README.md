@@ -25,3 +25,21 @@ many short-lived serverless instances. Preview deployments run the same steps ag
 of production), so their migrations never touch production data.
 
 Why this way: decision [0007](../decisions/0007-first-deploy-setup.md) and `docs/ARCHITECTURE.md` section 6.
+
+## When Vercel skips a build
+
+Before every build Vercel runs the `ignoreCommand` in `apps/web/vercel.json`: Turborepo's
+`turbo query affected --packages @forja/web --exit-code`, comparing the commit with the last one Vercel
+deployed on that branch (`VERCEL_GIT_PREVIOUS_SHA`, or the previous commit when there is none).
+
+- Exit **1** (the web app or anything it depends on changed — `apps/web`, `packages/core`, `packages/db`, the
+  root `package.json`, lockfile or `turbo.json`) → Vercel builds as usual, migrations included.
+- Exit **0** (nothing the app depends on changed — e.g. a Codex PR that only touches `docs/`) → Vercel skips
+  the build ("Canceled by Ignored Build Step"), for previews and for production after the merge.
+- Any error (exit 2, unknown base commit, shallow history) → treated as "build": a broken check never
+  silently skips a deploy.
+
+It runs before dependencies are installed, so it fetches Turborepo with `npx`, pinned to the repo's version.
+Limitation: on the first push of a new branch only that branch's last commit is compared; a multi-commit
+branch whose last commit is docs-only could skip its first preview. Pushing again, or Redeploy, builds it.
+

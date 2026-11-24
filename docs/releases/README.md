@@ -28,18 +28,22 @@ Why this way: decision [0007](../decisions/0007-first-deploy-setup.md) and `docs
 
 ## When Vercel skips a build
 
-Before every build Vercel runs the `ignoreCommand` in `apps/web/vercel.json`: Turborepo's
-`turbo query affected --packages @forja/web --exit-code`, comparing the commit with the last one Vercel
-deployed on that branch (`VERCEL_GIT_PREVIOUS_SHA`, or the previous commit when there is none).
+Before every build Vercel runs the `ignoreCommand` in `apps/web/vercel.json`, which is
+`sh scripts/vercel-ignore-build.sh`. The script runs Turborepo's `turbo query affected --packages @forja/web --exit-code`
+and compares the commit with the last one Vercel deployed on that branch (`VERCEL_GIT_PREVIOUS_SHA`).
+
+On the **first push of a new branch** Vercel has no previous commit. The script then compares with the commit where
+the branch split from `main`: it fetches `main` (Vercel clones shallowly, so the last 100 commits) and uses
+`git merge-base`. The first preview therefore looks at every change on the branch, not only its last commit.
 
 - Exit **1** (the web app or anything it depends on changed — `apps/web`, `packages/core`, `packages/db`, the
   root `package.json`, lockfile or `turbo.json`) → Vercel builds as usual, migrations included.
 - Exit **0** (nothing the app depends on changed — e.g. a Codex PR that only touches `docs/`) → Vercel skips
   the build ("Canceled by Ignored Build Step"), for previews and for production after the merge.
-- Any error (exit 2, unknown base commit, shallow history) → treated as "build": a broken check never
-  silently skips a deploy.
+- Anything else (turbo exit 2 or more, an unknown base commit, a failed fetch, no common ancestor in the fetched
+  history) → the script prints one line saying why, and Vercel builds. A broken check never silently skips a deploy.
 
-It runs before dependencies are installed, so it fetches Turborepo with `npx`, pinned to the repo's version.
-Limitation: on the first push of a new branch only that branch's last commit is compared; a multi-commit
-branch whose last commit is docs-only could skip its first preview. Pushing again, or Redeploy, builds it.
+It runs before dependencies are installed, so it fetches Turborepo with `npx`, pinned to `2.11.11` (the version the
+lockfile resolves; keep it in step with the `turbo` version in the root `package.json`). Redeploy in Vercel always
+builds, so use it when a skipped build has to be forced.
 

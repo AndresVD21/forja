@@ -3,6 +3,6 @@
   "regions": [
     "iad1"
   ],
-  "ignoreCommand": "cd ../.. && npx -y turbo@2.11.11 query affected --packages @forja/web --exit-code --base \"${VERCEL_GIT_PREVIOUS_SHA:-HEAD^1}\" --head HEAD",
+  "ignoreCommand": "sh scripts/vercel-ignore-build.sh",
   "buildCommand": "cd ../.. && pnpm --filter @forja/db db:migrate && pnpm --filter @forja/db db:seed-catalogue && pnpm turbo run build --filter=@forja/web"
 }

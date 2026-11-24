@@ -182,9 +182,9 @@ Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (desi
 - [x] **First deploy** to Vercel + Neon (2026-11-23, https://forja-three-phi.vercel.app), owner's account created and seeded; [decision 0007](decisions/0007-first-deploy-setup.md), checklist in `docs/releases/2026-11-21-first-deploy.md` (*release-manager*, owner)
 
 ### After M3, once designed (Codex + owner first)
-- [ ] Saved-workout detail and editing (owner's first production finding, 2026-11-23)
-- [ ] Logging a past day: a discoverable date, e.g. starting from a day in the history week (the date field exists but reads as a title)
-- [ ] Dumbbell exercises: clearer wording for how the weight is entered (one dumbbell's weight), or a third choice
+- [x] Saved-workout detail and editing ([decision 0008](decisions/0008-saved-workout-detail.md))
+- [ ] Logging a past day: visible date field and selecting a past day in the history week ([decision 0009](decisions/0009-past-day-workout.md))
+- [x] Dumbbell exercises: "Entered weight" wording ([decision 0010](decisions/0010-dumbbell-weight-copy.md))
 - [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, activity entry
 
 ### M4 — The 6-week plan
@@ -264,7 +264,7 @@ Not blocking. Correct them whenever convenient; they only affect seed data.
     Accept it, or later move the token into the URL `#fragment`, which browsers never send to the server.
 13. **Probing emails with an invite**: whoever holds a valid link can retry with different emails to learn which
     ones already have an account, because a taken email gives the link back. Accepted as low risk for a few friends.
-14. **Unsaved workout draft after leaving the page**: if you leave the entry screen without saving and come back
-    through an in-app link, the unsaved draft is still there (Next keeps the page in memory); a reload or sign-out
-    clears it. After a successful save the form is reset. Decide whether the unsaved draft should be kept (handy
-    mid-workout) or cleared, and whether it should survive a reload.
+14. ~~Unsaved workout draft after leaving the page~~ — decided 2026-11-23 in
+    [decision 0009](decisions/0009-past-day-workout.md): the unsaved draft is kept for accidental navigation (in
+    memory; a reload or sign-out still clears it), and starting a workout for a different date asks whether to
+    resume the draft or discard it.

@@ -166,6 +166,14 @@ is the set of Server Actions plus `packages/db` and `packages/core`.
 - **Why**: the notes show the same exercise at 73 kg in one gym and 100 kg in another, because machines differ.
   A proposal that mixes gyms would be wrong in both.
 
+### 2.13b Starting a workout from a past day
+
+- **Decision**: new workout entry has a visible date control and defaults to local today. A past
+  day selected in history exposes a dated Log workout action. History continues to show the full
+  week, and the form and server reject future workout dates.
+- **Concept**: explicit selection. Choosing a day changes the action's context and activating
+  the action opens the form. See [decision 0009](decisions/0009-past-day-workout.md).
+
 ### 2.14 Invite-only sign-up
 
 - **Decision**: registration only through a **one-time invite link** that expires (7 days by default). The

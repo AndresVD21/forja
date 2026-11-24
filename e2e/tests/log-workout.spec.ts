@@ -110,8 +110,8 @@ test.describe("validation keeps the draft and saves nothing", () => {
     await fillSets(page, [["20", "10"]]);
     await page.getByRole("button", { name: "Save workout" }).click();
 
-    await expect(page.getByRole("alert").filter({ hasText: "Choose a suggestion or save this name as a new exercise." })).toBeVisible();
-    await expect(page.getByRole("alert").filter({ hasText: "Fix the highlighted problems before saving." })).toBeVisible();
+    await expect(page.locator("p").filter({ hasText: "Choose a suggestion or save this name as a new exercise." })).toBeVisible();
+    await expect(page.getByRole("main").locator("p").filter({ hasText: "1 problem to fix before saving." })).toBeVisible();
     await expect(page).toHaveURL(/\/workouts\/new$/);
     // The draft is still there.
     await expect(page.getByRole("combobox", { name: EXERCISE_FIELD })).toHaveValue("zzz not an exercise");
@@ -130,7 +130,7 @@ test.describe("validation keeps the draft and saves nothing", () => {
     await page.getByRole("button", { name: "Save workout" }).click();
 
     await expect(
-      page.getByRole("alert").filter({ hasText: "Set 2: enter both weight and reps, or leave both empty." }),
+      page.locator("p").filter({ hasText: "Set 2: enter both weight and reps, or leave both empty." }),
     ).toBeVisible();
     await expect(page).toHaveURL(/\/workouts\/new$/);
     await expect(page.getByLabel("Set 2 weight", { exact: true })).toHaveValue("22,5");

@@ -101,6 +101,9 @@ is the set of Server Actions plus `packages/db` and `packages/core`.
 - **Authorisation** (what may you touch?): every table with user data has a `user_id` column and **every
   repository function takes `userId` as its first argument**. There is no function that reads workouts without
   one. This is the single most important backend rule in the project.
+- **Shared reference data** is the one exception: catalogue exercises (`user_id` null) and gyms
+  (`locations`, shared by everyone since [0011](decisions/0011-shared-gyms.md)) are readable by every user.
+  The rows that point at them — workouts, sets, reference weights — are still scoped by `user_id`.
 - **Concept**: *defence in depth* — the UI hides what you cannot do, the action checks the session, the
   repository scopes the query.
 
@@ -189,8 +192,9 @@ is the set of Server Actions plus `packages/db` and `packages/core`.
 ## 3. Data model (second draft)
 
 ```
-users ─┬─< locations
-       ├─< exercises
+locations (gyms: shared by all users, 0011)
+
+users ─┬─< exercises
        ├─< plans ──┬─< plan_weeks
        │           └─< plan_exercises >── exercises
        │                     │
@@ -209,7 +213,7 @@ users ─┬─< locations
 | Table | Key columns | Notes |
 |-------|-------------|-------|
 | `users`, `sessions`, `accounts` | — | Created and managed by Better Auth |
-| `locations` | `user_id`, `name` | Unique per user |
+| `locations` | `name`, `name_key`, `created_by?` | Shared by all users; `name_key` (normalised name) is unique, so the same gym cannot be added twice; `created_by` is audit only ([0011](decisions/0011-shared-gyms.md)) |
 | `exercises` | `user_id?`, `slug`, `name_en`, `name_es`, `muscle_group`, `equipment`, `default_unit`, `weight_step`, `load_mode`, `bar_weight` | `user_id` null = shared catalogue entry; `weight_step` = smallest increase available |
 | `exercise_aliases` | `exercise_id`, `alias` | Other spellings, used by search and by the notes import |
 | `training_days` | `user_id`, `name` | Chest, Back, Legs, Shoulders/Abs |

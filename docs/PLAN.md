@@ -185,6 +185,7 @@ Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (desi
 - [x] Saved-workout detail and editing ([decision 0008](decisions/0008-saved-workout-detail.md))
 - [x] Logging a past day: visible date field and selecting a past day in the history week ([decision 0009](decisions/0009-past-day-workout.md))
 - [x] Dumbbell exercises: "Entered weight" wording ([decision 0010](decisions/0010-dumbbell-weight-copy.md))
+- [x] Gyms are one shared list, named "SmartFit …"; anyone can add a missing gym ([decision 0011](decisions/0011-shared-gyms.md))
 - [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, activity entry
 
 ### M4 — The 6-week plan

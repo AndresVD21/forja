@@ -1,9 +1,15 @@
 // Shared by every script: which database to work on.
+// NEVER export this file from the package entry (src/index.ts): it reads the migrations folder with
+// `new URL("../migrations", import.meta.url)`, which Next's bundler cannot resolve, so the web app would fail to
+// start. The pure pieces the app needs live in describe-database.ts instead.
 //   DATABASE_URL set  -> Neon (or any Postgres reachable through the Neon driver)
 //   DATABASE_URL unset -> the local PGlite folder (decision 0005)
 // Scripts never guess: they print which one they use, so a command never silently hits the wrong database.
 import { fileURLToPath } from "node:url";
 import { createDb, type Database } from "../client";
+import { chooseDatabaseUrl, describeDatabase } from "./describe-database";
+
+export { chooseDatabaseUrl, describeDatabase };
 
 const migrationsFolder = fileURLToPath(new URL("../migrations", import.meta.url));
 
@@ -14,46 +20,6 @@ export type Target = {
   /** Releases the connection. The Neon pool keeps Node alive otherwise; PGlite must flush its files. */
   close: () => Promise<void>;
 };
-
-// `process.env` fits (the index signature keeps TypeScript from calling it a "weak type" in other packages).
-type DbEnv = { DATABASE_URL?: string; DATABASE_URL_UNPOOLED?: string } & Record<string, string | undefined>;
-
-type UrlChoice = { url: string; kind: "direct" | "pooled" };
-
-/**
- * Which connection string to use, and what to call it in the log (never the string itself: it has the password).
- * Neon offers two addresses for the same database: a *pooled* one (through PgBouncer, which shares connections;
- * what the running app uses) and a *direct* one. Schema changes should use the direct one, because the pooler
- * does not support everything a migration may need (session-level settings, advisory locks).
- * Neon's Vercel integration sets DATABASE_URL (pooled) and DATABASE_URL_UNPOOLED (direct).
- * Scripts that change the schema ask for `preferDirect`; the rest use DATABASE_URL as before.
- */
-export function chooseDatabaseUrl(
-  env: DbEnv,
-  preferDirect: boolean,
-): UrlChoice | undefined {
-  if (preferDirect && env.DATABASE_URL_UNPOOLED) return { url: env.DATABASE_URL_UNPOOLED, kind: "direct" };
-  if (env.DATABASE_URL) return { url: env.DATABASE_URL, kind: "pooled" };
-  return undefined;
-}
-
-/**
- * The "Database: ..." line every script prints before it touches anything: which variable is used (never its
- * value, which holds the password) or the local folder. `localDir` is only used for the local case.
- * A variable that is set but EMPTY (`DATABASE_URL="$UNSET_VAR"`) counts as unset, which is an easy mistake, so
- * it gets an extra sentence saying the local folder will be used.
- */
-export function describeDatabase(
-  env: DbEnv,
-  preferDirect: boolean,
-  localDir: string,
-): string {
-  const choice = chooseDatabaseUrl(env, preferDirect);
-  if (choice?.kind === "direct") return "Database: DATABASE_URL_UNPOOLED (Neon, direct connection)";
-  if (choice) return "Database: DATABASE_URL (Neon, as given; pooled when it is Neon's pooled address)";
-  const empty = env.DATABASE_URL === "" ? " (DATABASE_URL is set but empty, so it is ignored)" : "";
-  return `Database: local PGlite folder ${localDir}${empty}`;
-}
 
 /**
  * One line saying why a script failed: the error's message plus its cause's message (the Postgres or network

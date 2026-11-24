@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -76,5 +76,12 @@ describe.each(["migrate.ts", "seed-catalogue.ts"])("%s against an unreachable da
     expect(result.status).toBe(1);
     expect(`${result.stdout}${result.stderr}`).not.toContain("pw@");
     expect(`${result.stdout}${result.stderr}`).not.toMatch(/:pw\b/);
+  });
+});
+
+describe("package entry", () => {
+  it("does not reach scripts/target.ts (Next cannot bundle its migrations-folder URL)", () => {
+    const entry = readFileSync(fileURLToPath(new URL("../index.ts", import.meta.url)), "utf8");
+    expect(entry).not.toMatch(/scripts\/target/);
   });
 });

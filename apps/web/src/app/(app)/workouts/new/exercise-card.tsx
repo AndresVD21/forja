@@ -52,7 +52,25 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
 
   // Runs once on mount. A card that exists on page load must not steal focus, so only added cards ask for it.
   useEffect(() => {
-    if (focusOnMount) fieldRef.current?.focus();
+    const field = fieldRef.current;
+    if (!focusOnMount || !field) return;
+    // preventScroll: on a phone the browser's own focus-scroll runs before the keyboard exists and then leaves the
+    // field behind it (iOS Safari ignores `interactive-widget`). We scroll ourselves instead, once now and once
+    // more when the keyboard has finished opening and the visual viewport has shrunk.
+    field.focus({ preventScroll: true });
+    const reveal = () => {
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      field.scrollIntoView({ block: "center", behavior: smooth ? "smooth" : "auto" });
+    };
+    reveal();
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", reveal, { once: true });
+    // The keyboard may never open (hardware keyboard, desktop): do not keep the listener around forever.
+    const giveUp = window.setTimeout(() => viewport?.removeEventListener("resize", reveal), 1500);
+    return () => {
+      window.clearTimeout(giveUp);
+      viewport?.removeEventListener("resize", reveal);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleCreated(result: Extract<CreateExerciseResult, { ok: true }>) {

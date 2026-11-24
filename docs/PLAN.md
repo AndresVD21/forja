@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M3 usable locally** — sign in (invite-only), log a workout with to-failure sets and custom exercises, and see it in the week history, end to end and tested in CI. Still open in M3: the first deploy (and Codex's remaining designs: sign-in/save states, empty states). All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M3 done and live** at https://forja-three-phi.vercel.app (2026-11-23) — sign in (invite-only), log a workout with to-failure sets and custom exercises, and see it in the week history. Next: the owner's first findings in production (workout detail/edit, logging a past day, dumbbell wording — waiting for Codex's designs), then M4 (the 6-week plan). All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -179,10 +179,13 @@ Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (desi
 - [x] "Use “{name}”" custom-exercise setup and per-set details (to failure, unit, delete with Undo), from the designs in [decision 0004](decisions/0004-m3-page-designs.md) (*frontend-dev* + *backend-dev*)
 - [x] History screen with week view, including activities such as volleyball (*frontend-dev*)
 - [x] E2E test: sign in → log workout → see it in history, runs in CI (*test-engineer*)
-- [ ] **First deploy** to Vercel + Neon, then create the owner's account and run the per-user seed there; settle section 8, item 10 first (*release-manager*, you approve)
+- [x] **First deploy** to Vercel + Neon (2026-11-23, https://forja-three-phi.vercel.app), owner's account created and seeded; [decision 0007](decisions/0007-first-deploy-setup.md), checklist in `docs/releases/2026-11-21-first-deploy.md` (*release-manager*, owner)
 
 ### After M3, once designed (Codex + owner first)
-- [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, saved-workout detail, activity entry
+- [ ] Saved-workout detail and editing (owner's first production finding, 2026-11-23)
+- [ ] Logging a past day: a discoverable date, e.g. starting from a day in the history week (the date field exists but reads as a title)
+- [ ] Dumbbell exercises: clearer wording for how the weight is entered (one dumbbell's weight), or a third choice
+- [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, activity entry
 
 ### M4 — The 6-week plan
 - [ ] Create plan from template, choose exercises and starting weights (*frontend-dev* + *backend-dev*)

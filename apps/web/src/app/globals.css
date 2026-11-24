@@ -56,6 +56,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * The Save bar on the entry page is pinned to the bottom (about 5rem tall, more when it shows a message). Without
+ * this, focusing a field near the bottom lets the browser scroll it flush with the edge, under the bar.
+ */
+html {
+  scroll-padding-bottom: 8rem;
+}
+
 body {
   background: var(--page);
   color: var(--ink);

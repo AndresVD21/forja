@@ -11,10 +11,14 @@ import { cn } from "@/lib/utils";
  */
 export const invalidFieldClasses = "aria-invalid:border-ink aria-invalid:ring-2 aria-invalid:ring-ink";
 
-/** The message under (or about) an invalid field: an alert icon and the text, in the normal ink colour. */
+/**
+ * The message under (or about) an invalid field: an alert icon and the text, in the normal ink colour.
+ * No live role by default: the field points to it with aria-describedby and focus moves to the field, so the
+ * message is read once as its description. A role="alert" here made it be read two or three times.
+ */
 export function FieldError({ className, children, ...props }: ComponentProps<"p">) {
   return (
-    <p role="alert" className={cn("flex items-start gap-2 text-sm font-medium text-ink", className)} {...props}>
+    <p className={cn("flex items-start gap-2 text-sm font-medium text-ink", className)} {...props}>
       <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
       <span>{children}</span>
     </p>

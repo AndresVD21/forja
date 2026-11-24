@@ -1,3 +1,4 @@
+import { invalidFieldClasses } from "@/components/field-error";
 import { useId, type ComponentProps, type ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,8 @@ export function TextField({ label, endAdornment, hint, invalid, className, ...in
           aria-invalid={invalid || undefined}
           aria-describedby={hint ? hintId : undefined}
           className={cn(
-            "h-12 w-full rounded-xl border border-field bg-surface px-3 text-base text-ink placeholder:text-muted aria-invalid:border-2 aria-invalid:border-ink",
+            "h-12 w-full rounded-xl border border-field bg-surface px-3 text-base text-ink placeholder:text-muted ",
+            invalidFieldClasses,
             endAdornment && "pr-14",
             className,
           )}

@@ -162,7 +162,7 @@ export function SetsTable({ draft, exerciseName, perSide, editing, problems, dis
                   inputMode="decimal"
                   autoComplete="off"
                   aria-label={t("setWeight", { number })}
-                  aria-describedby={cn(unitDescriptionId, set.toFailure && badgeId, problems[index] && problemId)}
+                  aria-describedby={[unitDescriptionId, set.toFailure && badgeId, problems[index] && problemId].filter(Boolean).join(" ") || undefined}
                   aria-invalid={problems[index] ? true : undefined}
                   value={set.weight}
                   onChange={(event) => onChange(updateSet(draft, set.key, { weight: event.target.value }))}
@@ -183,7 +183,7 @@ export function SetsTable({ draft, exerciseName, perSide, editing, problems, dis
                 inputMode="numeric"
                 autoComplete="off"
                 aria-label={t("setReps", { number })}
-                aria-describedby={cn(set.toFailure && badgeId, problems[index] && problemId) || undefined}
+                aria-describedby={[set.toFailure && badgeId, problems[index] && problemId].filter(Boolean).join(" ") || undefined}
                 aria-invalid={problems[index] ? true : undefined}
                 value={set.reps}
                 onChange={(event) => onChange(updateSet(draft, set.key, { reps: event.target.value }))}

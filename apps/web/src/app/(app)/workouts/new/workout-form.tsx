@@ -181,6 +181,8 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   const [attempted, setAttempted] = useState(false); // problems are shown only after a Save attempt
   // How many Save attempts were blocked by a problem. Each one moves focus to the first problem (effect below).
   const [blockedAttempts, setBlockedAttempts] = useState(0);
+  // "Focus is still owed to the first problem": set by a blocked Save, consumed by the effect below.
+  const focusOwed = useRef(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<SaveErrorCode | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -209,8 +211,12 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   // look for them one render too early. The first problem is simply the first marked element in the page:
   // the DOM order is the reading order (date, gym, exercise name, set rows, "no sets" message), so there is no
   // second list of fields to keep in the same order.
+  // One-shot on purpose: Next keeps a left page hidden and React re-runs its effects every time it becomes visible
+  // again (preserving-ui-state.md). Without the flag, coming back to this page after a blocked Save would steal
+  // focus and scroll. A ref, not state: nothing needs to re-render when it flips.
   useEffect(() => {
-    if (blockedAttempts === 0) return;
+    if (!focusOwed.current) return;
+    focusOwed.current = false;
     const first = formRoot.current?.querySelector<HTMLElement>('[aria-invalid="true"], [data-problem]');
     if (!first) return;
     // preventScroll + our own scroll, as in exercise-card.tsx: the browser's focus-scroll can leave the field under
@@ -275,7 +281,11 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
     setAttempted(true);
     setSaveError(null);
     if (!canSave) {
+      focusOwed.current = true;
       setBlockedAttempts((n) => n + 1);
+      // Announced once per attempt. The summary at the bottom is plain text that keeps itself up to date while
+      // the person fixes things; it has no live role, or every keystroke would be read out again.
+      announce(t("problems.problemsToFix", { count: problemCount }));
       return;
     }
     setSaving(true);
@@ -353,7 +363,7 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
         </SelectField>
       </div>
       {gymProblem && (
-        <FieldError id={gymProblemId} role={attempted ? "alert" : undefined}>
+        <FieldError id={gymProblemId}>
           {data.locations.length === 0 ? t("noGyms") : t("problems.noGym")}
         </FieldError>
       )}

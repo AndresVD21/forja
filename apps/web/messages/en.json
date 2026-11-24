@@ -41,12 +41,18 @@
     "activity": "Activity",
     "exercises": "{count, plural, one {# exercise} other {# exercises}}",
     "sets": "{count, plural, one {# set} other {# sets}}",
-    "logWorkout": "Log workout"
+    "logWorkout": "Log workout",
+    "weekDays": "Days of the week",
+    "daySelected": "selected",
+    "clearSelection": "Clear date selection",
+    "logWorkoutFor": "Log workout for {date}",
+    "dayChosen": "{date} selected.",
+    "selectionCleared": "Date selection cleared."
   },
   "Entry": {
     "back": "Back",
-    "title": "New workout",
-    "date": "Date",
+    "title": "Log workout",
+    "date": "Workout date",
     "gym": "Gym",
     "noGyms": "You have no gyms yet, so a workout cannot be saved.",
     "trainingDay": "Training day",
@@ -213,7 +219,12 @@
       "signed_out": "You were signed out. Sign in again in another tab, then tap Save changes: your edits are still here.",
       "stale": "This workout was changed elsewhere. Load the saved version to see it; your edits here will be discarded.",
       "save_failed": "The changes could not be saved. Your edits are still here: try again."
-    }
+    },
+    "draftTitle": "Resume your workout draft?",
+    "draftText": "You have unsaved changes for {draftDate}. Resume that draft, or discard it and start a new workout for {newDate}.",
+    "draftResume": "Resume draft",
+    "draftDiscard": "Discard draft and start new workout",
+    "draftDiscarded": "Draft discarded. New workout for {date}."
   },
   "SignUp": {
     "title": "Create your account",

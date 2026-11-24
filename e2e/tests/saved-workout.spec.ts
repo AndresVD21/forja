@@ -73,7 +73,7 @@ test("edit round-trip: every saved value is shown, edits are saved, the date mov
   await openEdit(page);
 
   // Saved values, each row's own unit, the failure flag; no "last time" line and no suggestions.
-  await expect(page.getByLabel("Date", { exact: true })).toHaveValue(w.date);
+  await expect(page.getByLabel("Workout date", { exact: true })).toHaveValue(w.date);
   await expect(page.getByLabel("Gym", { exact: true })).toHaveValue(/.+/);
   await expect(page.getByLabel("Training day", { exact: true }).locator("option:checked")).toHaveText("Chest");
   await expect(page.getByRole("combobox", { name: "Exercise name" })).toHaveValue(w.name);
@@ -107,7 +107,7 @@ test("edit round-trip: every saved value is shown, edits are saved, the date mov
 
   // Move it to another past day.
   const newDate = daysBefore(w.date, 3);
-  await page.getByLabel("Date", { exact: true }).fill(newDate);
+  await page.getByLabel("Workout date", { exact: true }).fill(newDate);
 
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page).toHaveURL(new RegExp(`/workouts/${w.id}\\?week=${w.week}$`)); // original history week is kept
@@ -132,7 +132,7 @@ test("edit round-trip: every saved value is shown, edits are saved, the date mov
   // Reopening Edit shows the saved values, not a stale draft.
   await page.goto(`/workouts/${w.id}`);
   await openEdit(page);
-  await expect(page.getByLabel("Date", { exact: true })).toHaveValue(newDate);
+  await expect(page.getByLabel("Workout date", { exact: true })).toHaveValue(newDate);
   await expectEditRow(page, 1, "42.5", "10", "kg");
   await expectEditRow(page, 2, "90", "8", "lb");
   await expect(page.getByRole("button", { name: `Undo set removal for ${w.name}` })).toHaveCount(0);

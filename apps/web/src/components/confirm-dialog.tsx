@@ -58,12 +58,12 @@ export function ConfirmDialog({
           <div className="flex flex-col gap-2">
             {/* Cancel comes first in the DOM: Radix focuses it when the dialog opens, the safe choice. */}
             <AlertDialog.Cancel asChild>
-              <Button variant="outline" fullWidth disabled={pending}>
+              <Button variant="outline" fullWidth disabled={pending} className="h-auto min-h-12 py-2 text-center">
                 {cancelLabel}
               </Button>
             </AlertDialog.Cancel>
             {/* A plain Button, not AlertDialog.Action: Action closes the dialog itself, and ours must stay open on failure. */}
-            <Button fullWidth onClick={onConfirm} disabled={pending}>
+            <Button fullWidth onClick={onConfirm} disabled={pending} className="h-auto min-h-12 py-2 text-center">
               {confirmLabel}
             </Button>
           </div>

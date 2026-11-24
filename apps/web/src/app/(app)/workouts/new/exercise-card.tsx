@@ -4,6 +4,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
+import { FieldError } from "@/components/field-error";
 import { IconButton } from "@/components/icon-button";
 import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
@@ -150,9 +151,11 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
         onChange={onChange}
       />
       {problems?.noSets && (
-        <p role="alert" className="text-sm font-medium text-ink">
+        // tabIndex -1 and data-problem: when Save is blocked and nothing above it is wrong, this message is where
+        // focus goes (see focusFirstProblem in workout-form.tsx).
+        <FieldError data-problem tabIndex={-1} className="outline-offset-4">
           {t("problems.noSets")}
-        </p>
+        </FieldError>
       )}
 
       {draft.note === null ? (

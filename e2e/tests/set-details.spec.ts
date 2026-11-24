@@ -149,7 +149,7 @@ test.describe("set details sheet", () => {
     await createExerciseThroughSheet(page, name);
     await page.getByRole("button", { name: `Mark all sets to failure for ${name}` }).click();
     await page.getByRole("button", { name: "Save workout" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "Enter the weight and reps of at least one set." })).toBeVisible();
+    await expect(page.locator("p").filter({ hasText: "Enter the weight and reps of at least one set." })).toBeVisible();
     await expect(page).toHaveURL(/\/workouts\/new$/);
   });
 

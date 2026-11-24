@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { useId, type ComponentProps } from "react";
+import { invalidFieldClasses } from "@/components/field-error";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ export function SelectField({ label, className, children, ...selectProps }: Sele
           id={id}
           className={cn(
             "h-12 w-full appearance-none rounded-xl border border-field bg-surface pl-3 pr-10 text-base text-ink",
+            invalidFieldClasses,
             className,
           )}
           {...selectProps}

@@ -7,17 +7,19 @@ import { useFormatter, useMessages, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState, useTransition } from "react";
 import { useAnnounce } from "@/components/announcer";
+import { FieldError, invalidFieldClasses } from "@/components/field-error";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { requestReloadFocus, useReloadFocus } from "@/components/reload-focus";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { translatedOrTyped } from "@/i18n/labels";
 import type { EntryExercise, EntryFormData } from "@/server/queries";
 import type { ErrorCode, UpdateErrorCode } from "@/server/workout-actions";
 import { updateWorkout } from "../[id]/actions";
 import { saveWorkout } from "./actions";
-import { checkExercise, hasProblems, newExercise, toSaveExercises, type ExerciseDraft } from "./draft";
+import { checkExercise, countProblems, hasProblems, newExercise, toSaveExercises, type ExerciseDraft } from "./draft";
 import { ExerciseCard } from "./exercise-card";
 import { draftHasInput } from "./entry-date";
 import { buildUpdateInput, isDraftUnchanged, type SavedWorkoutDraft } from "./saved-draft";
@@ -42,6 +44,21 @@ type Props = {
   requestedDate?: string;
   saved?: SavedMode;
 };
+
+// The Workout date input's styling, in one place because of the iOS Safari notes below.
+// - The browser's own calendar button is stretched over the whole field and made invisible, so a tap anywhere
+//   opens the date picker; our icon is only the picture of it.
+// - iOS Safari draws the value in an inner box (::-webkit-date-and-time-value) that is only as tall as one text
+//   line and, with appearance-none and a fixed height, sits at the top of the field instead of the middle (Chrome
+//   centres it). Three things together make it robust: `flex items-center` on the input (WebKit lays the inner box
+//   out as a flex item, so it centres it in the 48 px), no vertical padding (so the content box is the full inner
+//   height), and an explicit min-height and line-height on the value box (so it never collapses to 0 when the
+//   field is empty, another iOS quirk of appearance-none date inputs). text-left because iOS centres the value.
+// - Check on a real iPhone or the iOS Simulator; Chrome cannot reproduce it.
+const DATE_INPUT_CLASSES =
+  "flex h-12 w-full appearance-none items-center rounded-xl border border-field bg-surface px-3 py-0 pr-12 text-left text-base text-ink tabular-nums " +
+  "[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:size-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 " +
+  "[&::-webkit-date-and-time-value]:min-h-6 [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:leading-6";
 
 export function WorkoutForm({ data, today, requestedDate, saved }: Props) {
   // Next 16 (Cache Components) keeps a visited page hidden and restores its React state on a client-side return
@@ -145,6 +162,9 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   const router = useRouter();
   const announce = useAnnounce();
   const dateId = useId();
+  const noChangesId = useId();
+  const gymProblemId = useId();
+  const formRoot = useRef<HTMLDivElement>(null);
   const messages = useMessages();
   useReloadFocus("edit-title", t("savedLoaded"));
 
@@ -159,6 +179,10 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   const [focusKeys, setFocusKeys] = useState<number[]>([]);
 
   const [attempted, setAttempted] = useState(false); // problems are shown only after a Save attempt
+  // How many Save attempts were blocked by a problem. Each one moves focus to the first problem (effect below).
+  const [blockedAttempts, setBlockedAttempts] = useState(0);
+  // "Focus is still owed to the first problem": set by a blocked Save, consumed by the effect below.
+  const focusOwed = useRef(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<SaveErrorCode | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -170,6 +194,7 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   const gymProblem = locationId === "";
   const exerciseProblems = exercises.map(checkExercise);
   const canSave = !dateProblem && !gymProblem && !exerciseProblems.some(hasProblems);
+  const problemCount = countProblems({ dateProblem, gymProblem, exercises: exerciseProblems });
 
   const hasInput = draftHasInput({ trainingDayId, exercises });
   useEffect(() => {
@@ -180,6 +205,26 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   const changed =
     saved !== undefined &&
     !isDraftUnchanged(saved.initial.draft, { date, locationId, trainingDayId, exercises });
+
+  // A blocked Save: take the person to the first thing to fix. This is an effect because the marks
+  // (aria-invalid, data-problem) only exist in the DOM after React has rendered `attempted`; a handler would
+  // look for them one render too early. The first problem is simply the first marked element in the page:
+  // the DOM order is the reading order (date, gym, exercise name, set rows, "no sets" message), so there is no
+  // second list of fields to keep in the same order.
+  // One-shot on purpose: Next keeps a left page hidden and React re-runs its effects every time it becomes visible
+  // again (preserving-ui-state.md). Without the flag, coming back to this page after a blocked Save would steal
+  // focus and scroll. A ref, not state: nothing needs to re-render when it flips.
+  useEffect(() => {
+    if (!focusOwed.current) return;
+    focusOwed.current = false;
+    const first = formRoot.current?.querySelector<HTMLElement>('[aria-invalid="true"], [data-problem]');
+    if (!first) return;
+    // preventScroll + our own scroll, as in exercise-card.tsx: the browser's focus-scroll can leave the field under
+    // the pinned Save bar or the keyboard. Centred, so the message under the field is visible too.
+    first.focus({ preventScroll: true });
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    first.scrollIntoView({ block: "center", behavior: smooth ? "smooth" : "auto" });
+  }, [blockedAttempts]);
 
   // Closing or reloading the tab with unsaved edits: the browser shows its own generic prompt (the text cannot
   // be customised). The in-app Cancel control has its own dialog. Back/forward buttons cannot be intercepted
@@ -235,7 +280,14 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   async function handleSave() {
     setAttempted(true);
     setSaveError(null);
-    if (!canSave) return;
+    if (!canSave) {
+      focusOwed.current = true;
+      setBlockedAttempts((n) => n + 1);
+      // Announced once per attempt. The summary at the bottom is plain text that keeps itself up to date while
+      // the person fixes things; it has no live role, or every keystroke would be read out again.
+      announce(t("problems.problemsToFix", { count: problemCount }));
+      return;
+    }
     setSaving(true);
     let outcome: SaveOutcome;
     try {
@@ -250,7 +302,7 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
+    <div ref={formRoot} className="flex flex-1 flex-col gap-4">
       {saved && (
         <div className="flex flex-col gap-3">
           <Button
@@ -282,22 +334,19 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
             max={today}
             required
             aria-invalid={attempted && dateProblem ? true : undefined}
+            aria-describedby={attempted && dateProblem ? `${dateId}-problem` : undefined}
             onChange={(event) => setDate(event.target.value)}
-            // The browser's own calendar button is stretched over the whole field and made invisible, so a tap
-            // anywhere opens the date picker; our icon is only the picture of it.
-            className="block h-12 w-full appearance-none rounded-xl border border-field bg-surface px-3 pr-12 text-left text-base text-ink tabular-nums aria-invalid:border-2 aria-invalid:border-ink [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:size-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-date-and-time-value]:text-left"
+            className={cn(DATE_INPUT_CLASSES, invalidFieldClasses)}
           />
           <CalendarDays aria-hidden className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-muted" />
         </div>
         {attempted && dateProblem && (
-          <p role="alert" className="text-sm font-medium text-ink">
-            {t("problems.dateInvalid")}
-          </p>
+          <FieldError id={`${dateId}-problem`}>{t("problems.dateInvalid")}</FieldError>
         )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <SelectField label={t("gym")} value={locationId} onChange={(event) => setLocationId(event.target.value)}>
+        <SelectField label={t("gym")} value={locationId} aria-invalid={attempted && gymProblem ? true : undefined} aria-describedby={gymProblem ? gymProblemId : undefined} onChange={(event) => setLocationId(event.target.value)}>
           {data.locations.map((location) => (
             <option key={location.id} value={location.id}>
               {location.name}
@@ -314,9 +363,9 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
         </SelectField>
       </div>
       {gymProblem && (
-        <p role={attempted ? "alert" : undefined} className="text-sm font-medium text-ink">
+        <FieldError id={gymProblemId}>
           {data.locations.length === 0 ? t("noGyms") : t("problems.noGym")}
-        </p>
+        </FieldError>
       )}
 
       {exercises.map((draft, index) => (
@@ -352,9 +401,7 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
       {/* Pinned to the bottom of the screen; it is the last thing in the page flow, so it never covers a row. */}
       <div className="sticky bottom-0 mt-auto flex flex-col gap-2 border-t border-line bg-page pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3">
         {attempted && !canSave && (
-          <p role="alert" className="text-sm font-medium text-ink">
-            {t("problems.fixBeforeSaving")}
-          </p>
+          <FieldError>{t("problems.problemsToFix", { count: problemCount })}</FieldError>
         )}
         {saveError && (
           <div role="alert" className="flex flex-col items-start gap-2 text-sm font-medium text-ink">
@@ -374,7 +421,18 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
             )}
           </div>
         )}
-        <Button fullWidth onClick={handleSave} disabled={saving}>
+        {/* Edit mode, nothing changed: Save is off, and this says why (it is also the button's description). */}
+        {saved && !changed && !saving && (
+          <p id={noChangesId} className="text-sm font-medium text-muted">
+            {t("noChanges")}
+          </p>
+        )}
+        <Button
+          fullWidth
+          onClick={handleSave}
+          disabled={saving || (saved !== undefined && !changed)}
+          aria-describedby={saved && !changed && !saving ? noChangesId : undefined}
+        >
           {saving ? t("saving") : t(saved ? "saveChanges" : "save")}
         </Button>
       </div>

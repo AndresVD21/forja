@@ -5,6 +5,7 @@
 import { Ellipsis, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
+import { FieldError, invalidFieldClasses } from "@/components/field-error";
 import { IconButton } from "@/components/icon-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,7 +36,8 @@ type Props = {
 };
 
 const inputClasses =
-  "h-11 w-full rounded-xl border border-field bg-surface px-3 text-base tabular-nums text-ink placeholder:text-muted";
+  "h-11 w-full rounded-xl border border-field bg-surface px-3 text-base tabular-nums text-ink placeholder:text-muted " +
+  invalidFieldClasses;
 
 // Set number, weight, reps, "…" button. The number column grows downward for the Failure badge.
 const columns = "grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)_2.75rem]";
@@ -141,6 +143,7 @@ export function SetsTable({ draft, exerciseName, perSide, editing, problems, dis
         const number = index + 1;
         const unitDescriptionId = `${baseId}-unit-${set.key}`;
         const badgeId = `${baseId}-badge-${set.key}`;
+        const problemId = `${baseId}-problem-${set.key}`;
         return (
           <div key={set.key} className="border-b border-line py-2">
             <div className={cn("grid items-center gap-2", columns)}>
@@ -159,7 +162,7 @@ export function SetsTable({ draft, exerciseName, perSide, editing, problems, dis
                   inputMode="decimal"
                   autoComplete="off"
                   aria-label={t("setWeight", { number })}
-                  aria-describedby={set.toFailure ? `${unitDescriptionId} ${badgeId}` : unitDescriptionId}
+                  aria-describedby={[unitDescriptionId, set.toFailure && badgeId, problems[index] && problemId].filter(Boolean).join(" ") || undefined}
                   aria-invalid={problems[index] ? true : undefined}
                   value={set.weight}
                   onChange={(event) => onChange(updateSet(draft, set.key, { weight: event.target.value }))}
@@ -180,7 +183,7 @@ export function SetsTable({ draft, exerciseName, perSide, editing, problems, dis
                 inputMode="numeric"
                 autoComplete="off"
                 aria-label={t("setReps", { number })}
-                aria-describedby={set.toFailure ? badgeId : undefined}
+                aria-describedby={[set.toFailure && badgeId, problems[index] && problemId].filter(Boolean).join(" ") || undefined}
                 aria-invalid={problems[index] ? true : undefined}
                 value={set.reps}
                 onChange={(event) => onChange(updateSet(draft, set.key, { reps: event.target.value }))}
@@ -205,9 +208,9 @@ export function SetsTable({ draft, exerciseName, perSide, editing, problems, dis
               </IconButton>
             </div>
             {problems[index] && (
-              <p role="alert" className="mt-1 text-sm font-medium text-ink">
+              <FieldError id={problemId} className="mt-1">
                 {problems[index]}
-              </p>
+              </FieldError>
             )}
           </div>
         );

@@ -217,8 +217,8 @@ test("a blocked save keeps the draft and the Undo history", async ({ page }) => 
   await page.getByLabel("Set 1 weight", { exact: true }).fill("44");
   await page.getByRole("button", { name: "Save changes" }).click();
 
-  await expect(page.getByRole("alert").filter({ hasText: "Set 2: enter both weight and reps, or leave both empty." })).toBeVisible();
-  await expect(page.getByRole("alert").filter({ hasText: "Fix the highlighted problems before saving." })).toBeVisible();
+  await expect(page.locator("p").filter({ hasText: "Set 2: enter both weight and reps, or leave both empty." })).toBeVisible();
+  await expect(page.getByRole("main").locator("p").filter({ hasText: "1 problem to fix before saving." })).toBeVisible();
   await expect(page).toHaveURL(/\/edit\?week=/);
   await expect(page.getByLabel("Set 1 weight", { exact: true })).toHaveValue("44");
   await expect(page.getByLabel(/^Set \d+ weight$/)).toHaveCount(2);

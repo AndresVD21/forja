@@ -242,6 +242,18 @@ export function hasProblems(problems: ExerciseProblems): boolean {
   return Boolean(problems.name) || Boolean(problems.noSets) || Object.keys(problems.sets).length > 0;
 }
 
+/**
+ * How many things Save is blocked on, for the "3 problems to fix" message. Each message the form shows counts
+ * once: the date, the gym, and per exercise its name, its "no sets" message and every bad set row.
+ */
+export function countProblems(form: { dateProblem: boolean; gymProblem: boolean; exercises: ExerciseProblems[] }): number {
+  const perExercise = form.exercises.reduce(
+    (total, p) => total + (p.name ? 1 : 0) + (p.noSets ? 1 : 0) + Object.keys(p.sets).length,
+    0,
+  );
+  return (form.dateProblem ? 1 : 0) + (form.gymProblem ? 1 : 0) + perExercise;
+}
+
 /** The exercises as the server action wants them. Only call when no exercise has problems. */
 export function toSaveExercises(drafts: ExerciseDraft[]) {
   return drafts.map((draft) => ({

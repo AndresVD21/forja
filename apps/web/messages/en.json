@@ -205,6 +205,7 @@
     "discardText": "Your changes to this workout have not been saved.",
     "keepEditing": "Keep editing",
     "discard": "Discard changes",
+    "savedLoaded": "Saved version loaded.",
     "reloadSaved": "Load the saved version",
     "editErrors": {
       "invalid_input": "Something in the workout is not valid. Check the date and the sets, then try again.",
@@ -251,10 +252,11 @@
     "failure": "Failure",
     "deleteWorkout": "Delete workout",
     "deleteTitle": "Delete workout?",
-    "deleteContext": "This will delete {workout} on {date} and all its sets.",
+    "deleteContext": "{hasName, select, yes {This will delete the {workout} workout on {date} and all its sets.} other {This will delete the workout on {date} and all its sets.}}",
     "cancel": "Cancel",
     "deleting": "Deleting…",
     "deleted": "Workout deleted.",
+    "savedLoaded": "Saved version loaded.",
     "reload": "Reload",
     "deleteErrors": {
       "stale": "This workout was changed elsewhere. Reload to see the latest version.",

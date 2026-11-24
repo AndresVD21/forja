@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useAnnounce } from "@/components/announcer";
+import { requestReloadFocus, useReloadFocus } from "@/components/reload-focus";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import type { DeleteErrorCode } from "@/server/workout-actions";
@@ -33,6 +34,7 @@ export function DeleteWorkout({ id, version, workoutName, dateText, historyHref 
   const [error, setError] = useState<DeleteErrorCode | null>(null);
   const optionsButton = useRef<HTMLButtonElement>(null);
   const deleted = useRef(false);
+  useReloadFocus("workout-title", t("savedLoaded"));
 
   async function handleDelete() {
     setPending(true);
@@ -92,7 +94,7 @@ export function DeleteWorkout({ id, version, workoutName, dateText, historyHref 
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title={t("deleteTitle")}
-        description={t("deleteContext", { workout: workoutName, date: dateText })}
+        description={t("deleteContext", { hasName: workoutName ? "yes" : "no", workout: workoutName, date: dateText })}
         cancelLabel={t("cancel")}
         confirmLabel={pending ? t("deleting") : t("deleteWorkout")}
         onConfirm={handleDelete}
@@ -101,7 +103,13 @@ export function DeleteWorkout({ id, version, workoutName, dateText, historyHref 
         errorAction={
           error === "stale" ? (
             // Re-reads the page: the new version number remounts this component (the page keys it by version).
-            <Button variant="outline" onClick={() => router.refresh()}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                requestReloadFocus();
+                router.refresh();
+              }}
+            >
               {t("reload")}
             </Button>
           ) : undefined

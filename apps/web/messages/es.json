@@ -205,6 +205,7 @@
     "discardText": "Tus cambios en este entrenamiento no se han guardado.",
     "keepEditing": "Seguir editando",
     "discard": "Descartar cambios",
+    "savedLoaded": "Se cargó la versión guardada.",
     "reloadSaved": "Cargar la versión guardada",
     "editErrors": {
       "invalid_input": "Algo del entrenamiento no es válido. Revisa la fecha y las series e inténtalo de nuevo.",
@@ -251,10 +252,11 @@
     "failure": "Fallo",
     "deleteWorkout": "Eliminar entrenamiento",
     "deleteTitle": "¿Eliminar el entrenamiento?",
-    "deleteContext": "Se eliminarán {workout} del {date} y todas sus series.",
+    "deleteContext": "{hasName, select, yes {Se eliminará el entrenamiento {workout} del {date} con todas sus series.} other {Se eliminará el entrenamiento del {date} con todas sus series.}}",
     "cancel": "Cancelar",
     "deleting": "Eliminando…",
     "deleted": "Entrenamiento eliminado.",
+    "savedLoaded": "Se cargó la versión guardada.",
     "reload": "Recargar",
     "deleteErrors": {
       "stale": "Este entrenamiento se cambió en otro lugar. Recarga para ver la última versión.",

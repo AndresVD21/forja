@@ -55,14 +55,14 @@ async function Detail({ params, searchParams }: PageProps<"/workouts/[id]">) {
           key={workout.version}
           id={workout.id}
           version={workout.version}
-          workoutName={title}
+          workoutName={workout.trainingDay ? title : ""}
           dateText={shortDate}
           historyHref={backHref}
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <h1 className="text-balance text-3xl font-bold tracking-tight">{title}</h1>
+        <h1 id="workout-title" tabIndex={-1} className="text-balance outline-none text-3xl font-bold tracking-tight">{title}</h1>
         <p className="text-lg">{longDate}</p>
         <p className="text-muted">{workout.location.name}</p>
       </div>

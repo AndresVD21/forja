@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useAnnounce } from "@/components/announcer";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { requestReloadFocus, useReloadFocus } from "@/components/reload-focus";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,7 @@ import { updateWorkout } from "../[id]/actions";
 import { saveWorkout } from "./actions";
 import { checkExercise, hasProblems, newExercise, toSaveExercises, type ExerciseDraft } from "./draft";
 import { ExerciseCard } from "./exercise-card";
-import { isDraftUnchanged, type SavedWorkoutDraft } from "./saved-draft";
+import { buildUpdateInput, isDraftUnchanged, type SavedWorkoutDraft } from "./saved-draft";
 
 /** Present = the form edits a saved workout (decision 0008); absent = it logs a new one. */
 export type SavedMode = {
@@ -29,6 +30,9 @@ export type SavedMode = {
   /** The detail page to return to (it carries the history week). */
   detailHref: string;
 };
+
+/** Every error either save can return. */
+type SaveErrorCode = ErrorCode | UpdateErrorCode;
 
 type Props = { data: EntryFormData; today: string; saved?: SavedMode };
 
@@ -56,7 +60,7 @@ export function WorkoutForm({ data, today, saved }: Props) {
       saved={saved}
       knownExercises={knownExercises}
       onExercisesChange={setKnownExercises}
-      onSaved={() => setGeneration((g) => g + 1)}
+      onReset={() => setGeneration((g) => g + 1)}
     />
   );
 }
@@ -64,15 +68,16 @@ export function WorkoutForm({ data, today, saved }: Props) {
 type BodyProps = Props & {
   knownExercises: EntryExercise[];
   onExercisesChange: (exercises: EntryExercise[]) => void;
-  onSaved: () => void;
+  onReset: () => void;
 };
 
-function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange, onSaved }: BodyProps) {
+function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange, onReset }: BodyProps) {
   const t = useTranslations("Entry");
   const router = useRouter();
   const announce = useAnnounce();
   const dateId = useId();
   const messages = useMessages();
+  useReloadFocus("edit-title", t("savedLoaded"));
 
   // A saved workout starts from its own values; a new one from today, the last used gym and one empty card.
   const start = saved?.initial.draft;
@@ -86,7 +91,7 @@ function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange
 
   const [attempted, setAttempted] = useState(false); // problems are shown only after a Save attempt
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<ErrorCode | UpdateErrorCode | null>(null);
+  const [saveError, setSaveError] = useState<SaveErrorCode | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [reloading, startReload] = useTransition();
   const cancelButton = useRef<HTMLButtonElement>(null);
@@ -119,7 +124,7 @@ function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange
 
   function handleDiscard() {
     if (!saved) return;
-    onSaved(); // same reset as after a save: the preserved editor starts clean next time
+    onReset(); // same reset as after a save: the preserved editor starts clean next time
     router.push(saved.detailHref);
   }
 
@@ -127,50 +132,46 @@ function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange
     setExercises((all) => all.map((e) => (e.key === next.key ? next : e)));
   }
 
+  // Both saves return the same shape, so they share the tail below: stay on the page with the error shown.
+  type SaveOutcome = { ok: true } | { ok: false; error: SaveErrorCode };
+
+  async function saveEdit(saved: SavedMode): Promise<SaveOutcome> {
+    const result = await updateWorkout(buildUpdateInput(saved, { date, locationId, trainingDayId, exercises }));
+    if (!result.ok) return result;
+    // `saving` stays true on purpose: the button stays off until the detail page replaces this one.
+    announce(t("changesSaved"));
+    router.push(saved.detailHref);
+    return { ok: true };
+  }
+
+  async function saveNew(): Promise<SaveOutcome> {
+    const result = await saveWorkout({
+      performedOn: date,
+      locationId,
+      trainingDayId: trainingDayId || null,
+      exercises: toSaveExercises(exercises),
+    });
+    if (!result.ok) return result;
+    // Saved for real: only now do we leave. The new workout is in that week's list.
+    onReset(); // reset first, so a later client-side return to this page shows a blank form
+    router.push(`/?week=${result.performedOn}`);
+    return { ok: true };
+  }
+
   async function handleSave() {
     setAttempted(true);
     setSaveError(null);
     if (!canSave) return;
     setSaving(true);
+    let outcome: SaveOutcome;
     try {
-      if (saved) {
-        const result = await updateWorkout({
-          id: saved.id,
-          expectedVersion: saved.version,
-          performedOn: date,
-          locationId,
-          trainingDayId: trainingDayId || null,
-          // The form has no field for the workout notes yet: they go back exactly as loaded.
-          notes: saved.initial.notes,
-          exercises: toSaveExercises(exercises),
-        });
-        if (result.ok) {
-          // `saving` stays true on purpose: the button stays off until the detail page replaces this one.
-          announce(t("changesSaved"));
-          router.push(saved.detailHref);
-          return;
-        }
-        setSaveError(result.error);
-        setSaving(false);
-        return;
-      }
-      const result = await saveWorkout({
-        performedOn: date,
-        locationId,
-        trainingDayId: trainingDayId || null,
-        exercises: toSaveExercises(exercises),
-      });
-      if (result.ok) {
-        // Saved for real: only now do we leave. The new workout is in that week's list.
-        onSaved(); // reset first, so a later client-side return to this page shows a blank form
-        router.push(`/?week=${result.performedOn}`);
-        return;
-      }
-      setSaveError(result.error);
+      outcome = saved ? await saveEdit(saved) : await saveNew();
     } catch {
-      setSaveError("save_failed");
+      outcome = { ok: false, error: "save_failed" };
     }
+    if (outcome.ok) return;
     // The draft stays untouched on failure so nothing has to be typed again.
+    setSaveError(outcome.error);
     setSaving(false);
   }
 
@@ -188,7 +189,9 @@ function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange
             <ChevronLeft aria-hidden className="size-5" />
             {t("cancelEdit")}
           </Button>
-          <h1 className="text-3xl font-bold tracking-tight">{t("editTitle")}</h1>
+          <h1 id="edit-title" tabIndex={-1} className="text-3xl font-bold tracking-tight outline-none">
+            {t("editTitle")}
+          </h1>
         </div>
       )}
 
@@ -275,11 +278,17 @@ function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange
         )}
         {saveError && (
           <div role="alert" className="flex flex-col items-start gap-2 text-sm font-medium text-ink">
-            <p>{saved ? t(`editErrors.${saveError}`) : t(`errors.${saveError as ErrorCode}`)}</p>
+            {/* "stale" only exists when editing, so it has no entry under errors. */}
+            <p>{saved || saveError === "stale" ? t(`editErrors.${saveError}`) : t(`errors.${saveError}`)}</p>
             {saved && saveError === "stale" && (
               // The draft cannot be saved over a newer version. Refreshing re-reads the page: the new version
               // number changes the key on this component (see the edit page), which remounts it with the saved values.
-              <Button variant="outline" disabled={reloading} onClick={() => startReload(() => router.refresh())}>
+              <Button variant="outline" disabled={reloading} onClick={() =>
+                  startReload(() => {
+                    requestReloadFocus();
+                    router.refresh();
+                  })
+                }>
                 {t("reloadSaved")}
               </Button>
             )}

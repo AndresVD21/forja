@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { WorkoutDetailView } from "@/server/queries";
 import { deleteSet, undoDelete, updateSet } from "./draft";
-import { isDraftUnchanged, savedWorkoutToDraft } from "./saved-draft";
+import { buildUpdateInput, isDraftUnchanged, lastTimeExerciseId, savedWorkoutToDraft } from "./saved-draft";
 
 const workout: WorkoutDetailView = {
   id: "w1",
@@ -81,5 +81,45 @@ describe("isDraftUnchanged", () => {
     const deleted = { ...draft, exercises: [deleteSet(draft.exercises[0], 1), draft.exercises[1]] };
     expect(isDraftUnchanged(draft, deleted)).toBe(false);
     expect(isDraftUnchanged(draft, { ...deleted, exercises: [undoDelete(deleted.exercises[0]), draft.exercises[1]] })).toBe(true);
+  });
+});
+
+describe("buildUpdateInput", () => {
+  it("round-trips a loaded workout: notes, ids, each row's unit and failure flag", () => {
+    const saved = savedWorkoutToDraft(workout, "en");
+    const input = buildUpdateInput({ id: "w1", version: 3, initial: saved }, saved.draft);
+    expect(input).toMatchObject({
+      id: "w1",
+      expectedVersion: 3,
+      performedOn: "2026-11-17",
+      locationId: "loc",
+      trainingDayId: "day",
+      notes: "Felt good",
+    });
+    expect(input.exercises).toEqual([
+      {
+        exerciseId: "ex1",
+        note: "Left arm first",
+        sets: [
+          { weight: { value: 12, unit: "kg" }, reps: 10, toFailure: false },
+          { weight: { value: 22.5, unit: "lb" }, reps: 9, toFailure: true },
+        ],
+      },
+      { exerciseId: "ex2", note: null, sets: [{ weight: { value: 20, unit: "kg" }, reps: 10, toFailure: false }] },
+    ]);
+  });
+  it("sends no training day as null and keeps null notes null", () => {
+    const saved = savedWorkoutToDraft({ ...workout, trainingDay: null, notes: null }, "en");
+    const input = buildUpdateInput({ id: "w1", version: 3, initial: saved }, saved.draft);
+    expect(input.trainingDayId).toBeNull();
+    expect(input.notes).toBeNull();
+  });
+});
+
+describe("lastTimeExerciseId", () => {
+  it("asks for no last time while editing a saved workout, and passes the exercise otherwise", () => {
+    expect(lastTimeExerciseId(true, "ex1")).toBeNull();
+    expect(lastTimeExerciseId(false, "ex1")).toBe("ex1");
+    expect(lastTimeExerciseId(false, null)).toBeNull();
   });
 });

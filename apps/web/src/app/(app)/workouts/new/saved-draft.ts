@@ -2,7 +2,7 @@
 // draft still equals what was loaded. No React, so both are unit-tested (saved-draft.test.ts).
 import type { Unit } from "@forja/core";
 import type { WorkoutDetailView } from "@/server/queries";
-import { formatDecimalInput, type ExerciseDraft } from "./draft";
+import { formatDecimalInput, toSaveExercises, type ExerciseDraft } from "./draft";
 
 export type WorkoutDraft = {
   date: string;
@@ -81,4 +81,25 @@ export function isDraftUnchanged(initial: WorkoutDraft, current: WorkoutDraft): 
       })
     );
   });
+}
+
+/**
+ * The `updateWorkout` input for a draft that passed validation. The form has no field for the workout notes
+ * yet, so the saved notes go back exactly as loaded (sending null here would erase them).
+ */
+export function buildUpdateInput(saved: { id: string; version: number; initial: SavedWorkoutDraft }, draft: WorkoutDraft) {
+  return {
+    id: saved.id,
+    expectedVersion: saved.version,
+    performedOn: draft.date,
+    locationId: draft.locationId,
+    trainingDayId: draft.trainingDayId || null,
+    notes: saved.initial.notes,
+    exercises: toSaveExercises(draft.exercises),
+  };
+}
+
+/** Which exercise to ask "last time" for. Editing a saved workout must not: the card would compare it with itself. */
+export function lastTimeExerciseId(editing: boolean, exerciseId: string | null): string | null {
+  return editing ? null : exerciseId;
 }

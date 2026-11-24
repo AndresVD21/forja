@@ -17,6 +17,7 @@ import { CustomExerciseSheet } from "./custom-exercise-sheet";
 import { adoptCreatedExercise } from "./custom-exercise";
 import { changeUnit, chooseExercise, type ExerciseDraft, type ExerciseProblems } from "./draft";
 import { ExerciseCombobox, exerciseDisplayName } from "./exercise-combobox";
+import { lastTimeExerciseId } from "./saved-draft";
 import { SetsTable } from "./sets-table";
 
 type Props = {
@@ -84,7 +85,7 @@ export function ExerciseCard({ draft, number, exercises, locationId, problems, o
     setSetupName(null);
   }
 
-  const lastTime = useLastTime(editing ? null : draft.exerciseId, locationId);
+  const lastTime = useLastTime(lastTimeExerciseId(editing, draft.exerciseId), locationId);
 
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-4">

@@ -43,9 +43,9 @@ test("wrong password shows the generic error, keeps the email and creates no ses
 });
 
 // STATE OWNERSHIP (tests share one database, so each state-changing test owns its own gym + exercise):
-//   journey  -> saves Incline Barbell Press at Valle del Lili, and is the only test that asserts what "last time"
+//   journey  -> saves Incline Barbell Press at SmartFit Valle del Lili, and is the only test that asserts what "last time"
 //               says for it. The other tests never save that pair (validation tests save nothing; Spanish saves
-//               Pec Fly at Hacienda), so test order does not matter.
+//               Pec Fly at SmartFit Hacienda), so test order does not matter.
 // The journey changes state, so a retry or a second --repeat-each pass starts from a dirty database: retries are
 // off for it (a retry could not pass for the right reason), and the reference-line check adapts to repeats.
 test.describe("journey", () => {
@@ -62,7 +62,7 @@ test("sign in, log a workout, see it in the history, then see it as last time", 
   await page.getByRole("link", { name: "Log workout" }).click();
   await expect(page).toHaveURL(/\/workouts\/new$/);
 
-  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
   await page.getByLabel("Training day", { exact: true }).selectOption({ label: "Chest" });
   await pickExercise(page, "press inclinado", "Incline Barbell Press");
   await expect(page.getByRole("combobox", { name: EXERCISE_FIELD })).toHaveValue("Incline Barbell Press");
@@ -81,7 +81,7 @@ test("sign in, log a workout, see it in the history, then see it as last time", 
   await expect(page).toHaveURL(/\/\?week=\d{4}-\d{2}-\d{2}$/);
   const cards = workoutCards(page, "Chest");
   await expect(cards).toHaveCount(before + 1);
-  await expect(cards.first()).toContainText("Valle del Lili · 1 exercise · 4 sets");
+  await expect(cards.first()).toContainText("SmartFit Valle del Lili · 1 exercise · 4 sets");
   await expect(
     // The day is a button now (decision 0009); its accessible name carries the date and the dot's meaning.
     page.getByRole("button", { name: new RegExp(`^${todayLongDate()}, today, has entries`) }),
@@ -89,7 +89,7 @@ test("sign in, log a workout, see it in the history, then see it as last time", 
 
   // The next entry now takes its reference from the saved workout, at this gym.
   await page.getByRole("link", { name: "Log workout" }).click();
-  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
   await pickExercise(page, "press inclinado", "Incline Barbell Press");
   await expect(page.getByText("Last at this gym: 22.5 kg/side × 8")).toBeVisible();
 });
@@ -105,7 +105,7 @@ test.describe("validation keeps the draft and saves nothing", () => {
   test("an exercise name that matches nothing blocks saving", async ({ page }) => {
     const before = await workoutCards(page, /.*/).count();
     await page.getByRole("link", { name: "Log workout" }).click();
-    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
     await page.getByRole("combobox", { name: EXERCISE_FIELD }).fill("zzz not an exercise");
     await fillSets(page, [["20", "10"]]);
     await page.getByRole("button", { name: "Save workout" }).click();
@@ -124,7 +124,7 @@ test.describe("validation keeps the draft and saves nothing", () => {
   test("a half-filled set row blocks saving", async ({ page }) => {
     const before = await workoutCards(page, /.*/).count();
     await page.getByRole("link", { name: "Log workout" }).click();
-    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
     await pickExercise(page, "press inclinado", "Incline Barbell Press");
     await fillSets(page, [["20", "10"], ["22,5", ""]]);
     await page.getByRole("button", { name: "Save workout" }).click();
@@ -150,7 +150,7 @@ test("Spanish: the history heading and the saved card are translated", async ({ 
   await expect(page.getByRole("heading", { level: 1, name: "Registro de entrenamiento" })).toBeVisible();
   await page.getByRole("link", { name: "Registrar entrenamiento" }).click();
 
-  await page.getByLabel("Gimnasio", { exact: true }).selectOption({ label: "Hacienda" });
+  await page.getByLabel("Gimnasio", { exact: true }).selectOption({ label: "SmartFit Hacienda" });
   await page.getByLabel("Día de entrenamiento", { exact: true }).selectOption({ label: "Pecho" });
   await pickExercise(page, "aperturas", "Aperturas en máquina");
   await fillSets(page, FOUR_SETS, "es");
@@ -158,6 +158,6 @@ test("Spanish: the history heading and the saved card are translated", async ({ 
 
   await expect(page).toHaveURL(/\/\?week=\d{4}-\d{2}-\d{2}$/);
   await expect(page.getByRole("heading", { level: 1, name: "Registro de entrenamiento" })).toBeVisible();
-  const card = workoutCards(page, "Pecho", "Hacienda").first();
-  await expect(card).toContainText("Hacienda · 1 ejercicio · 4 series");
+  const card = workoutCards(page, "Pecho", "SmartFit Hacienda").first();
+  await expect(card).toContainText("SmartFit Hacienda · 1 ejercicio · 4 series");
 });

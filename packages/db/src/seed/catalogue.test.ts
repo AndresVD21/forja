@@ -55,7 +55,7 @@ describe("migrations and catalogue seed", () => {
     // Build a valid parent chain first, so the only thing wrong with the set is its weight.
     const [user] = await db.insert(users).values({ name: "T", email: "t@example.com" }).returning();
     const [exercise] = await db.select().from(exercises).limit(1);
-    const [location] = await db.insert(locations).values({ userId: user!.id, name: "Gym" }).returning();
+    const [location] = await db.insert(locations).values({ createdBy: user!.id, name: "Gym", nameKey: "gym" }).returning();
     const [workout] = await db
       .insert(workouts)
       .values({ userId: user!.id, locationId: location!.id, performedOn: "2026-01-05" })

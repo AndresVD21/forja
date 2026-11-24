@@ -20,7 +20,7 @@ const status = (page: Page, text: string) => page.getByRole("status").filter({ h
 /** Opens a fresh entry (full load) and types the name: what the exercise combobox offers for it. */
 async function offeredFor(page: Page, name: string) {
   await page.goto("/workouts/new");
-  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
   await field(page).fill(name);
 }
 

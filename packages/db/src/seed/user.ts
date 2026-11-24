@@ -21,8 +21,8 @@ export const ReferenceWeightsSchema = z.object({
 export type ReferenceWeights = z.infer<typeof ReferenceWeightsSchema>;
 
 /**
- * Gives one user their starting data: gyms and training days from the catalogue, plus reference weights.
- * Needs the shared catalogue to be seeded already. Idempotent: every insert is "do nothing if it exists",
+ * Gives one user their starting data: training days from the catalogue, plus reference weights.
+ * Needs the shared catalogue (exercises and gyms) to be seeded already. Idempotent: every insert is "do nothing if it exists",
  * so running it again neither duplicates rows nor overwrites reference weights the user has edited since.
  * One transaction: all or nothing.
  */
@@ -32,17 +32,7 @@ export async function seedUserData(
   data: { catalogue: Catalogue; referenceWeights: ReferenceWeights },
 ): Promise<void> {
   await db.transaction(async (tx) => {
-    // Skip a catalogue gym or day when the user already has one that namesMatch (so a gym they logged as
-    // "hacienda" is not duplicated as "Hacienda"). SQL's unique constraint only catches the exact text.
-    const knownGyms = (await tx.select({ name: locations.name }).from(locations).where(eq(locations.userId, userId))).map((l) => l.name);
-    const newGyms = [];
-    for (const name of data.catalogue.locations) {
-      if (knownGyms.some((known) => namesMatch(known, name))) continue;
-      knownGyms.push(name); // also protects against duplicates inside the catalogue itself
-      newGyms.push({ userId, name });
-    }
-    if (newGyms.length > 0) await tx.insert(locations).values(newGyms).onConflictDoNothing();
-
+    // Gyms are shared and seeded by seedCatalogue, so nothing is created here: only training days are per user.
     const knownDays = (await tx.select({ name: trainingDays.name }).from(trainingDays).where(eq(trainingDays.userId, userId))).map((d) => d.name);
     const newDays = [];
     for (const day of data.catalogue.training_days) {
@@ -53,7 +43,7 @@ export async function seedUserData(
     }
     if (newDays.length > 0) await tx.insert(trainingDays).values(newDays).onConflictDoNothing();
 
-    const locationRows = await tx.select().from(locations).where(eq(locations.userId, userId));
+    const locationRows = await tx.select({ id: locations.id, name: locations.name }).from(locations);
     const exerciseRows = await tx.select({ id: exercises.id, slug: exercises.slug }).from(exercises).where(isNull(exercises.userId));
 
     const values = data.referenceWeights.entries.map((entry) => {
@@ -62,7 +52,11 @@ export async function seedUserData(
       if (!exercise) throw new Error(`reference weights: unknown exercise slug "${entry.exercise}" (is the catalogue seeded?)`);
       let locationId: string | null = null;
       if (entry.location !== null) {
-        const location = locationRows.find((l) => namesMatch(l.name, entry.location as string));
+        // The owner's file predates the SmartFit rename and says "Hacienda": accept that old short name as an
+        // alias of "SmartFit Hacienda" (decision 0011). The SmartFit spelling is tried FIRST so that an unrelated
+        // gym someone later adds as plain "Hacienda" does not catch the owner's reference weights.
+        const wanted = entry.location;
+        const location = locationRows.find((l) => namesMatch(l.name, `SmartFit ${wanted}`)) ?? locationRows.find((l) => namesMatch(l.name, wanted));
         if (!location) throw new Error(`reference weights: unknown location "${entry.location}" (normalized "${normalizeName(entry.location)}")`);
         locationId = location.id;
       }

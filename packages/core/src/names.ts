@@ -1,3 +1,8 @@
+import { z } from "zod";
+
+/** A gym name as typed: 1-60 characters after trimming. The shared gym list is small and shown in a picker. */
+export const LocationNameSchema = z.string().trim().min(1).max(60);
+
 /**
  * Name matching for exercises (rule 12): user input is compared against catalogue
  * aliases with this one function so the seed, the search repository and the UI agree.

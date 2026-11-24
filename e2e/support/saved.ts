@@ -63,7 +63,7 @@ export async function logWorkout(
   opts: { date?: string; gym?: string; day?: string; sets?: Array<[string, string]>; label?: string } = {},
 ): Promise<LoggedWorkout> {
   const date = opts.date ?? uniquePastDate();
-  const gym = opts.gym ?? "Valle del Lili";
+  const gym = opts.gym ?? "SmartFit Valle del Lili";
   const day = opts.day ?? "Chest";
   const name = uniqueName(opts.label ?? "saved");
   await openEntry(page, gym);
@@ -96,7 +96,7 @@ export async function logWorkout(
 }
 
 /** The history card (a link) for a workout of that date at that gym. */
-export function historyCard(page: Page, date: string, gym = "Valle del Lili"): Locator {
+export function historyCard(page: Page, date: string, gym = "SmartFit Valle del Lili"): Locator {
   return page.getByRole("link").filter({ hasText: cardDate(date) }).filter({ hasText: gym });
 }
 

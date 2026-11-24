@@ -73,7 +73,7 @@ describe("history.lastFor fallback order", () => {
     // B has no data of their own: A's workouts and reference weights must not leak.
     const bLocation = (await t.repos.locations.findOrCreate(t.userB, "Hacienda")).id;
     expect(await t.repos.history.lastFor(t.userB, pressId, bLocation)).toBeUndefined();
-    await expectNotFound(t.repos.history.lastFor(t.userB, pressId, hacienda), "location");
+    expect(await t.repos.history.lastFor(t.userB, pressId, hacienda)).toBeUndefined(); // shared gym, but none of A's history
     await expectNotFound(t.repos.history.lastFor(t.userB, pressId, MISSING_ID), "location");
     void pasoancho; void mall;
   });

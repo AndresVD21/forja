@@ -54,11 +54,9 @@ export async function requireExercises(db: Database, userId: string, ids: readon
   if (found.length !== unique.length) throw new NotFoundError("exercise");
 }
 
-export async function requireLocation(db: Database, userId: string, id: string): Promise<void> {
-  const [row] = await db
-    .select({ id: locations.id })
-    .from(locations)
-    .where(and(eq(locations.id, id), eq(locations.userId, userId)));
+/** Gyms are shared (decision 0011): any gym may be used by anyone, so this only checks that it exists. */
+export async function requireLocation(db: Database, id: string): Promise<void> {
+  const [row] = await db.select({ id: locations.id }).from(locations).where(eq(locations.id, id));
   if (!row) throw new NotFoundError("location");
 }
 

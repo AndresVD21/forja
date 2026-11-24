@@ -20,7 +20,9 @@ import type { ErrorCode, UpdateErrorCode } from "@/server/workout-actions";
 import { updateWorkout } from "../[id]/actions";
 import { saveWorkout } from "./actions";
 import { checkExercise, countProblems, hasProblems, newExercise, toSaveExercises, type ExerciseDraft } from "./draft";
+import { AddGymSheet } from "./add-gym-sheet";
 import { ExerciseCard } from "./exercise-card";
+import { mergeGyms, type Gym } from "./gym-list";
 import { draftHasInput } from "./entry-date";
 import { buildUpdateInput, isDraftUnchanged, type SavedWorkoutDraft } from "./saved-draft";
 
@@ -79,6 +81,8 @@ export function WorkoutForm({ data, today, requestedDate, saved }: Props) {
   // The server list is only read when the page loads, so an exercise created in the setup sheet is added here.
   // It lives outside the keyed body because that exercise is saved for good, even when the draft is reset.
   const [knownExercises, setKnownExercises] = useState<EntryExercise[]>(data.exercises);
+  // Same for gyms added in the sheet: they are saved for good and shared, so a draft reset must not drop them.
+  const [addedGyms, setAddedGyms] = useState<Gym[]>([]);
 
   // What the body last reported about its draft. A ref, not state: the outer component only needs it at the
   // moment a different date is requested, and a state would re-render everything on every keystroke.
@@ -129,6 +133,8 @@ export function WorkoutForm({ data, today, requestedDate, saved }: Props) {
         saved={saved}
         knownExercises={knownExercises}
         onExercisesChange={setKnownExercises}
+        addedGyms={addedGyms}
+        onGymAdded={(gym) => setAddedGyms((all) => [...all, gym])}
         onReset={() => startOver(today)}
         onDraftChange={reportDraft}
       />
@@ -154,10 +160,12 @@ type BodyProps = Omit<Props, "requestedDate"> & {
   onDraftChange: (date: string, hasInput: boolean) => void;
   knownExercises: EntryExercise[];
   onExercisesChange: (exercises: EntryExercise[]) => void;
+  addedGyms: Gym[];
+  onGymAdded: (gym: Gym) => void;
   onReset: () => void;
 };
 
-function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExercises, onExercisesChange, onReset, onDraftChange }: BodyProps) {
+function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExercises, onExercisesChange, addedGyms, onGymAdded, onReset, onDraftChange }: BodyProps) {
   const t = useTranslations("Entry");
   const router = useRouter();
   const announce = useAnnounce();
@@ -171,7 +179,10 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   // A saved workout starts from its own values; a new one from today, the last used gym and one empty card.
   const start = saved?.initial.draft;
   const [date, setDate] = useState(start?.date ?? startDate);
-  const [locationId, setLocationId] = useState(start?.locationId ?? data.defaultLocationId ?? data.locations[0]?.id ?? "");
+  const gyms = mergeGyms(data.locations, addedGyms);
+  const [locationId, setLocationId] = useState(start?.locationId ?? data.defaultLocationId ?? "");
+  const [addGymOpen, setAddGymOpen] = useState(false);
+  const gymSelect = useRef<HTMLSelectElement>(null);
   const [trainingDayId, setTrainingDayId] = useState(start?.trainingDayId ?? "");
   const [exercises, setExercises] = useState<ExerciseDraft[]>(start?.exercises ?? [newExercise(1)]);
   const nextKey = useRef(saved?.initial.nextExerciseKey ?? 2);
@@ -192,6 +203,9 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
   // Derived from the draft on every render, so a message disappears as soon as the user fixes the problem.
   const dateProblem = !IsoDateSchema.safeParse(date).success || date > today;
   const gymProblem = locationId === "";
+  // A new user starts with no gym chosen; saying "Choose a gym." in red before they have even tried to save reads as
+  // a mistake. The "no gyms yet" note is guidance, so it shows straight away.
+  const showGymProblem = gymProblem && (attempted || gyms.length === 0);
   const exerciseProblems = exercises.map(checkExercise);
   const canSave = !dateProblem && !gymProblem && !exerciseProblems.some(hasProblems);
   const problemCount = countProblems({ dateProblem, gymProblem, exercises: exerciseProblems });
@@ -236,6 +250,11 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
     return () => window.removeEventListener("beforeunload", warn);
   }, [changed, saving]);
 
+  // Next keeps a left page hidden and runs effect cleanups when it hides. Closing the Add-a-gym sheet then means
+  // the person comes back to the form, not to a half-typed sheet. The sheet is closed when this mounts, so React's
+  // dev-only mount/cleanup/mount check is harmless.
+  useEffect(() => () => setAddGymOpen(false), []);
+
   function handleCancel() {
     if (saved && changed) setDiscardOpen(true);
     else if (saved) router.push(saved.detailHref);
@@ -245,6 +264,13 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
     if (!saved) return;
     onReset(); // same reset as after a save: the preserved editor starts clean next time
     router.push(saved.detailHref);
+  }
+
+  function handleGymAdded({ gym, created }: { gym: Gym; created: boolean }) {
+    onGymAdded(gym); // mergeGyms ignores it when the list already has it
+    setLocationId(gym.id);
+    setAddGymOpen(false);
+    announce(t(created ? "addGym.added" : "addGym.existing", { name: gym.name }));
   }
 
   function updateExercise(next: ExerciseDraft) {
@@ -346,13 +372,26 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <SelectField label={t("gym")} value={locationId} aria-invalid={attempted && gymProblem ? true : undefined} aria-describedby={gymProblem ? gymProblemId : undefined} onChange={(event) => setLocationId(event.target.value)}>
-          {data.locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
-          ))}
-        </SelectField>
+        <div className="flex flex-col gap-1">
+          <SelectField ref={gymSelect} label={t("gym")} value={locationId} aria-invalid={attempted && gymProblem ? true : undefined} aria-describedby={showGymProblem ? gymProblemId : undefined} onChange={(event) => setLocationId(event.target.value)}>
+            {/* No gym until the person picks one: gyms are shared, so the first A-Z may be someone else's. */}
+            {locationId === "" && (
+              <option value="" disabled>
+                {t("chooseGym")}
+              </option>
+            )}
+            {gyms.map((location) => (
+              <option key={location.id} value={location.id}>
+                {location.name}
+              </option>
+            ))}
+          </SelectField>
+          {/* A button, not an "Add..." option inside the native select: the picker stays a plain list. */}
+          <Button variant="text" className="min-h-11 self-start px-2" disabled={saving} onClick={() => setAddGymOpen(true)}>
+            <Plus aria-hidden className="size-5" />
+            {t("addGym.open")}
+          </Button>
+        </div>
         <SelectField label={t("trainingDay")} value={trainingDayId} onChange={(event) => setTrainingDayId(event.target.value)}>
           <option value="">{t("noTrainingDay")}</option>
           {data.trainingDays.map((day) => (
@@ -362,10 +401,20 @@ function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExerci
           ))}
         </SelectField>
       </div>
-      {gymProblem && (
+      {showGymProblem && (
         <FieldError id={gymProblemId}>
-          {data.locations.length === 0 ? t("noGyms") : t("problems.noGym")}
+          {gyms.length === 0 ? t("noGyms") : t("problems.noGym")}
         </FieldError>
+      )}
+      {addGymOpen && (
+        <AddGymSheet
+          onAdded={handleGymAdded}
+          onCancel={() => setAddGymOpen(false)}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            gymSelect.current?.focus();
+          }}
+        />
       )}
 
       {exercises.map((draft, index) => (

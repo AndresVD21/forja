@@ -39,7 +39,7 @@ export async function loadWorkoutDetail(db: Database, userId: string, id: string
     throw error;
   }
   const [locations, trainingDays, exercises] = await Promise.all([
-    repos.locations.list(userId),
+    repos.locations.listForUser(userId),
     repos.trainingDays.list(userId),
     repos.exercises.listWithAliases(userId),
   ]);

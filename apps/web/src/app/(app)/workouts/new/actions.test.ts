@@ -23,7 +23,7 @@ describe("actions.ts", () => {
   const exported = Object.entries(actions);
 
   it("exports the actions we expect (a new one should be added to this thinking, not slip in)", () => {
-    expect(exported.map(([name]) => name).sort()).toEqual(["createExercise", "getLastTime", "saveWorkout"]);
+    expect(exported.map(([name]) => name).sort()).toEqual(["createExercise", "createGym", "getLastTime", "saveWorkout"]);
   });
 
   it.each(exported)("%s returns signed_out when there is no user, without touching the database", async (_name, action) => {

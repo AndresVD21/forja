@@ -9,7 +9,7 @@ export function uniqueName(label: string): string {
 }
 
 /** Sign in and open a blank entry at the given gym. A full page load, so no earlier draft can be restored. */
-export async function openEntry(page: Page, gym = "Valle del Lili", lang: "en" | "es" = "en") {
+export async function openEntry(page: Page, gym = "SmartFit Valle del Lili", lang: "en" | "es" = "en") {
   await page.goto("/sign-in");
   if (lang === "es") {
     await page.getByRole("radio", { name: "Español" }).click();

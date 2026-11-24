@@ -400,11 +400,11 @@
     }
   ],
   "locations": [
-    "Hacienda",
-    "Cañasgordas",
-    "Pasoancho",
-    "Valle del Lili",
-    "Mall Plaza"
+    "SmartFit Hacienda",
+    "SmartFit Cañasgordas",
+    "SmartFit Pasoancho",
+    "SmartFit Valle del Lili",
+    "SmartFit Mall Plaza"
   ],
   "notation": {
     "(max N) / (N reps)": "Best reps reached on a to-failure set",
@@ -423,7 +423,7 @@
     "sets": 4,
     "unit": "kg",
     "bar_weight_kg": 20,
-    "location_when_missing": "Valle del Lili",
+    "location_when_missing": "SmartFit Valle del Lili",
     "notes_start": "2026-01-05 (Monday of the first SEMANA 1); later week numbers do not map to real dates"
   }
 }

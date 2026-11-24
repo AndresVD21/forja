@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
 import { getCurrentUser } from "@/server/session";
 import { createExerciseFor, type CreateExerciseInput, type CreateExerciseResult } from "@/server/exercise-actions";
+import { createGymFor, type CreateGymInput, type CreateGymResult } from "@/server/gym-actions";
 import { getToday } from "@/server/time";
 import {
   getLastTimeFor,
@@ -40,5 +41,18 @@ export async function createExercise(input: CreateExerciseInput): Promise<Create
   const result = await createExerciseFor(db, user.id, input);
   // Even when nothing new was made the page's data is still correct; only a real insert needs refreshing.
   if (result.ok && result.created) revalidatePath("/workouts/new");
+  return result;
+}
+
+/** "Add a gym": the list is shared by every user, so a new gym is visible to all (decision 0011). */
+export async function createGym(input: CreateGymInput): Promise<CreateGymResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "signed_out" };
+  const result = await createGymFor(db, user.id, input);
+  // Only a real insert changes what the pickers list. Entry pages: new workout (past days reuse it) and the edit page.
+  if (result.ok && result.created) {
+    revalidatePath("/workouts/new");
+    revalidatePath("/workouts/[id]", "page");
+  }
   return result;
 }

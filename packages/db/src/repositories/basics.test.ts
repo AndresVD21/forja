@@ -12,7 +12,7 @@ describe("locations", () => {
     const again = await t.repos.locations.findOrCreate(t.userA, "  cañasgordas ");
     expect(again.id).toBe(first.id);
     const other = await t.repos.locations.findOrCreate(t.userA, "Hacienda");
-    expect(await t.repos.locations.list(t.userA)).toHaveLength(2);
+    expect((await t.repos.locations.list()).map((l) => l.id)).toEqual(expect.arrayContaining([first.id, other.id]));
 
     expect(await t.repos.locations.lastUsed(t.userA)).toBeUndefined();
     await t.repos.workouts.create(t.userA, { locationId: first.id, performedOn: "2026-01-01", exercises: [] });
@@ -20,11 +20,12 @@ describe("locations", () => {
     expect((await t.repos.locations.lastUsed(t.userA))?.id).toBe(other.id);
   });
 
-  it("is per user: B gets their own location with the same name and sees none of A's", async () => {
-    const mineB = await t.repos.locations.findOrCreate(t.userB, "Hacienda");
+  it("is shared: B adding A's gym gets the same row, and B's lastUsed is still B's own", async () => {
     const mineA = await t.repos.locations.findOrCreate(t.userA, "Hacienda");
-    expect(mineB.id).not.toBe(mineA.id);
-    expect(await t.repos.locations.list(t.userB)).toEqual([mineB]);
+    const mineB = await t.repos.locations.findOrCreate(t.userB, "hacienda");
+    expect(mineB.id).toBe(mineA.id);
+    expect(mineB.created).toBe(false);
+    expect((await t.repos.locations.list()).map((l) => l.id)).toContain(mineB.id);
     expect(await t.repos.locations.lastUsed(t.userB)).toBeUndefined();
   });
 });

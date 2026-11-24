@@ -44,7 +44,7 @@ export function referenceWeightRepository(db: Database) {
     async upsert(userId: string, input: ReferenceWeightInput): Promise<ReferenceWeight> {
       return db.transaction(async (tx) => {
         await requireExercises(tx, userId, [input.exerciseId]);
-        if (input.locationId !== null) await requireLocation(tx, userId, input.locationId);
+        if (input.locationId !== null) await requireLocation(tx, input.locationId);
         const values = {
           weight: input.weight.value,
           unit: input.weight.unit,

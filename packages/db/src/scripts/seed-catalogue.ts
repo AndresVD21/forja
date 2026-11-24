@@ -14,7 +14,7 @@ let target: Awaited<ReturnType<typeof openTarget>> | undefined;
 try {
   target = await openTarget({ preferDirect: true });
   await seedCatalogue(target.db, catalogue);
-  console.log(`Seeded ${catalogue.exercises.length} catalogue exercises.`);
+  console.log(`Seeded ${catalogue.exercises.length} catalogue exercises and ${catalogue.locations.length} shared gyms.`);
 } catch (error) {
   console.error("Catalogue seed failed:", describeFailure(error));
   process.exitCode = 1;

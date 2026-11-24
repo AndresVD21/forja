@@ -124,9 +124,8 @@ describe("plans and weeks", () => {
 });
 
 describe("other uniqueness and foreign keys", () => {
-  it("rejects a duplicate location or training day name for one user, allows it for another", async () => {
-    expect(await dbFailureOf(t.db.insert(locations).values({ userId: t.userA, name: "Hacienda" }))).toMatch(/locations_user_name_unique/);
-    await t.db.insert(locations).values({ userId: t.userB, name: "Hacienda" });
+  it("rejects a duplicate gym (same name_key, whoever adds it) and a duplicate training day name for one user", async () => {
+    expect(await dbFailureOf(t.db.insert(locations).values({ createdBy: t.userB, name: "HACIENDA", nameKey: "hacienda" }))).toMatch(/locations_name_key_unique/);
     expect(await dbFailureOf(t.db.insert(trainingDays).values({ userId: t.userA, name: "Pierna" }))).toMatch(/training_days_user_name_unique/);
   });
   it("refuses to delete a location or an exercise that a workout uses (history is protected)", async () => {
@@ -143,14 +142,16 @@ describe("other uniqueness and foreign keys", () => {
     await t.db.delete(trainingDays).where(sql`id = ${d!.id}`);
     expect((await t.repos.workouts.getById(t.userA, w!.id)).trainingDayId).toBeNull();
   });
-  it("deleting a user removes their data but never the shared catalogue", async () => {
+  it("deleting a user removes their data but never the shared catalogue or gyms", async () => {
     const { users } = await import("./schema");
     const [u] = await t.db.insert(users).values({ name: "Gone", email: "gone@example.com" }).returning();
     await t.repos.locations.findOrCreate(u!.id, "Somewhere");
     await t.repos.exercises.create(u!.id, { name: "Odd lift", muscleGroup: "a", equipment: "b", defaultUnit: "kg", loadMode: "total" });
     const catalogueBefore = (await t.repos.exercises.list(t.userA)).filter((e) => e.userId === null).length;
     await t.db.delete(users).where(sql`id = ${u!.id}`);
-    expect(await t.repos.locations.list(u!.id)).toEqual([]);
+    // Gyms are shared: the one this user added stays (other people may have workouts there) and forgets its author.
+    const [gym] = await t.db.select().from(locations).where(sql`name = 'Somewhere'`);
+    expect(gym?.createdBy).toBeNull();
     expect((await t.repos.exercises.list(t.userA)).filter((e) => e.userId === null)).toHaveLength(catalogueBefore);
     expect((await t.db.select().from(exercises).where(sql`user_id = ${u!.id}`))).toEqual([]);
   });

@@ -107,7 +107,7 @@ export function workoutRepository(db: Database) {
       requireSets(input);
       return db.transaction(async (tx) => {
         // Ownership first: the foreign keys would accept another user's ids.
-        await requireLocation(tx, userId, input.locationId);
+        await requireLocation(tx, input.locationId);
         await requireExercises(tx, userId, input.exercises.map((e) => e.exerciseId));
         if (input.trainingDayId) await requireTrainingDays(tx, userId, [input.trainingDayId]);
         if (input.planWeekId) await requirePlanWeek(tx, userId, input.planWeekId);
@@ -170,7 +170,7 @@ export function workoutRepository(db: Database) {
     async update(userId: string, id: string, expectedVersion: number, input: WorkoutInput): Promise<WorkoutDetail> {
       requireSets(input);
       return db.transaction(async (tx) => {
-        await requireLocation(tx, userId, input.locationId);
+        await requireLocation(tx, input.locationId);
         await requireExercises(tx, userId, input.exercises.map((e) => e.exerciseId));
         if (input.trainingDayId) await requireTrainingDays(tx, userId, [input.trainingDayId]);
 

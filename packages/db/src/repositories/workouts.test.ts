@@ -83,8 +83,8 @@ describe("workouts", () => {
     await expectNotFound(t.repos.workouts.delete(t.userB, mine.id, mine.version), "workout");
     expect(await t.repos.workouts.listForUser(t.userB, { from: "2000-01-01", to: "2100-01-01" })).toEqual([]);
 
-    // B tries to log a workout at A's location, and with A's custom exercise.
-    await expectNotFound(t.repos.workouts.create(t.userB, { locationId, performedOn: "2026-08-02", exercises: [] }), "location");
+    // B tries to log a workout at an unknown gym (gyms are shared, so A's own gym would be fine), and with A's custom exercise.
+    await expectNotFound(t.repos.workouts.create(t.userB, { locationId: MISSING_ID, performedOn: "2026-08-02", exercises: [] }), "location");
     const bLocation = (await t.repos.locations.findOrCreate(t.userB, "Mine")).id;
     const { exercise } = await t.repos.exercises.create(t.userA, {
       name: "A only", muscleGroup: "back", equipment: "cable", defaultUnit: "kg", loadMode: "total",

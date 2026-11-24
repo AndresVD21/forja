@@ -132,7 +132,7 @@ describe("auth tables", () => {
   });
 
   it("clearWorkoutsAndPlans removes workouts but leaves the user (for Better Auth's beforeDelete)", async () => {
-    const [gym] = await ctx.db.insert(locations).values({ userId: ctx.userB, name: "Gym" }).returning({ id: locations.id });
+    const [gym] = await ctx.db.insert(locations).values({ createdBy: ctx.userB, name: "Gym", nameKey: "gym" }).returning({ id: locations.id });
     await ctx.db.insert(workouts).values({ userId: ctx.userB, locationId: gym!.id, performedOn: "2026-01-01" });
     await ctx.repos.users.clearWorkoutsAndPlans(ctx.userB);
     expect(await ctx.db.select().from(workouts).where(eq(workouts.userId, ctx.userB))).toHaveLength(0);

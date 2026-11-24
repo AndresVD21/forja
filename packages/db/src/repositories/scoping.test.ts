@@ -2,7 +2,7 @@
 // World: user A owns one of everything; user B tries to read, list, change, delete and REFERENCE it.
 import { beforeAll, describe, expect, it } from "vitest";
 import { buildUserWorld, expectIndistinguishable, kg, RANDOM_ID, type World } from "./spec-utils";
-import { setup } from "./test-utils";
+import { expectNotFound, setup } from "./test-utils";
 
 let t: World;
 let a: Awaited<ReturnType<typeof buildUserWorld>>;
@@ -73,18 +73,18 @@ describe("exercises: scoping", () => {
   });
 });
 
-describe("locations: scoping", () => {
-  it("list shows only my locations", async () => {
-    expect((await t.repos.locations.list(t.userB)).map((l) => l.name)).toEqual(["Gym B"]);
-    expect((await t.repos.locations.list(t.userA)).map((l) => l.name)).toEqual(["Gym A"]);
+describe("locations: shared list, private history", () => {
+  it("list shows every gym to everyone (gyms are shared, decision 0011)", async () => {
+    const names = (await t.repos.locations.list()).map((l) => l.name);
+    expect(names).toEqual(expect.arrayContaining(["Gym A", "Gym B"]));
   });
-  it("findOrCreate by B with A's gym name creates B's own location", async () => {
-    const mine = await t.repos.locations.findOrCreate(t.userB, "gym a");
-    expect(mine.id).not.toBe(a.location.id);
-    expect((await t.repos.locations.list(t.userA)).map((l) => l.id)).toEqual([a.location.id]);
+  it("findOrCreate by B with A's gym name returns A's row, not a copy", async () => {
+    const same = await t.repos.locations.findOrCreate(t.userB, "gym a");
+    expect(same.id).toBe(a.location.id);
+    expect(same.created).toBe(false);
   });
-  it("lastUsed never returns another user's gym", async () => {
-    // A has a workout; B has none yet in this file at this point -> undefined, not A's gym.
+  it("lastUsed never returns a gym only another user trained at", async () => {
+    // A has a workout at Gym A; B has none: undefined, not A's gym.
     const fresh = await t.repos.locations.lastUsed(t.userB);
     expect(fresh === undefined || fresh.id !== a.location.id).toBe(true);
     expect((await t.repos.locations.lastUsed(t.userA))?.id).toBe(a.location.id);
@@ -153,12 +153,8 @@ describe("workouts: scoping", () => {
     locationId: b.location.id, performedOn: "2026-03-01",
     exercises: [{ exerciseId: b.exercise.id, sets: oneSet }], ...over,
   });
-  it("B cannot reference A's location", async () => {
-    await expectIndistinguishable(
-      () => t.repos.workouts.create(t.userB, base({ locationId: a.location.id })),
-      () => t.repos.workouts.create(t.userB, base({ locationId: RANDOM_ID })),
-      "location",
-    );
+  it("an unknown gym id is refused (gyms are shared, so A's gym is not special)", async () => {
+    await expectNotFound(t.repos.workouts.create(t.userB, base({ locationId: RANDOM_ID })), "location");
   });
   it("B cannot reference A's custom exercise", async () => {
     await expectIndistinguishable(
@@ -187,17 +183,15 @@ describe("workouts: scoping", () => {
 });
 
 describe("history: scoping", () => {
-  it("lastFor refuses A's custom exercise and A's location, like random ids", async () => {
+  it("lastFor refuses A's custom exercise like a random id; A's gym is shared but shows none of A's history", async () => {
     await expectIndistinguishable(
       () => t.repos.history.lastFor(t.userB, a.exercise.id, b.location.id),
       () => t.repos.history.lastFor(t.userB, RANDOM_ID, b.location.id),
       "exercise",
     );
-    await expectIndistinguishable(
-      () => t.repos.history.lastFor(t.userB, b.exercise.id, a.location.id),
-      () => t.repos.history.lastFor(t.userB, b.exercise.id, RANDOM_ID),
-      "location",
-    );
+    await expectNotFound(t.repos.history.lastFor(t.userB, b.exercise.id, RANDOM_ID), "location");
+    // Same gym row as A trained at, but the history is per user (rule 11): B has nothing there.
+    expect(await t.repos.history.lastFor(t.userB, b.exercise.id, a.location.id)).toBeUndefined();
   });
   it("lastFor on a catalogue exercise does not leak A's workout or reference weight to B", async () => {
     const legPress = await t.exerciseId("leg-press");
@@ -259,18 +253,14 @@ describe("reference weights: scoping", () => {
     expect(await t.repos.referenceWeights.list(t.userB)).toEqual([]);
     expect(await t.repos.referenceWeights.list(t.userA)).toHaveLength(1);
   });
-  it("upsert: B cannot reference A's custom exercise or A's location", async () => {
+  it("upsert: B cannot reference A's custom exercise, or an unknown gym", async () => {
     await expectIndistinguishable(
       () => t.repos.referenceWeights.upsert(t.userB, { exerciseId: a.exercise.id, locationId: null, weight: kg(1) }),
       () => t.repos.referenceWeights.upsert(t.userB, { exerciseId: RANDOM_ID, locationId: null, weight: kg(1) }),
       "exercise",
     );
     const legPress = await t.exerciseId("leg-press");
-    await expectIndistinguishable(
-      () => t.repos.referenceWeights.upsert(t.userB, { exerciseId: legPress, locationId: a.location.id, weight: kg(1) }),
-      () => t.repos.referenceWeights.upsert(t.userB, { exerciseId: legPress, locationId: RANDOM_ID, weight: kg(1) }),
-      "location",
-    );
+    await expectNotFound(t.repos.referenceWeights.upsert(t.userB, { exerciseId: legPress, locationId: RANDOM_ID, weight: kg(1) }), "location");
   });
   it("B upserting the same (exercise, location-less) trio as A does not overwrite A's row", async () => {
     const legPress = await t.exerciseId("leg-press");

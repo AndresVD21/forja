@@ -35,6 +35,7 @@
     "previousWeek": "Previous week",
     "nextWeek": "Next week",
     "hasEntries": "has entries",
+    "today": "today",
     "thisWeek": "This week",
     "emptyWeek": "Nothing logged this week.",
     "workoutFallback": "Workout",

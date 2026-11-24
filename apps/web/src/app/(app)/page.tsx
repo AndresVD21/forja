@@ -53,7 +53,11 @@ async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
     weekday: fmt(day.date, { weekday: "narrow" }),
     number: fmt(day.date, { day: "numeric" }),
     // Screen readers get the whole date and the dot's meaning in words; the visuals are decorative.
-    name: [fmt(day.date, { weekday: "long", day: "numeric", month: "long" }), day.hasEntries && t("hasEntries")]
+    name: [
+      fmt(day.date, { weekday: "long", day: "numeric", month: "long" }),
+      day.date === today && t("today"),
+      day.hasEntries && t("hasEntries"),
+    ]
       .filter(Boolean)
       .join(", "),
     shortDate: fmt(day.date, { day: "numeric", month: "short" }),

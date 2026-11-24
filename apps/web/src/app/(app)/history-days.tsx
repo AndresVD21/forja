@@ -143,6 +143,9 @@ export function HistoryDays({ days, children }: Props) {
             {/* The full calendar date travels in the address; the form validates it again (entry-date.ts). */}
             <Link
               href={`/workouts/new?date=${selectedDay.date}`}
+              // The selection was for this one action. This page stays in memory (same week key), so without
+              // clearing, coming back with Back or after saving would still show the day selected.
+              onClick={() => setSelected(null)}
               className={cn(buttonVariants({ variant: "primary", fullWidth: true }), "h-auto py-2 text-center")}
             >
               <Plus aria-hidden className="size-5 shrink-0" />

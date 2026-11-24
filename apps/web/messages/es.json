@@ -35,6 +35,7 @@
     "previousWeek": "Semana anterior",
     "nextWeek": "Semana siguiente",
     "hasEntries": "tiene registros",
+    "today": "hoy",
     "thisWeek": "Esta semana",
     "emptyWeek": "No hay nada registrado esta semana.",
     "workoutFallback": "Entrenamiento",

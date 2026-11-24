@@ -69,10 +69,17 @@ export function WorkoutForm({ data, today, requestedDate, saved }: Props) {
   // Set while the "resume or discard?" question is open: the date asked for and the date the draft holds.
   const [question, setQuestion] = useState<{ requested: string; draftDate: string } | null>(null);
 
+  // The Workout date input of the current body. The body fills it in; the dialog uses it to put focus back.
+  const dateInput = useRef<HTMLInputElement | null>(null);
+
   // The page was opened, or opened again from memory, asking for `requestedDate`. This is an effect because
   // the trigger is something outside this page (the address), not something the person did here. React also
   // runs it again each time a hidden, kept page becomes visible, so reopening the same link after a save
   // (the form was reset to today) lands on the requested date too.
+  // This reads `draftInfo` correctly only because React runs a child's effects before its parent's: the body
+  // (child) writes `draftInfo` in its own effect, on mount and when a hidden kept page becomes visible again.
+  // A plain /workouts/new resolves to today, so a draft for another date asks the question there too (by
+  // design, decision 0009), including just after midnight; Resume is focused and nothing is lost.
   useEffect(() => {
     if (saved || requestedDate === undefined) return;
     const draft = draftInfo.current;
@@ -98,6 +105,7 @@ export function WorkoutForm({ data, today, requestedDate, saved }: Props) {
     <>
       <WorkoutFormBody
         key={generation}
+        dateInput={dateInput}
         data={data}
         today={today}
         startDate={startDate}
@@ -109,6 +117,7 @@ export function WorkoutForm({ data, today, requestedDate, saved }: Props) {
       />
       <DraftChoice
         question={question}
+        dateInput={dateInput}
         onResume={() => setQuestion(null)}
         onDiscard={(date) => {
           setQuestion(null);
@@ -120,6 +129,8 @@ export function WorkoutForm({ data, today, requestedDate, saved }: Props) {
 }
 
 type BodyProps = Omit<Props, "requestedDate"> & {
+  /** Filled with the date input, so the outer component can focus it after the draft question closes. */
+  dateInput: React.RefObject<HTMLInputElement | null>;
   /** The date a new draft starts on (a saved workout starts on its own date instead). */
   startDate: string;
   /** Tells the outer component what the draft holds, for the "different date requested" question. */
@@ -129,7 +140,7 @@ type BodyProps = Omit<Props, "requestedDate"> & {
   onReset: () => void;
 };
 
-function WorkoutFormBody({ data, today, startDate, saved, knownExercises, onExercisesChange, onReset, onDraftChange }: BodyProps) {
+function WorkoutFormBody({ dateInput, data, today, startDate, saved, knownExercises, onExercisesChange, onReset, onDraftChange }: BodyProps) {
   const t = useTranslations("Entry");
   const router = useRouter();
   const announce = useAnnounce();
@@ -265,6 +276,7 @@ function WorkoutFormBody({ data, today, startDate, saved, knownExercises, onExer
         <div className="relative">
           <input
             id={dateId}
+            ref={dateInput}
             type="date"
             value={date}
             max={today}
@@ -390,12 +402,13 @@ function WorkoutFormBody({ data, today, startDate, saved, knownExercises, onExer
 type DraftChoiceProps = {
   /** null = nothing is being asked. */
   question: { requested: string; draftDate: string } | null;
+  dateInput: React.RefObject<HTMLInputElement | null>;
   onResume: () => void;
   onDiscard: (date: string) => void;
 };
 
 /** "Resume your workout draft?": the form is already holding unsaved input and a different date was requested. */
-function DraftChoice({ question, onResume, onDiscard }: DraftChoiceProps) {
+function DraftChoice({ question, dateInput, onResume, onDiscard }: DraftChoiceProps) {
   const t = useTranslations("Entry");
   const format = useFormatter();
   const announce = useAnnounce();
@@ -414,6 +427,13 @@ function DraftChoice({ question, onResume, onDiscard }: DraftChoiceProps) {
       // Resume comes first in the dialog, so it is the focused, safe choice.
       cancelLabel={t("draftResume")}
       confirmLabel={t("draftDiscard")}
+      // Radix would return focus to the link that opened the page, which is hidden now (or to a form that was
+      // just remounted). The choice was about the date, so the date field takes focus. After Discard the body
+      // remounts in the same commit; Radix calls this later, so the ref already holds the new input.
+      onCloseAutoFocus={(event) => {
+        event.preventDefault();
+        dateInput.current?.focus();
+      }}
       onConfirm={() => {
         if (!question) return;
         announce(t("draftDiscarded", { date: longDate(question.requested) }));

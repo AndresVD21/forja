@@ -37,7 +37,7 @@ export async function fillNewExercise(page: Page, mode: "total" | "per_side") {
   const sheet = page.getByRole("dialog", { name: "New exercise" });
   await sheet.getByLabel("Muscle group", { exact: true }).selectOption({ label: "Chest" });
   await sheet.getByLabel("Equipment", { exact: true }).selectOption({ label: "Machine" });
-  await sheet.getByRole("radio", { name: mode === "total" ? /^Total weight/ : /^Plates per side/ }).check();
+  await sheet.getByRole("radio", { name: mode === "total" ? /^Entered weight/ : /^Plates per side/ }).check();
 }
 
 /** The whole path: unmatched name -> sheet -> required choices -> Save exercise and use. */

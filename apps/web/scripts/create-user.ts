@@ -29,6 +29,12 @@ async function askPassword(question: string): Promise<string> {
   });
 }
 
+// Say where the account will be written BEFORE asking for the password (same line the db scripts print).
+// create-user goes through the app's database (server/db.ts), which reads DATABASE_URL only.
+const { describeDatabase } = await import("@forja/db");
+const { localDbDir } = await import("@forja/db/local");
+console.log(describeDatabase({ DATABASE_URL: process.env.DATABASE_URL }, false, localDbDir()));
+
 const password = await askPassword("Password (8 characters or more): ");
 
 // Imported after the checks so a usage error does not open the database.

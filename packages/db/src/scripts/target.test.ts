@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { chooseDatabaseUrl, describeFailure, openTarget } from "./target";
+import { chooseDatabaseUrl, describeDatabase, describeFailure, openTarget } from "./target";
 
 const both = { DATABASE_URL: "postgres://pooled", DATABASE_URL_UNPOOLED: "postgres://direct" };
 
@@ -22,6 +22,19 @@ describe("chooseDatabaseUrl", () => {
   it("returns nothing when neither is set (the scripts then use the local PGlite folder)", () => {
     expect(chooseDatabaseUrl({}, true)).toBeUndefined();
     expect(chooseDatabaseUrl({ DATABASE_URL_UNPOOLED: "postgres://direct" }, false)).toBeUndefined();
+  });
+});
+
+describe("describeDatabase", () => {
+  it("names the variable or the local folder, never the URL", () => {
+    expect(describeDatabase(both, true, "/x")).toBe("Database: DATABASE_URL_UNPOOLED (Neon, direct connection)");
+    const pooled = describeDatabase(both, false, "/x");
+    expect(pooled).toContain("DATABASE_URL (Neon");
+    expect(pooled).not.toContain("postgres://");
+    expect(describeDatabase({}, false, "/x/.data/pglite")).toBe("Database: local PGlite folder /x/.data/pglite");
+  });
+  it("says when an empty DATABASE_URL is being ignored", () => {
+    expect(describeDatabase({ DATABASE_URL: "" }, false, "/x")).toContain("DATABASE_URL is set but empty");
   });
 });
 

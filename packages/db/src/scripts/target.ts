@@ -15,6 +15,9 @@ export type Target = {
   close: () => Promise<void>;
 };
 
+// `process.env` fits (the index signature keeps TypeScript from calling it a "weak type" in other packages).
+type DbEnv = { DATABASE_URL?: string; DATABASE_URL_UNPOOLED?: string } & Record<string, string | undefined>;
+
 type UrlChoice = { url: string; kind: "direct" | "pooled" };
 
 /**
@@ -26,12 +29,30 @@ type UrlChoice = { url: string; kind: "direct" | "pooled" };
  * Scripts that change the schema ask for `preferDirect`; the rest use DATABASE_URL as before.
  */
 export function chooseDatabaseUrl(
-  env: { DATABASE_URL?: string; DATABASE_URL_UNPOOLED?: string },
+  env: DbEnv,
   preferDirect: boolean,
 ): UrlChoice | undefined {
   if (preferDirect && env.DATABASE_URL_UNPOOLED) return { url: env.DATABASE_URL_UNPOOLED, kind: "direct" };
   if (env.DATABASE_URL) return { url: env.DATABASE_URL, kind: "pooled" };
   return undefined;
+}
+
+/**
+ * The "Database: ..." line every script prints before it touches anything: which variable is used (never its
+ * value, which holds the password) or the local folder. `localDir` is only used for the local case.
+ * A variable that is set but EMPTY (`DATABASE_URL="$UNSET_VAR"`) counts as unset, which is an easy mistake, so
+ * it gets an extra sentence saying the local folder will be used.
+ */
+export function describeDatabase(
+  env: DbEnv,
+  preferDirect: boolean,
+  localDir: string,
+): string {
+  const choice = chooseDatabaseUrl(env, preferDirect);
+  if (choice?.kind === "direct") return "Database: DATABASE_URL_UNPOOLED (Neon, direct connection)";
+  if (choice) return "Database: DATABASE_URL (Neon, as given; pooled when it is Neon's pooled address)";
+  const empty = env.DATABASE_URL === "" ? " (DATABASE_URL is set but empty, so it is ignored)" : "";
+  return `Database: local PGlite folder ${localDir}${empty}`;
 }
 
 /**
@@ -56,11 +77,7 @@ export async function openTarget(options: { preferDirect?: boolean } = {}): Prom
   }
   if (choice) {
     const databaseUrl = choice.url;
-    console.log(
-      choice.kind === "direct"
-        ? "Database: DATABASE_URL_UNPOOLED (Neon, direct connection)"
-        : "Database: DATABASE_URL (Neon, as given; pooled when it is Neon's pooled address)",
-    );
+    console.log(describeDatabase(process.env, options.preferDirect ?? false, ""));
     const db = createDb(databaseUrl);
     return {
       db,
@@ -77,7 +94,7 @@ export async function openTarget(options: { preferDirect?: boolean } = {}): Prom
   }
   // Imported only here, so a script that has DATABASE_URL never loads PGlite.
   const { openLocalDb, migrateLocalDb, localDbDir } = await import("../local");
-  console.log(`Database: local PGlite folder ${localDbDir()}`);
+  console.log(describeDatabase(process.env, options.preferDirect ?? false, localDbDir()));
   const local = openLocalDb();
   return { db: local.db, migrate: () => migrateLocalDb(local.db, migrationsFolder), close: local.close };
 }

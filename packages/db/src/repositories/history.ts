@@ -51,7 +51,10 @@ async function latestWorkout(db: Database, userId: string, exerciseId: string, l
         locationId === undefined ? undefined : eq(workouts.locationId, locationId),
       ),
     )
-    .orderBy(desc(workouts.performedOn), desc(workouts.createdAt))
+    // Performed date decides "latest". created_at is only a tie-break for two workouts on the same day; it is
+    // never updated by an edit, and (unlike a version or edit time) says nothing about when it was performed.
+    // The id makes the order fully deterministic when even created_at ties.
+    .orderBy(desc(workouts.performedOn), desc(workouts.createdAt), desc(workouts.id))
     .limit(1);
   return row;
 }

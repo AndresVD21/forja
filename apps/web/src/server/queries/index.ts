@@ -7,9 +7,11 @@ import { requireUser } from "../session";
 import { getToday } from "../time";
 import { loadEntryFormData, type EntryFormData } from "./entry-form";
 import { failSafely } from "../safe-log";
+import { loadWorkoutDetail, type WorkoutDetailView } from "./workout-detail";
 import { loadWeek, neighbourWeek, resolveWeekStart, type WeekView } from "./week";
 
 export type { EntryExercise, EntryFormData } from "./entry-form";
+export type { WorkoutDetailView } from "./workout-detail";
 export type { WeekActivity, WeekDay, WeekView, WeekWorkout } from "./week";
 
 /**
@@ -27,4 +29,10 @@ export async function getWeek(date?: string): Promise<WeekView> {
 export async function getEntryFormData(): Promise<EntryFormData> {
   const user = await requireUser();
   return failSafely("entry form lookup", () => loadEntryFormData(db, user.id));
+}
+
+/** One saved workout of the signed-in user, or null when it does not exist or is not theirs. */
+export async function getWorkoutDetail(id: string): Promise<WorkoutDetailView | null> {
+  const user = await requireUser();
+  return failSafely("workout detail lookup", () => loadWorkoutDetail(db, user.id, id));
 }

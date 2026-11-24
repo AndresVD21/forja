@@ -5,7 +5,7 @@
 //    parameter must never live there: a browser could call it with someone else's id.
 import "server-only";
 import { IsoDateSchema, WeightSchema, type Unit } from "@forja/core";
-import { createRepositories, NotFoundError, type Database, type LastFor } from "@forja/db";
+import { createRepositories, NotFoundError, StaleWriteError, type Database, type LastFor } from "@forja/db";
 import { z } from "zod";
 import { describeError } from "./safe-log";
 
@@ -78,6 +78,66 @@ function toErrorCode(error: unknown): ErrorCode {
   // Log without user data: describeError never includes the message (see safe-log.ts).
   console.error("saveWorkout failed:", describeError(error));
   return "save_failed";
+}
+
+// ---- updateWorkout / deleteWorkout (decision 0008) ------------------------------------------------------
+
+/** "stale": the workout was changed by another save after the form read it (see workouts.version). */
+export type UpdateErrorCode = "signed_out" | "invalid_input" | "not_found" | "stale" | "save_failed";
+export type DeleteErrorCode = "signed_out" | "not_found" | "stale" | "delete_failed";
+
+// Same fields and rules as saving a new workout, plus which workout and which version the form was based on.
+export const UpdateWorkoutInput = SaveWorkoutInput.extend({
+  id: z.uuid(),
+  expectedVersion: z.number().int().min(1),
+});
+export type UpdateWorkoutInput = z.input<typeof UpdateWorkoutInput>;
+export type UpdateWorkoutResult =
+  | { ok: true; id: string; performedOn: string; version: number }
+  | { ok: false; error: UpdateErrorCode };
+
+export async function updateWorkoutFor(db: Database, userId: string, today: string, input: unknown): Promise<UpdateWorkoutResult> {
+  const parsed = UpdateWorkoutInput.safeParse(input);
+  if (!parsed.success || parsed.data.performedOn > today) return { ok: false, error: "invalid_input" };
+  const { id, expectedVersion, ...data } = parsed.data;
+  try {
+    const workout = await createRepositories(db).workouts.update(userId, id, expectedVersion, {
+      performedOn: data.performedOn,
+      locationId: data.locationId,
+      trainingDayId: data.trainingDayId ?? null,
+      notes: data.notes || null,
+      exercises: data.exercises.map((e) => ({ exerciseId: e.exerciseId, note: e.note || null, sets: e.sets })),
+    });
+    return { ok: true, id: workout.id, performedOn: workout.performedOn, version: workout.version };
+  } catch (error) {
+    if (error instanceof NotFoundError) return { ok: false, error: "not_found" };
+    if (error instanceof StaleWriteError) return { ok: false, error: "stale" };
+    console.error("updateWorkout failed:", describeError(error));
+    return { ok: false, error: "save_failed" };
+  }
+}
+
+const DeleteWorkoutInput = z.object({ id: z.uuid(), expectedVersion: z.number().int().min(1) });
+export type DeleteWorkoutInput = z.input<typeof DeleteWorkoutInput>;
+export type DeleteWorkoutResult = { ok: true; performedOn: string } | { ok: false; error: DeleteErrorCode };
+
+export async function deleteWorkoutFor(db: Database, userId: string, input: unknown): Promise<DeleteWorkoutResult> {
+  const parsed = DeleteWorkoutInput.safeParse(input);
+  // A malformed id cannot be anyone's workout.
+  if (!parsed.success) return { ok: false, error: "not_found" };
+  try {
+    const repos = createRepositories(db);
+    // Read the date first: the caller needs it to go back to the right week, and it is gone after the delete.
+    // The version check in delete() is what protects against a stale delete, not this read.
+    const { performedOn } = await repos.workouts.getById(userId, parsed.data.id);
+    await repos.workouts.delete(userId, parsed.data.id, parsed.data.expectedVersion);
+    return { ok: true, performedOn };
+  } catch (error) {
+    if (error instanceof NotFoundError) return { ok: false, error: "not_found" };
+    if (error instanceof StaleWriteError) return { ok: false, error: "stale" };
+    console.error("deleteWorkout failed:", describeError(error));
+    return { ok: false, error: "delete_failed" };
+  }
 }
 
 // ---- getLastTime ---------------------------------------------------------------------------------------

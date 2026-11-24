@@ -65,7 +65,7 @@ describe("rule 5: each set is a row", () => {
       locationId: hacienda, performedOn: "2026-02-25",
       exercises: [{ exerciseId: await t.exerciseId("pec-fly"), sets: [{ reps: 8, weight: kg(10), toFailure: false }] }],
     });
-    await t.repos.workouts.delete(t.userA, w.id);
+    await t.repos.workouts.delete(t.userA, w.id, w.version);
     expect(await rowCounts()).toEqual(before);
   });
 });

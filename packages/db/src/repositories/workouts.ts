@@ -198,21 +198,15 @@ export function workoutRepository(db: Database) {
     },
 
     /**
-     * Exercises and sets go with it (ON DELETE CASCADE). Pass `expectedVersion` to refuse deleting a workout that
-     * changed since it was read (StaleWriteError); omit it for an unconditional delete.
+     * Exercises and sets go with it (ON DELETE CASCADE). Only deletes while the row still has `expectedVersion`
+     * (StaleWriteError otherwise). RETURNING hands back the date of the deleted row, so one statement is enough.
      */
-    async delete(userId: string, id: string, expectedVersion?: number): Promise<void> {
-      const deleted = await db
+    async delete(userId: string, id: string, expectedVersion: number): Promise<{ performedOn: string }> {
+      const [deleted] = await db
         .delete(workouts)
-        .where(
-          and(
-            eq(workouts.id, id),
-            eq(workouts.userId, userId),
-            expectedVersion === undefined ? undefined : eq(workouts.version, expectedVersion),
-          ),
-        )
-        .returning({ id: workouts.id });
-      if (deleted.length === 0) await throwNotFoundOrStale(db, userId, id);
+        .where(and(eq(workouts.id, id), eq(workouts.userId, userId), eq(workouts.version, expectedVersion)))
+        .returning({ performedOn: workouts.performedOn });
+      return deleted ?? throwNotFoundOrStale(db, userId, id);
     },
   };
 }

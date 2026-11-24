@@ -86,10 +86,13 @@ function toErrorCode(error: unknown): ErrorCode {
 export type UpdateErrorCode = "signed_out" | "invalid_input" | "not_found" | "stale" | "save_failed";
 export type DeleteErrorCode = "signed_out" | "not_found" | "stale" | "delete_failed";
 
+// A Postgres `integer` tops out at 2^31 - 1; a bigger number would only fail in the database, and retrying never helps.
+const Version = z.number().int().min(1).max(2_147_483_647);
+
 // Same fields and rules as saving a new workout, plus which workout and which version the form was based on.
 export const UpdateWorkoutInput = SaveWorkoutInput.extend({
   id: z.uuid(),
-  expectedVersion: z.number().int().min(1),
+  expectedVersion: Version,
 });
 export type UpdateWorkoutInput = z.input<typeof UpdateWorkoutInput>;
 export type UpdateWorkoutResult =
@@ -117,7 +120,7 @@ export async function updateWorkoutFor(db: Database, userId: string, today: stri
   }
 }
 
-const DeleteWorkoutInput = z.object({ id: z.uuid(), expectedVersion: z.number().int().min(1) });
+const DeleteWorkoutInput = z.object({ id: z.uuid(), expectedVersion: Version });
 export type DeleteWorkoutInput = z.input<typeof DeleteWorkoutInput>;
 export type DeleteWorkoutResult = { ok: true; performedOn: string } | { ok: false; error: DeleteErrorCode };
 
@@ -126,11 +129,7 @@ export async function deleteWorkoutFor(db: Database, userId: string, input: unkn
   // A malformed id cannot be anyone's workout.
   if (!parsed.success) return { ok: false, error: "not_found" };
   try {
-    const repos = createRepositories(db);
-    // Read the date first: the caller needs it to go back to the right week, and it is gone after the delete.
-    // The version check in delete() is what protects against a stale delete, not this read.
-    const { performedOn } = await repos.workouts.getById(userId, parsed.data.id);
-    await repos.workouts.delete(userId, parsed.data.id, parsed.data.expectedVersion);
+    const { performedOn } = await createRepositories(db).workouts.delete(userId, parsed.data.id, parsed.data.expectedVersion);
     return { ok: true, performedOn };
   } catch (error) {
     if (error instanceof NotFoundError) return { ok: false, error: "not_found" };

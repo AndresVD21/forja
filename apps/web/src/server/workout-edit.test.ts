@@ -106,6 +106,7 @@ describe("updateWorkout", () => {
     expect(await updateWorkoutFor(t.db, t.userA, TODAY, { ...base, performedOn: "2026-11-24" })).toEqual(invalid);
     expect(await updateWorkoutFor(t.db, t.userA, TODAY, { ...base, exercises: [{ exerciseId: t.machine.id, sets: [set(5, 10.125)] }] })).toEqual(invalid);
     expect(await updateWorkoutFor(t.db, t.userA, TODAY, { ...base, expectedVersion: 0 })).toEqual(invalid);
+    expect(await updateWorkoutFor(t.db, t.userA, TODAY, { ...base, expectedVersion: 2_147_483_648 })).toEqual(invalid);
     expect(await snapshot(t.userA, id)).toEqual(before);
   });
 
@@ -142,6 +143,8 @@ describe("deleteWorkout", () => {
     expect(await deleteWorkoutFor(t.db, t.userB, { id, expectedVersion: 1 })).toEqual({ ok: false, error: "not_found" });
     expect(await deleteWorkoutFor(t.db, t.userA, { id: missing, expectedVersion: 1 })).toEqual({ ok: false, error: "not_found" });
     expect(await deleteWorkoutFor(t.db, t.userA, { id: "nope", expectedVersion: 1 })).toEqual({ ok: false, error: "not_found" });
+    // A version beyond Postgres' integer is refused before the database sees it (same code as a malformed id).
+    expect(await deleteWorkoutFor(t.db, t.userA, { id, expectedVersion: 2_147_483_648 })).toEqual({ ok: false, error: "not_found" });
     expect((await snapshot(t.userA, id)).version).toBe(1);
   });
 });

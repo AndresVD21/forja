@@ -1,4 +1,4 @@
-import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, index, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { createdAt, id } from "./common";
 import { users } from "./users";
 
@@ -106,3 +106,22 @@ export const invites = pgTable(
   // Foreign keys are not indexed automatically in Postgres; the ON DELETE SET NULL above looks rows up by it.
   (table) => [index("invites_used_by_user_id_idx").on(table.usedByUserId)],
 );
+
+/**
+ * Sign-in rate limiting (decision 0007). One row per "client IP + path": `count` requests so far in the window
+ * that began at `last_request`. Better Auth keeps these counts here instead of in memory because Vercel runs
+ * many short-lived server instances and each would otherwise count on its own, letting an attacker try 5 passwords
+ * per instance. The database is the one place all instances share.
+ *
+ * `key` is unique, which gives it the index every lookup needs and lets Better Auth's insert-or-retry logic
+ * detect two requests creating the same row at once. `last_request` is a bigint because it holds milliseconds
+ * since 1970 (about 1.7 trillion), which does not fit in a 4-byte `integer` (max about 2.1 billion).
+ * `mode: "number"` hands us a JS number; a millisecond timestamp is far below JS's safe integer limit.
+ * No foreign key: the key is derived from an IP address, not from a user.
+ */
+export const rateLimits = pgTable("rate_limits", {
+  id: id(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});

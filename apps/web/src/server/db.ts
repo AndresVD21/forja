@@ -3,6 +3,9 @@
 //   DATABASE_URL set       -> Neon (Postgres over WebSockets).
 //   unset, not production  -> PGlite saved in .data/pglite at the repo root (decision 0005).
 //   unset, production      -> error: PGlite must never serve real users.
+// A Vercel preview deployment is also NODE_ENV=production (only VERCEL_ENV says "preview"), so it takes the same
+// path: Neon's integration gives it a DATABASE_URL for its own branch, and without one it fails instead of
+// falling back to PGlite.
 //
 // The connection is opened LAZILY, on the first query, not when this file is imported. That matters because
 // `next dev` imports server modules in more than one process (a worker that only collects route information

@@ -260,6 +260,7 @@ test("a draft for another date asks: Resume keeps the draft and its date, focus 
 
   await dialog.getByRole("button", { name: "Resume draft" }).click();
   await expect(dialog).toBeHidden();
+  await expect(dateField(page)).toBeFocused();
   await expect(dateField(page)).toHaveValue(draftDate);
   await expect(page.getByLabel("Training day", { exact: true })).toHaveValue(/.+/);
   await expect(page.getByLabel("Training day", { exact: true }).locator("option:checked")).toHaveText("Chest");
@@ -274,6 +275,7 @@ test("a draft for another date asks: Discard starts a clean form on the requeste
   const dialog = page.getByRole("alertdialog", { name: "Resume your workout draft?" });
   await dialog.getByRole("button", { name: "Discard draft and start new workout" }).click();
   await expect(dialog).toBeHidden();
+  await expect(dateField(page)).toBeFocused();
   await expect(dateField(page)).toHaveValue(today);
   await expect(page.getByLabel("Training day", { exact: true })).toHaveValue("");
   await expect(page.getByRole("combobox", { name: EXERCISE_FIELD })).toHaveValue("");
@@ -287,6 +289,7 @@ test("Escape on the draft question keeps the draft", async ({ page }) => {
   await expect(page.getByRole("alertdialog", { name: "Resume your workout draft?" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expect(dateField(page)).toBeFocused();
   await expect(dateField(page)).toHaveValue(draftDate);
 });
 
@@ -371,7 +374,7 @@ test("Spanish: the dated action, the field label and the draft question", async 
   await expect(page.getByRole("heading", { level: 1, name: "Registro de entrenamiento" })).toBeVisible();
 
   await dayButton(page, today, "es").click();
-  await expect(dayButton(page, today, "es")).toHaveAccessibleName(/, seleccionado$/);
+  await expect(dayButton(page, today, "es")).toHaveAccessibleName(new RegExp(`^${dayName(today, "es")}, hoy(, tiene registros)?, seleccionado$`));
   await expect(page.getByRole("button", { name: "Quitar selección de fecha" })).toBeVisible();
   const action = page.getByRole("link", { name: `Registrar entrenamiento del ${footerDate(today, "es")}`, exact: true });
   await expect(action).toBeVisible();
@@ -398,12 +401,14 @@ test("accessibility: day buttons are at least 44 px, the selected day says so, t
     expect(box!.height, `day button ${i} height`).toBeGreaterThanOrEqual(44);
   }
 
-  // Today: aria-current="date" on exactly one day, none on the others. (Its name does not say "today".)
+  // Today: aria-current="date" on exactly one day, and the word "today" in its name, so it is not marked by colour alone.
   await expect(dayList(page).locator('[aria-current="date"]')).toHaveCount(1);
   await expect(dayButton(page, today)).toHaveAttribute("aria-current", "date");
+  await expect(dayButton(page, today)).toHaveAccessibleName(new RegExp(`^${dayName(today)}, today`));
+  await expect(dayList(page).getByRole("button", { name: /, today/ })).toHaveCount(1);
 
   await dayButton(page, today).click();
-  await expect(dayButton(page, today)).toHaveAccessibleName(new RegExp(`^${dayName(today)}(, has entries)?, selected$`));
+  await expect(dayButton(page, today)).toHaveAccessibleName(new RegExp(`^${dayName(today)}, today(, has entries)?, selected$`));
   for (const control of [page.getByRole("button", { name: "Clear date selection" }), logFor(page, today)]) {
     const box = await control.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(44);
@@ -414,4 +419,25 @@ test("accessibility: day buttons are at least 44 px, the selected day says so, t
   await page.getByRole("link", { name: "Log workout for", exact: false }).click();
   const field = await dateField(page).boundingBox();
   expect(field!.height).toBeGreaterThanOrEqual(44);
+});
+
+test("after saving a past-day workout no day stays selected and the footer is the plain Log workout", async ({ page }) => {
+  const date = uniquePastDate();
+  await openHistoryAt(page, date);
+  await logOnSelectedDay(page, date);
+  await expect(dayList(page).getByRole("button", { name: /selected/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Log workout", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Clear date selection" })).toHaveCount(0);
+});
+
+test("opening the dated action clears the selection: Back from the form shows nothing selected", async ({ page }) => {
+  const date = uniquePastDate();
+  await openHistoryAt(page, date);
+  await dayButton(page, date).click();
+  await logFor(page, date).click();
+  await expect(dateField(page)).toHaveValue(date);
+  await page.getByRole("link", { name: "Back" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Training log" })).toBeVisible();
+  await expect(dayList(page).getByRole("button", { name: /selected/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Log workout", exact: true })).toBeVisible();
 });

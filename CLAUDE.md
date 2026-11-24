@@ -14,7 +14,7 @@ React and Next.js, so **clarity beats cleverness** and every non-obvious decisio
 Milestone **M3 done and live** at https://forja-three-phi.vercel.app (Vercel + Neon, decision 0007): sign-in
 (invite-only), workout entry with to-failure sets and custom exercises, and the week history. Locally `pnpm dev`
 uses a PGlite database (`pnpm db:reset-local` rebuilds it); unit, integration and Playwright tests run in CI.
-Next: workout detail/editing, past-day logging and dumbbell wording (waiting for Codex), then M4. The owner's decisions are in
+Since then: workout detail/editing, past-day logging and dumbbell wording (decisions 0008–0010). Next: M4. The owner's decisions are in
 `docs/PLAN.md` section 7; section 8 lists what is still open — do not assume answers to those.
 The app is called **Forja**; packages use the `@forja/*` scope.
 

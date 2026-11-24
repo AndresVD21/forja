@@ -1,6 +1,6 @@
 # Forja — Project Plan
 
-> Status: **M3 done and live** at https://forja-three-phi.vercel.app (2026-11-23) — sign in (invite-only), log a workout with to-failure sets and custom exercises, and see it in the week history. Next: the owner's first findings in production (workout detail/edit, logging a past day, dumbbell wording — waiting for Codex's designs), then M4 (the 6-week plan). All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
+> Status: **M3 done and live** at https://forja-three-phi.vercel.app (2026-11-23) — sign in (invite-only), log a workout with to-failure sets and custom exercises, and see it in the week history. Since then: the owner's first findings in production are done (workout detail/edit, logging a past day, dumbbell wording — decisions 0008–0010). Next: M4 (the 6-week plan). All questions are answered (section 7); section 8 lists the assumptions still worth a glance.
 > Edit this file freely; agents treat it as the source of truth for scope and order of work.
 
 ## 1. Goals
@@ -183,7 +183,7 @@ Scope and page designs: [decision 0004](decisions/0004-m3-page-designs.md) (desi
 
 ### After M3, once designed (Codex + owner first)
 - [x] Saved-workout detail and editing ([decision 0008](decisions/0008-saved-workout-detail.md))
-- [ ] Logging a past day: visible date field and selecting a past day in the history week ([decision 0009](decisions/0009-past-day-workout.md))
+- [x] Logging a past day: visible date field and selecting a past day in the history week ([decision 0009](decisions/0009-past-day-workout.md))
 - [x] Dumbbell exercises: "Entered weight" wording ([decision 0010](decisions/0010-dumbbell-weight-copy.md))
 - [ ] Exercises and Settings tabs, gym and training-day management, manual theme switch, activity entry
 

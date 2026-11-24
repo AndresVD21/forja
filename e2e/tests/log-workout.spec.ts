@@ -84,7 +84,7 @@ test("sign in, log a workout, see it in the history, then see it as last time", 
   await expect(cards.first()).toContainText("Valle del Lili · 1 exercise · 4 sets");
   await expect(
     // The day is a button now (decision 0009); its accessible name carries the date and the dot's meaning.
-    page.getByRole("button", { name: new RegExp(`^${todayLongDate()}, has entries`) }),
+    page.getByRole("button", { name: new RegExp(`^${todayLongDate()}, today, has entries`) }),
   ).toHaveCount(1);
 
   // The next entry now takes its reference from the saved workout, at this gym.

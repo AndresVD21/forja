@@ -56,7 +56,7 @@
     "title": "Log workout",
     "date": "Workout date",
     "gym": "Gym",
-    "noGyms": "You have no gyms yet, so a workout cannot be saved.",
+    "noGyms": "There are no gyms yet. Tap \"Add a gym\" to add yours, then save the workout.",
     "trainingDay": "Training day",
     "noTrainingDay": "—",
     "exerciseName": "Exercise name",
@@ -227,7 +227,22 @@
     "draftText": "You have unsaved changes for {draftDate}. Resume that draft, or discard it and start a new workout for {newDate}.",
     "draftResume": "Resume draft",
     "draftDiscard": "Discard draft and start new workout",
-    "draftDiscarded": "Draft discarded. New workout for {date}."
+    "draftDiscarded": "Draft discarded. New workout for {date}.",
+    "addGym": {
+      "open": "Add a gym",
+      "title": "Add a gym",
+      "name": "Gym name",
+      "hint": "e.g. SmartFit Valle del Lili",
+      "add": "Add",
+      "adding": "Adding…",
+      "cancel": "Cancel",
+      "problemEmpty": "Enter the gym name.",
+      "problemTooLong": "The gym name can have at most 60 characters.",
+      "serverError": "Couldn't add the gym. Try again.",
+      "signedOut": "You were signed out. Sign in again in another tab, then tap Add: what you typed is still here.",
+      "added": "Added {name}.",
+      "existing": "{name} was already in the list; it's selected."
+    }
   },
   "SignUp": {
     "title": "Create your account",

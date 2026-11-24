@@ -56,7 +56,7 @@
     "title": "Registrar entrenamiento",
     "date": "Fecha del entrenamiento",
     "gym": "Gimnasio",
-    "noGyms": "Aún no tienes gimnasios, así que no se puede guardar un entrenamiento.",
+    "noGyms": "Aún no hay gimnasios. Toca «Agregar un gimnasio» para añadir el tuyo y luego guarda el entrenamiento.",
     "trainingDay": "Día de entrenamiento",
     "noTrainingDay": "—",
     "exerciseName": "Nombre del ejercicio",
@@ -227,7 +227,22 @@
     "draftText": "Tienes cambios sin guardar del {draftDate}. Retoma ese borrador, o descártalo e inicia un entrenamiento nuevo del {newDate}.",
     "draftResume": "Retomar borrador",
     "draftDiscard": "Descartar borrador e iniciar otro entrenamiento",
-    "draftDiscarded": "Borrador descartado. Nuevo entrenamiento del {date}."
+    "draftDiscarded": "Borrador descartado. Nuevo entrenamiento del {date}.",
+    "addGym": {
+      "open": "Agregar un gimnasio",
+      "title": "Agregar un gimnasio",
+      "name": "Nombre del gimnasio",
+      "hint": "p. ej. SmartFit Valle del Lili",
+      "add": "Agregar",
+      "adding": "Agregando…",
+      "cancel": "Cancelar",
+      "problemEmpty": "Escribe el nombre del gimnasio.",
+      "problemTooLong": "El nombre del gimnasio puede tener como máximo 60 caracteres.",
+      "serverError": "No se pudo agregar el gimnasio. Inténtalo de nuevo.",
+      "signedOut": "Se cerró tu sesión. Inicia sesión de nuevo en otra pestaña y toca Agregar: lo que escribiste sigue aquí.",
+      "added": "Se agregó {name}.",
+      "existing": "{name} ya estaba en la lista; quedó seleccionado."
+    }
   },
   "SignUp": {
     "title": "Crea tu cuenta",

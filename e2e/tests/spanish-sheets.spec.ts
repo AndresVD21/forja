@@ -6,7 +6,7 @@ import { SET_LABELS, fillSets, pickExercise } from "../support/helpers";
 // Nothing is saved, so these tests share no data with others.
 
 test("Spanish: the set details sheet", async ({ page }) => {
-  await openEntry(page, "Hacienda", "es");
+  await openEntry(page, "SmartFit Hacienda", "es");
   await pickExercise(page, "press inclinado", "Press inclinado con barra");
   await fillSets(page, [["20", "10"], ["25", "8"]], "es");
   const exercise = "Press inclinado con barra";
@@ -52,7 +52,7 @@ test("Spanish: the set details sheet", async ({ page }) => {
 });
 
 test("Spanish: the custom exercise sheet", async ({ page }) => {
-  await openEntry(page, "Hacienda", "es");
+  await openEntry(page, "SmartFit Hacienda", "es");
   const name = uniqueName("es");
   await page.getByRole("combobox", { name: "Nombre del ejercicio" }).fill(name);
   await page.getByRole("option", { name: `Usar “${name}”` }).click();

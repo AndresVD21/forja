@@ -81,7 +81,7 @@ test.describe("set details sheet", () => {
 
     // Persistence, end to end: a new entry (full load) asks the server what it stored for this exercise.
     await page.goto("/workouts/new");
-    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
     const sets = await readLastTimeSets(page, () => pickExercise(page, name, name));
     expect(sets.map((s) => s.toFailure)).toEqual([false, true, false]);
     expect(sets.map((s) => s.reps)).toEqual([10, 8, 6]);
@@ -138,7 +138,7 @@ test.describe("set details sheet", () => {
     await expect(workoutCards(page, /.*/).filter({ hasText: "1 exercise · 2 sets" }).first()).toBeVisible();
 
     await page.goto("/workouts/new");
-    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+    await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
     const sets = await readLastTimeSets(page, () => pickExercise(page, name, name));
     expect(sets).toHaveLength(2);
     expect(sets.every((s) => s.toFailure)).toBe(true);
@@ -278,7 +278,7 @@ test.describe("set details sheet", () => {
       await expect(page).toHaveURL(/\/\?week=\d{4}-\d{2}-\d{2}$/);
 
       await page.goto("/workouts/new");
-      await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+      await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
       const sets = await readLastTimeSets(page, () => pickExercise(page, name, name));
       expect(sets.map((s) => s.weight)).toEqual([
         { value: 20, unit: "kg" },
@@ -351,7 +351,7 @@ test.describe("set details sheet", () => {
       await expect(page).toHaveURL(/\/\?week=\d{4}-\d{2}-\d{2}$/);
 
       await page.goto("/workouts/new");
-      await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+      await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
       const sets = await readLastTimeSets(page, () => pickExercise(page, name, name));
       expect(sets.map((s) => s.reps)).toEqual([10, 8]);
     });

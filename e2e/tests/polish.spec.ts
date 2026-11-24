@@ -186,7 +186,7 @@ test.describe("a blocked Save moves focus to the first problem and counts the pr
   });
 
   test("es: the count is a Spanish plural", async ({ page }) => {
-    await openEntry(page, "Valle del Lili", "es");
+    await openEntry(page, "SmartFit Valle del Lili", "es");
     await page.getByRole("button", { name: "Guardar entrenamiento" }).click();
     await expect(page.getByRole("main").locator("p").filter({ hasText: "2 problemas por corregir antes de guardar." })).toBeVisible();
     await expect(page.getByRole("combobox", { name: "Nombre del ejercicio" })).toBeFocused();

@@ -31,7 +31,7 @@ test("open from a past week: the detail shows date, gym, day and every set with 
   await page.goto(`/?week=${w.week}`);
   const card = historyCard(page, w.date, w.gym);
   await expect(card).toContainText("Chest");
-  await expect(card).toContainText("Valle del Lili · 1 exercise · 3 sets");
+  await expect(card).toContainText("SmartFit Valle del Lili · 1 exercise · 3 sets");
   await card.click();
 
   await expect(page).toHaveURL(new RegExp(`/workouts/${w.id}\\?week=${w.week}$`));
@@ -40,7 +40,7 @@ test("open from a past week: the detail shows date, gym, day and every set with 
     new Date(`${w.date}T00:00:00Z`),
   );
   await expect(page.getByText(longDate, { exact: true })).toBeVisible();
-  await expect(page.getByText("Valle del Lili", { exact: true })).toBeVisible();
+  await expect(page.getByText("SmartFit Valle del Lili", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: w.name })).toBeVisible();
 
   // Each set has its own row and its own unit; the barbell weights are marked per side.
@@ -421,12 +421,12 @@ test("a workout moved to another gym follows the new gym in the history", async 
   const w = await logWorkout(page);
   await openDetail(page, w);
   await openEdit(page);
-  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Hacienda" });
+  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Hacienda" });
   await page.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.locator("p", { hasText: /^Hacienda$/ })).toBeVisible();
+  await expect(page.locator("p", { hasText: /^SmartFit Hacienda$/ })).toBeVisible();
   await page.goto(`/?week=${w.week}`);
-  await expect(historyCard(page, w.date, "Hacienda")).toHaveCount(1);
-  await expect(historyCard(page, w.date, "Valle del Lili")).toHaveCount(0);
+  await expect(historyCard(page, w.date, "SmartFit Hacienda")).toHaveCount(1);
+  await expect(historyCard(page, w.date, "SmartFit Valle del Lili")).toHaveCount(0);
 });
 
 test("Spanish: the detail, the editor's save and the delete dialog", async ({ page, browser }) => {
@@ -440,7 +440,7 @@ test("Spanish: the detail, the editor's save and the delete dialog", async ({ pa
     await expect(p.getByRole("heading", { level: 1, name: "Registro de entrenamiento" })).toBeVisible();
 
     await p.goto(`/?week=${w.week}`);
-    await p.getByRole("link").filter({ hasText: "Valle del Lili · 1 ejercicio · 3 series" }).filter({ hasText: "Pecho" }).first().click();
+    await p.getByRole("link").filter({ hasText: "SmartFit Valle del Lili · 1 ejercicio · 3 series" }).filter({ hasText: "Pecho" }).first().click();
     await expect(p).toHaveURL(new RegExp(`/workouts/${w.id}\\?week=${w.week}$`));
     await expect(p.getByRole("heading", { level: 1, name: "Pecho" })).toBeVisible();
     await expect(p.getByRole("link", { name: "Volver al historial" })).toBeVisible();

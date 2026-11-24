@@ -45,7 +45,7 @@ async function openHistoryAt(page: Page, iso: string | null) {
 /** A minimal valid workout in the open entry form: its own exercise, one set. */
 async function fillMinimal(page: Page, label: string) {
   // The form opens on the user's first gym; the history helpers look for cards of this one.
-  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "Valle del Lili" });
+  await page.getByLabel("Gym", { exact: true }).selectOption({ label: "SmartFit Valle del Lili" });
   await createExerciseThroughSheet(page, uniqueName(label));
   await fillSets(page, [["20", "10"]]);
 }
@@ -366,7 +366,7 @@ test("a failed save keeps the selected date and everything entered, and a retry 
 test("Spanish: the dated action, the field label and the draft question", async ({ page }) => {
   const today = todayIso();
   const draftDate = uniquePastDate();
-  await openEntry(page, "Valle del Lili", "es");
+  await openEntry(page, "SmartFit Valle del Lili", "es");
   await expect(dateField(page, "es")).toHaveValue(today);
   await dateField(page, "es").fill(draftDate);
   await page.getByLabel("Día de entrenamiento", { exact: true }).selectOption({ index: 1 });

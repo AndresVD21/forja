@@ -15,4 +15,19 @@ describe("mergeGyms", () => {
   it("returns the server list when nothing was added", () => {
     expect(mergeGyms([a], [])).toEqual([a]);
   });
+  it("ignores an added gym the server list already has, keeping the server's order and object", () => {
+    const fresh = { id: "a", name: "SmartFit A (renamed)" };
+    expect(mergeGyms([b, a], [fresh])).toEqual([b, a]);
+  });
+  it("handles two empty lists and an empty server list", () => {
+    expect(mergeGyms([], [])).toEqual([]);
+    expect(mergeGyms([], [a, b])).toEqual([a, b]);
+  });
+  it("does not change its inputs", () => {
+    const server = [a];
+    const added = [b];
+    mergeGyms(server, added);
+    expect(server).toEqual([a]);
+    expect(added).toEqual([b]);
+  });
 });

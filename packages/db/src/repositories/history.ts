@@ -91,7 +91,7 @@ export function historyRepository(db: Database) {
      */
     async lastFor(userId: string, exerciseId: string, locationId: string): Promise<LastFor | undefined> {
       await requireExercises(db, userId, [exerciseId]);
-      await requireLocation(db, userId, locationId);
+      await requireLocation(db, locationId);
 
       const here = await latestWorkout(db, userId, exerciseId, locationId);
       if (here) return workoutResult(here, true);

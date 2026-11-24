@@ -5,7 +5,7 @@ import { count, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ReferenceWeightsSchema, seedUserData } from "../seed/user";
 import {
-  activities, exerciseAliases, exercises, locations, planExercises, planTargets, planWeeks, plans, referenceWeights,
+  activities, exerciseAliases, exercises, planExercises, planTargets, planWeeks, plans, referenceWeights,
   trainingDays, users, workoutSets, workouts,
 } from "../schema";
 import { dbFailureOf, kg, lb, type World } from "./spec-utils";
@@ -16,7 +16,7 @@ beforeEach(async () => {
   t = await setup();
 });
 
-type UserOwned = typeof locations | typeof trainingDays | typeof activities | typeof plans | typeof workouts | typeof referenceWeights;
+type UserOwned = typeof trainingDays | typeof activities | typeof plans | typeof workouts | typeof referenceWeights;
 const total = async (table: UserOwned, userId: string) =>
   (await t.db.select({ n: count() }).from(table).where(eq(table.userId, userId)))[0]!.n;
 
@@ -59,7 +59,7 @@ describe("users.deleteAccount", () => {
     await t.repos.users.deleteAccount(t.userA);
 
     expect(await t.db.select().from(users).where(eq(users.id, t.userA))).toEqual([]);
-    for (const table of [locations, trainingDays, activities, plans, workouts, referenceWeights]) {
+    for (const table of [trainingDays, activities, plans, workouts, referenceWeights]) {
       expect(await total(table, t.userA), "rows left for A").toBe(0);
     }
     expect(await t.db.select().from(exercises).where(eq(exercises.userId, t.userA))).toEqual([]);
@@ -173,11 +173,12 @@ describe("seedUserData with names the user already has", () => {
   });
 
   it("reference weights for a gym the user logged as 'hacienda' attach to that gym", async () => {
-    const mine = await t.repos.locations.findOrCreate(t.userA, "hacienda");
+    const mine = await t.repos.locations.findOrCreate(t.userA, "smartfit hacienda");
+    expect(mine.created).toBe(false); // the shared catalogue gym, found by its normalised name
     await seedUserData(t.db, t.userA, data());
     const rows = await t.db.select().from(referenceWeights).where(eq(referenceWeights.userId, t.userA));
     expect(rows.some((r) => r.locationId === mine.id)).toBe(true);
-    expect(await t.repos.locations.list(t.userA)).toHaveLength(catalogue.locations.length);
+    expect(await t.repos.locations.list()).toHaveLength(catalogue.locations.length);
   });
 });
 

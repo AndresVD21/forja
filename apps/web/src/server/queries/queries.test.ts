@@ -65,7 +65,10 @@ describe("loadWeek", () => {
 describe("loadEntryFormData", () => {
   it("gives the user's gyms and days, the last used gym, and every visible exercise with aliases", async () => {
     const data = await loadEntryFormData(t.db, t.userA);
-    expect(data.locations.map((l) => l.name)).toEqual(["Hacienda"]);
+    // Every shared gym, with the one this user trained at most recently first.
+    expect(data.locations[0]!.name).toBe("Hacienda");
+    expect(data.locations.map((l) => l.name)).toContain("Secret gym");
+    expect(data.locations).toHaveLength((await t.repos.locations.list()).length);
     expect(data.trainingDays).toEqual([expect.objectContaining({ name: "Pecho", catalogKey: "chest" })]);
     expect(data.defaultLocationId).toBe(gymA);
     expect(data.exercises).toHaveLength(30);

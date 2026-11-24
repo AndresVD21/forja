@@ -41,7 +41,7 @@ export function toEntryExercise(e: ExerciseWithAliases): EntryExercise {
 export async function loadEntryFormData(db: Database, userId: string): Promise<EntryFormData> {
   const repos = createRepositories(db);
   const [locations, trainingDays, lastUsed, exercises] = await Promise.all([
-    repos.locations.list(userId),
+    repos.locations.listForUser(userId),
     repos.trainingDays.list(userId),
     repos.locations.lastUsed(userId),
     repos.exercises.listWithAliases(userId),

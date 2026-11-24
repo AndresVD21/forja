@@ -2,7 +2,7 @@ import { defaultWeightStep, LoadModeSchema, normalizeName, UnitSchema } from "@f
 import { isNull } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "../client";
-import { exerciseAliases, exercises } from "../schema";
+import { exerciseAliases, exercises, locations } from "../schema";
 
 // Only the parts of docs/sample-data/exercise-catalog.json that the app uses. Zod objects ignore
 // unknown keys by default (e.g. "confirm", "notation"), so notes in the file do not break parsing.
@@ -30,7 +30,7 @@ export const CatalogueSchema = z.object({
 export type Catalogue = z.infer<typeof CatalogueSchema>;
 
 /**
- * Upserts the shared catalogue (exercises with user_id NULL) and their aliases.
+ * Upserts the shared catalogue (exercises with user_id NULL, their aliases, and the shared gyms).
  * Idempotent: "upsert" = insert, or update if the row already exists, so running it twice
  * leaves the same rows. Everything runs in one transaction: either the whole catalogue lands or nothing.
  */
@@ -38,6 +38,16 @@ export async function seedCatalogue(db: Database, catalogue: Catalogue): Promise
   const { unit, bar_weight_kg } = catalogue.defaults;
 
   await db.transaction(async (tx) => {
+    // Shared gyms. DO NOTHING on a name that already exists (any spelling that normalises the same), so a gym a
+    // user added, or one renamed since, is never overwritten; created_by stays NULL = "from the catalogue".
+    const gyms = new Map(catalogue.locations.map((name) => [normalizeName(name), name]));
+    if (gyms.size > 0) {
+      await tx
+        .insert(locations)
+        .values([...gyms].map(([nameKey, name]) => ({ name, nameKey })))
+        .onConflictDoNothing({ target: locations.nameKey });
+    }
+
     for (const item of catalogue.exercises) {
       const perSide = item.load_mode === "per_side";
       const values = {

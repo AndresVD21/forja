@@ -32,7 +32,7 @@ export async function loadWeek(db: Database, userId: string, start: IsoDate): Pr
   const [workouts, activities, locations, trainingDays] = await Promise.all([
     repos.workouts.listForUser(userId, range),
     repos.activities.listForUser(userId, range),
-    repos.locations.list(userId),
+    repos.locations.list(),
     repos.trainingDays.list(userId),
   ]);
   const locationName = new Map(locations.map((l) => [l.id, l.name]));

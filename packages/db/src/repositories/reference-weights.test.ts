@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { expectNotFound, setup } from "./test-utils";
+import { expectNotFound, MISSING_ID, setup } from "./test-utils";
 
 let t: Awaited<ReturnType<typeof setup>>;
 beforeAll(async () => {
@@ -19,12 +19,13 @@ describe("referenceWeights", () => {
     expect(list.every((r) => r.weight.value === 22.5 && r.note === "felt easy" && r.source === null)).toBe(true);
   });
 
-  it("user B sees none of A's and cannot point at A's location or custom exercise", async () => {
+  it("user B sees none of A's weights and cannot point at A's custom exercise; gyms are shared so any gym is fine", async () => {
     expect(await t.repos.referenceWeights.list(t.userB)).toEqual([]);
     const exerciseId = await t.exerciseId("incline-barbell-press");
-    const [aLocation] = await t.repos.locations.list(t.userA);
+    const [gym] = await t.repos.locations.list();
+    await t.repos.referenceWeights.upsert(t.userB, { exerciseId, locationId: gym!.id, weight: { value: 1, unit: "kg" } }); // shared gym: allowed
     await expectNotFound(
-      t.repos.referenceWeights.upsert(t.userB, { exerciseId, locationId: aLocation!.id, weight: { value: 1, unit: "kg" } }),
+      t.repos.referenceWeights.upsert(t.userB, { exerciseId, locationId: MISSING_ID, weight: { value: 1, unit: "kg" } }),
       "location",
     );
     const { exercise } = await t.repos.exercises.create(t.userA, {

@@ -20,11 +20,23 @@ const userId = () =>
     .notNull()
     .references(() => users.id, { onDelete: "cascade" });
 
+// Gyms are ONE shared list for every user (decision 0011), like catalogue exercises: there is no owner.
+// Which gyms a user trained at is derived from their own workouts, so history stays per user (rule 11).
 export const locations = pgTable(
   "locations",
-  { id: id(), userId: userId(), name: text("name").notNull(), createdAt: createdAt() },
-  // The unique index starts with user_id, so it doubles as the "my locations" index.
-  (t) => [unique("locations_user_name_unique").on(t.userId, t.name)],
+  {
+    id: id(),
+    // Who added the gym. Audit only: never used to filter or authorise. set null: if that account is deleted
+    // the gym stays, because other people's workouts point at it.
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    // As typed (kept for display)...
+    name: text("name").notNull(),
+    // ...and the form used for uniqueness: core's normalizeName(name), computed in TypeScript on every insert
+    // (same idea as exercise_aliases.alias_normalized), so "smartfit  VALLE del lili" cannot be added twice.
+    nameKey: text("name_key").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("locations_name_key_unique").on(t.nameKey)],
 );
 
 export const trainingDays = pgTable(

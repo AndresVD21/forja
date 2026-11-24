@@ -18,7 +18,7 @@ beforeEach(async () => {
   t = await setupDb();
   gymA = (await t.repos.locations.findOrCreate(t.userA, "Hacienda")).id;
   gymA2 = (await t.repos.locations.findOrCreate(t.userA, "Valle")).id;
-  gymB = (await t.repos.locations.findOrCreate(t.userB, "Other gym")).id;
+  gymB = "00000000-0000-4000-8000-000000000000"; // gyms are shared now, so "another user's gym" no longer exists: an unknown id is the refusal case
   dayA = (await t.repos.trainingDays.create(t.userA, { name: "Pecho" })).id;
 });
 

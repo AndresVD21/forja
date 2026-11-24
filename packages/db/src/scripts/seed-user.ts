@@ -26,5 +26,5 @@ const catalogue = CatalogueSchema.parse(await readJson("exercise-catalog.json"))
 const referenceWeights = ReferenceWeightsSchema.parse(await readJson("reference-weights.json"));
 
 await seedUserData(db, user.id, { catalogue, referenceWeights });
-console.log(`Seeded ${email}: ${catalogue.locations.length} locations, ${catalogue.training_days.length} training days, ${referenceWeights.entries.length} reference weights.`);
+console.log(`Seeded ${email}: ${catalogue.training_days.length} training days, ${referenceWeights.entries.length} reference weights.`);
 await target.close();

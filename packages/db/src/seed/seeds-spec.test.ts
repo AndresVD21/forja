@@ -86,18 +86,18 @@ describe("seedUserData with the real files", () => {
     expect(refs).toHaveLength(99);
     expect(data.referenceWeights.entries).toHaveLength(99);
     expect(refs.filter((r) => r.locationId === null)).toHaveLength(data.referenceWeights.entries.filter((e) => e.location === null).length);
-    expect((await t.db.select({ n: count() }).from(locations).where(eq(locations.userId, t.userA)))[0]!.n).toBe(5);
+    expect((await t.db.select({ n: count() }).from(locations))[0]!.n).toBe(5); // shared gyms, seeded with the catalogue
     expect((await t.db.select({ n: count() }).from(trainingDays).where(eq(trainingDays.userId, t.userA)))[0]!.n).toBe(4);
   });
 
   it("every entry of the file landed with its own weight, unit, note and source, at the right exercise and gym", async () => {
     const refs = await t.repos.referenceWeights.list(t.userA);
-    const gyms = new Map((await t.repos.locations.list(t.userA)).map((l) => [l.id, l.name]));
+    const gyms = new Map((await t.repos.locations.list()).map((l) => [l.id, l.name]));
     const slugs = new Map((await t.db.select({ id: exercises.id, slug: exercises.slug }).from(exercises)).map((e) => [e.id, e.slug]));
     const key = (slug: string | undefined, gym: string | null | undefined, w: number, unit: string, source: string | null | undefined) =>
       `${slug}|${gym ?? "-"}|${w}|${unit}|${source ?? ""}`;
     const stored = refs.map((r) => key(slugs.get(r.exerciseId), r.locationId && gyms.get(r.locationId), r.weight.value, r.weight.unit, r.source)).sort();
-    const expected = data.referenceWeights.entries.map((e) => key(e.exercise, e.location, e.weight, e.unit, e.source)).sort();
+    const expected = data.referenceWeights.entries.map((e) => key(e.exercise, e.location && `SmartFit ${e.location}`, e.weight, e.unit, e.source)).sort();
     expect(stored).toEqual(expected);
   });
 
@@ -118,7 +118,7 @@ describe("seedUserData with the real files", () => {
     const after = await t.repos.referenceWeights.list(t.userA);
     expect(after).toHaveLength(99);
     expect(after.find((r) => r.id === first!.id)!.weight).toEqual({ value: 1.25, unit: "lb" });
-    expect((await t.db.select({ n: count() }).from(locations).where(eq(locations.userId, t.userA)))[0]!.n).toBe(5);
+    expect((await t.db.select({ n: count() }).from(locations))[0]!.n).toBe(5); // shared gyms, seeded with the catalogue
     expect((await t.db.select({ n: count() }).from(trainingDays).where(eq(trainingDays.userId, t.userA)))[0]!.n).toBe(4);
   });
 
@@ -126,16 +126,15 @@ describe("seedUserData with the real files", () => {
     await seedUserData(t.db, t.userB, data);
     expect(await t.repos.referenceWeights.list(t.userB)).toHaveLength(99);
     expect(await t.repos.referenceWeights.list(t.userA)).toHaveLength(99);
-    const aIds = new Set((await t.repos.locations.list(t.userA)).map((l) => l.id));
-    expect((await t.repos.locations.list(t.userB)).some((l) => aIds.has(l.id))).toBe(false);
+    expect((await t.db.select({ n: count() }).from(locations))[0]!.n).toBe(5); // gyms are shared: still the same five
   });
 
-  it("fails loudly on an unknown slug or location, and rolls back the gyms and days it had inserted", async () => {
+  it("fails loudly on an unknown slug or location, and rolls back the days it had inserted", async () => {
     const [u] = await t.db.insert((await import("../schema")).users).values({ name: "C", email: "c@example.com" }).returning();
     const entry = data.referenceWeights.entries[0]!;
     await expect(seedUserData(t.db, u!.id, { ...data, referenceWeights: { entries: [{ ...entry, exercise: "typo-press" }] } })).rejects.toThrow(/typo-press/);
     await expect(seedUserData(t.db, u!.id, { ...data, referenceWeights: { entries: [{ ...entry, location: "Atlantis" }] } })).rejects.toThrow(/Atlantis/);
-    for (const table of [locations, trainingDays, referenceWeights]) {
+    for (const table of [trainingDays, referenceWeights]) {
       expect((await t.db.select({ n: count() }).from(table).where(eq(table.userId, u!.id)))[0]!.n).toBe(0);
     }
   });
@@ -147,12 +146,14 @@ describe("seedUserData with the real files", () => {
     expect(await t.repos.referenceWeights.list(u!.id)).toHaveLength(1);
   });
 
-  it("seeding a user who already logged a gym as 'hacienda' must not create a second 'Hacienda'", async () => {
+  it("a user adding 'smartfit hacienda' gets the shared gym, and the old short name in the file maps to it", async () => {
     const [u] = await t.db.insert((await import("../schema")).users).values({ name: "E", email: "e@example.com" }).returning();
-    await t.repos.locations.findOrCreate(u!.id, "hacienda");
-    await seedUserData(t.db, u!.id, data);
-    const names = (await t.repos.locations.list(u!.id)).map((l) => l.name.toLowerCase());
-    expect(names.filter((n) => n === "hacienda")).toHaveLength(1);
+    const shared = await t.repos.locations.findOrCreate(u!.id, "smartfit hacienda");
+    expect(shared.created).toBe(false);
+    await seedUserData(t.db, u!.id, data); // the file still says "Hacienda"
+    const refs = await t.repos.referenceWeights.list(u!.id);
+    expect(refs.some((r) => r.locationId === shared.id)).toBe(true);
+    expect((await t.repos.locations.list()).filter((l) => /hacienda/i.test(l.name))).toHaveLength(1);
   });
 
   it("file entries and the catalogue agree: every gym and slug used exists (guards the sample data)", () => {
@@ -160,7 +161,7 @@ describe("seedUserData with the real files", () => {
     const gyms = new Set(catalogue.locations);
     for (const e of data.referenceWeights.entries) {
       expect(slugs.has(e.exercise), e.exercise).toBe(true);
-      if (e.location !== null) expect(gyms.has(e.location), e.location).toBe(true);
+      if (e.location !== null) expect(gyms.has(e.location) || gyms.has(`SmartFit ${e.location}`), e.location).toBe(true); // the file uses the old short names
     }
   });
 });

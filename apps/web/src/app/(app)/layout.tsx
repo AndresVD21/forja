@@ -1,3 +1,4 @@
+import { Announcement, AnnouncerProvider } from "@/components/announcer";
 import { AppHeader } from "@/components/app-header";
 import { TimeZoneSync } from "@/components/time-zone-sync";
 
@@ -7,8 +8,12 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-4 sm:px-6">
       <TimeZoneSync />
-      <AppHeader />
-      <main className="flex flex-1 flex-col gap-4">{children}</main>
+      {/* The provider keeps "Changes saved." / "Workout deleted." alive across the page change that follows. */}
+      <AnnouncerProvider>
+        <AppHeader />
+        <Announcement />
+        <main className="flex flex-1 flex-col gap-4">{children}</main>
+      </AnnouncerProvider>
     </div>
   );
 }

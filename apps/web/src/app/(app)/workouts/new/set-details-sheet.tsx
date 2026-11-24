@@ -18,6 +18,8 @@ type Props = {
   /** The row's current draft values; the sheet always shows these, so it cannot go stale. */
   set: SetDraft;
   perSide: boolean;
+  /** True in the saved-workout editor: the footer note names "Save changes" instead of "Save workout". */
+  editing: boolean;
   onToFailureChange: (toFailure: boolean) => void;
   onApplyUnit: (unit: Unit, mode: UnitChangeMode) => void;
   onDelete: () => void;
@@ -35,6 +37,7 @@ export function SetDetailsSheet({
   number,
   set,
   perSide,
+  editing,
   onToFailureChange,
   onApplyUnit,
   onDelete,
@@ -115,7 +118,7 @@ export function SetDetailsSheet({
               </Button>
             </div>
           )}
-          <p className="text-center text-sm text-muted">{pendingUnit ? t("sheet.previewNote") : t("sheet.draftNote")}</p>
+          <p className="text-center text-sm text-muted">{pendingUnit ? t("sheet.previewNote") : t(editing ? "sheet.draftNoteEdit" : "sheet.draftNote")}</p>
         </div>
       }
     >

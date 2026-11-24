@@ -122,7 +122,8 @@
       "convertOutOfRange": "El peso convertido quedaría fuera del rango permitido.",
       "apply": "Aplicar cambio de unidad",
       "cancel": "Cancelar cambio de unidad",
-      "previewNote": "El entrenamiento aún no está guardado."
+      "previewNote": "El entrenamiento aún no está guardado.",
+      "draftNoteEdit": "Los cambios quedan en este borrador hasta Guardar cambios."
     },
     "useName": "Usar “{name}”",
     "useNameHelp": "Guardar como ejercicio nuevo para futuros entrenamientos",
@@ -195,6 +196,22 @@
       "signed_out": "Se cerró tu sesión. Inicia sesión de nuevo en otra pestaña y toca Guardar: tu entrenamiento sigue aquí.",
       "server_error": "No se pudo cargar el resultado anterior.",
       "save_failed": "No se pudo guardar el entrenamiento. Tus datos siguen aquí: inténtalo de nuevo."
+    },
+    "editTitle": "Editar entrenamiento",
+    "saveChanges": "Guardar cambios",
+    "cancelEdit": "Cancelar",
+    "changesSaved": "Cambios guardados.",
+    "discardTitle": "¿Descartar los cambios?",
+    "discardText": "Tus cambios en este entrenamiento no se han guardado.",
+    "keepEditing": "Seguir editando",
+    "discard": "Descartar cambios",
+    "reloadSaved": "Cargar la versión guardada",
+    "editErrors": {
+      "invalid_input": "Algo del entrenamiento no es válido. Revisa la fecha y las series e inténtalo de nuevo.",
+      "not_found": "No se encontró el entrenamiento, el gimnasio, el día de entrenamiento o algún ejercicio. Recarga la página e inténtalo de nuevo.",
+      "signed_out": "Se cerró tu sesión. Inicia sesión de nuevo en otra pestaña y toca Guardar cambios: tus ediciones siguen aquí.",
+      "stale": "Este entrenamiento se cambió en otro lugar. Carga la versión guardada para verlo; tus ediciones aquí se descartarán.",
+      "save_failed": "No se pudieron guardar los cambios. Tus ediciones siguen aquí: inténtalo de nuevo."
     }
   },
   "SignUp": {
@@ -218,5 +235,35 @@
     "invalidInvite": "Este enlace de invitación no es válido, ha caducado o ya se usó. Pide uno nuevo.",
     "signInLink": "Ir a iniciar sesión",
     "signInInstead": "Iniciar sesión"
+  },
+  "Detail": {
+    "backToHistory": "Volver al historial",
+    "options": "Opciones del entrenamiento",
+    "edit": "Editar entrenamiento",
+    "notes": "Notas",
+    "note": "Nota: {note}",
+    "colSet": "Serie",
+    "colWeight": "Peso",
+    "colReps": "Reps",
+    "setsFor": "Series de {exercise}",
+    "weight": "{value} {unit}",
+    "weightPerSide": "{value} {unit} / lado",
+    "failure": "Fallo",
+    "deleteWorkout": "Eliminar entrenamiento",
+    "deleteTitle": "¿Eliminar el entrenamiento?",
+    "deleteContext": "Se eliminarán {workout} del {date} y todas sus series.",
+    "cancel": "Cancelar",
+    "deleting": "Eliminando…",
+    "deleted": "Entrenamiento eliminado.",
+    "reload": "Recargar",
+    "deleteErrors": {
+      "stale": "Este entrenamiento se cambió en otro lugar. Recarga para ver la última versión.",
+      "not_found": "Este entrenamiento ya no existe. Vuelve al historial.",
+      "signed_out": "Se cerró tu sesión. Inicia sesión de nuevo en otra pestaña e inténtalo otra vez.",
+      "delete_failed": "No se pudo eliminar el entrenamiento. Inténtalo de nuevo."
+    },
+    "notFoundTitle": "Entrenamiento no encontrado",
+    "notFoundText": "Puede que se haya eliminado, o que no exista.",
+    "workoutFallback": "Entrenamiento"
   }
 }

@@ -2,28 +2,46 @@
 // Client Component: the whole form is a draft that changes as the user types, and Save calls a server action.
 
 import { IsoDateSchema } from "@forja/core";
-import { Plus } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import { useMessages, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { useAnnounce } from "@/components/announcer";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { translatedOrTyped } from "@/i18n/labels";
 import type { EntryExercise, EntryFormData } from "@/server/queries";
-import type { ErrorCode } from "@/server/workout-actions";
+import type { ErrorCode, UpdateErrorCode } from "@/server/workout-actions";
+import { updateWorkout } from "../[id]/actions";
 import { saveWorkout } from "./actions";
 import { checkExercise, hasProblems, newExercise, toSaveExercises, type ExerciseDraft } from "./draft";
 import { ExerciseCard } from "./exercise-card";
+import { isDraftUnchanged, type SavedWorkoutDraft } from "./saved-draft";
 
-type Props = { data: EntryFormData; today: string };
+/** Present = the form edits a saved workout (decision 0008); absent = it logs a new one. */
+export type SavedMode = {
+  id: string;
+  /** The version the draft was loaded from; sent back so the server can refuse a stale overwrite. */
+  version: number;
+  initial: SavedWorkoutDraft;
+  /** The detail page to return to (it carries the history week). */
+  detailHref: string;
+};
 
-export function WorkoutForm({ data, today }: Props) {
+type Props = { data: EntryFormData; today: string; saved?: SavedMode };
+
+export function WorkoutForm({ data, today, saved }: Props) {
   // Next 16 (Cache Components) keeps a visited page hidden and restores its React state on a client-side return
   // (docs: preserving-ui-state.md). After a successful save the draft is finished, so we remount the form body
   // with a new key (the guide's "reset state with a key" pattern): every draft, sheet, announcement and pending
   // flag starts fresh, and the date field shows `today` again. A full page reload would also work but throws
   // away the whole client cache for no reason.
+  // Editing a saved workout uses the same key for "Discard changes": the preserved editor must not show the
+  // discarded draft next time. After a successful SAVE the editor is not reset here (it would flash the old
+  // values before the navigation); the edit page keys this component by workout version instead, so the
+  // refreshed server data remounts it with the saved values and the new version.
   // NOTE: leaving WITHOUT saving and coming back by a link still restores the unsaved draft. That is on purpose
   // for now; whether it should be kept is a product question for the owner.
   const [generation, setGeneration] = useState(0);
@@ -35,6 +53,7 @@ export function WorkoutForm({ data, today }: Props) {
       key={generation}
       data={data}
       today={today}
+      saved={saved}
       knownExercises={knownExercises}
       onExercisesChange={setKnownExercises}
       onSaved={() => setGeneration((g) => g + 1)}
@@ -48,29 +67,61 @@ type BodyProps = Props & {
   onSaved: () => void;
 };
 
-function WorkoutFormBody({ data, today, knownExercises, onExercisesChange, onSaved }: BodyProps) {
+function WorkoutFormBody({ data, today, saved, knownExercises, onExercisesChange, onSaved }: BodyProps) {
   const t = useTranslations("Entry");
   const router = useRouter();
+  const announce = useAnnounce();
   const dateId = useId();
   const messages = useMessages();
 
-  const [date, setDate] = useState(today);
-  const [locationId, setLocationId] = useState(data.defaultLocationId ?? data.locations[0]?.id ?? "");
-  const [trainingDayId, setTrainingDayId] = useState("");
-  const [exercises, setExercises] = useState<ExerciseDraft[]>([newExercise(1)]);
-  const nextKey = useRef(2);
+  // A saved workout starts from its own values; a new one from today, the last used gym and one empty card.
+  const start = saved?.initial.draft;
+  const [date, setDate] = useState(start?.date ?? today);
+  const [locationId, setLocationId] = useState(start?.locationId ?? data.defaultLocationId ?? data.locations[0]?.id ?? "");
+  const [trainingDayId, setTrainingDayId] = useState(start?.trainingDayId ?? "");
+  const [exercises, setExercises] = useState<ExerciseDraft[]>(start?.exercises ?? [newExercise(1)]);
+  const nextKey = useRef(saved?.initial.nextExerciseKey ?? 2);
   // Keys of cards added after the first render: they take focus; the first card must not on page load.
   const [focusKeys, setFocusKeys] = useState<number[]>([]);
 
   const [attempted, setAttempted] = useState(false); // problems are shown only after a Save attempt
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<ErrorCode | null>(null);
+  const [saveError, setSaveError] = useState<ErrorCode | UpdateErrorCode | null>(null);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [reloading, startReload] = useTransition();
+  const cancelButton = useRef<HTMLButtonElement>(null);
 
   // Derived from the draft on every render, so a message disappears as soon as the user fixes the problem.
   const dateProblem = !IsoDateSchema.safeParse(date).success || date > today;
   const gymProblem = locationId === "";
   const exerciseProblems = exercises.map(checkExercise);
   const canSave = !dateProblem && !gymProblem && !exerciseProblems.some(hasProblems);
+
+  // Edit mode only: does the draft differ from what was loaded? (pure function, tested in saved-draft.test.ts)
+  const changed =
+    saved !== undefined &&
+    !isDraftUnchanged(saved.initial.draft, { date, locationId, trainingDayId, exercises });
+
+  // Closing or reloading the tab with unsaved edits: the browser shows its own generic prompt (the text cannot
+  // be customised). The in-app Cancel control has its own dialog. Back/forward buttons cannot be intercepted
+  // reliably in the App Router, so they are not covered.
+  useEffect(() => {
+    if (!changed || saving) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [changed, saving]);
+
+  function handleCancel() {
+    if (saved && changed) setDiscardOpen(true);
+    else if (saved) router.push(saved.detailHref);
+  }
+
+  function handleDiscard() {
+    if (!saved) return;
+    onSaved(); // same reset as after a save: the preserved editor starts clean next time
+    router.push(saved.detailHref);
+  }
 
   function updateExercise(next: ExerciseDraft) {
     setExercises((all) => all.map((e) => (e.key === next.key ? next : e)));
@@ -82,6 +133,27 @@ function WorkoutFormBody({ data, today, knownExercises, onExercisesChange, onSav
     if (!canSave) return;
     setSaving(true);
     try {
+      if (saved) {
+        const result = await updateWorkout({
+          id: saved.id,
+          expectedVersion: saved.version,
+          performedOn: date,
+          locationId,
+          trainingDayId: trainingDayId || null,
+          // The form has no field for the workout notes yet: they go back exactly as loaded.
+          notes: saved.initial.notes,
+          exercises: toSaveExercises(exercises),
+        });
+        if (result.ok) {
+          // `saving` stays true on purpose: the button stays off until the detail page replaces this one.
+          announce(t("changesSaved"));
+          router.push(saved.detailHref);
+          return;
+        }
+        setSaveError(result.error);
+        setSaving(false);
+        return;
+      }
       const result = await saveWorkout({
         performedOn: date,
         locationId,
@@ -104,6 +176,22 @@ function WorkoutFormBody({ data, today, knownExercises, onExercisesChange, onSav
 
   return (
     <div className="flex flex-1 flex-col gap-4">
+      {saved && (
+        <div className="flex flex-col gap-3">
+          <Button
+            ref={cancelButton}
+            variant="outline"
+            className="h-11 self-start"
+            disabled={saving}
+            onClick={handleCancel}
+          >
+            <ChevronLeft aria-hidden className="size-5" />
+            {t("cancelEdit")}
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight">{t("editTitle")}</h1>
+        </div>
+      )}
+
       {/* Looks like a title but is a real, labelled date field. Future dates are blocked by max. */}
       <div className="flex flex-col items-center">
         <Label htmlFor={dateId} className="sr-only">
@@ -161,6 +249,7 @@ function WorkoutFormBody({ data, today, knownExercises, onExercisesChange, onSav
           onExercisesChange={onExercisesChange}
           focusOnMount={focusKeys.includes(draft.key)}
           disabled={saving}
+          editing={saved !== undefined}
         />
       ))}
 
@@ -185,14 +274,38 @@ function WorkoutFormBody({ data, today, knownExercises, onExercisesChange, onSav
           </p>
         )}
         {saveError && (
-          <p role="alert" className="text-sm font-medium text-ink">
-            {t(`errors.${saveError}`)}
-          </p>
+          <div role="alert" className="flex flex-col items-start gap-2 text-sm font-medium text-ink">
+            <p>{saved ? t(`editErrors.${saveError}`) : t(`errors.${saveError as ErrorCode}`)}</p>
+            {saved && saveError === "stale" && (
+              // The draft cannot be saved over a newer version. Refreshing re-reads the page: the new version
+              // number changes the key on this component (see the edit page), which remounts it with the saved values.
+              <Button variant="outline" disabled={reloading} onClick={() => startReload(() => router.refresh())}>
+                {t("reloadSaved")}
+              </Button>
+            )}
+          </div>
         )}
         <Button fullWidth onClick={handleSave} disabled={saving}>
-          {saving ? t("saving") : t("save")}
+          {saving ? t("saving") : t(saved ? "saveChanges" : "save")}
         </Button>
       </div>
+
+      {saved && (
+        <ConfirmDialog
+          open={discardOpen}
+          onOpenChange={setDiscardOpen}
+          title={t("discardTitle")}
+          description={t("discardText")}
+          cancelLabel={t("keepEditing")}
+          confirmLabel={t("discard")}
+          onConfirm={handleDiscard}
+          onCloseAutoFocus={(event) => {
+            // Keep editing: back to the Cancel button that opened the dialog.
+            event.preventDefault();
+            cancelButton.current?.focus();
+          }}
+        />
+      )}
     </div>
   );
 }

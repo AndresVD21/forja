@@ -25,6 +25,8 @@ type Props = {
   /** Typed name, or a numbered fallback; used in accessible names so rows of different exercises differ. */
   exerciseName: string;
   perSide: boolean;
+  /** True in the saved-workout editor (changes the wording of the sheet's draft note). */
+  editing: boolean;
   /** Set index -> already-translated message, shown under that row. */
   problems: Record<number, string>;
   /** True while the workout is being saved: the draft must not change under the request. */
@@ -38,7 +40,7 @@ const inputClasses =
 // Set number, weight, reps, "…" button. The number column grows downward for the Failure badge.
 const columns = "grid-cols-[3.5rem_minmax(0,1fr)_minmax(0,1fr)_2.75rem]";
 
-export function SetsTable({ draft, exerciseName, perSide, problems, disabled, onChange }: Props) {
+export function SetsTable({ draft, exerciseName, perSide, editing, problems, disabled, onChange }: Props) {
   const t = useTranslations("Entry");
   const locale = useLocale();
   const sets = draft.sets;
@@ -233,6 +235,7 @@ export function SetsTable({ draft, exerciseName, perSide, problems, disabled, on
           number={sets.indexOf(openSet) + 1}
           set={openSet}
           perSide={perSide}
+          editing={editing}
           onToFailureChange={(toFailure) => onChange(updateSet(draft, openSet.key, { toFailure }))}
           onApplyUnit={(unit, mode) => onChange(applySetUnit(draft, openSet.key, unit, mode, locale))}
           onDelete={() => handleDelete(openSet.key)}

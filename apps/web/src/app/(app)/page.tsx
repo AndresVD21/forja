@@ -112,12 +112,14 @@ async function History({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
         {entries.length === 0 ? (
           <p className="text-muted">{t("emptyWeek")}</p>
         ) : (
-          // Cards have no link: the saved-workout detail is not designed yet (decision 0005).
+          // Workout cards link to their detail (decision 0008); activity cards stay static until their own design.
           <ul className="flex flex-col gap-3">
             {entries.map((entry) =>
               entry.kind === "workout" ? (
                 <li key={entry.item.id}>
                   <ListCardRow
+                    // The week travels along so "Back to history" returns to it.
+                    href={`/workouts/${entry.item.id}?week=${start}`}
                     eyebrow={fmt(entry.date, { weekday: "short", day: "numeric", month: "short" })}
                     title={
                       entry.item.trainingDay

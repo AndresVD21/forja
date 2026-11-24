@@ -4,6 +4,7 @@ import {
   applySetUnit,
   changeUnit,
   checkExercise,
+  countProblems,
   filterExercises,
   findExactMatch,
   deleteSet,
@@ -121,6 +122,25 @@ describe("checkExercise and toSaveExercises", () => {
     const draft = { ...newExercise(1), exerciseId: bench.id };
     draft.sets[0] = { ...draft.sets[0], weight: "20", reps: "10" };
     expect(Object.keys(toSaveExercises([draft])[0].sets[0]).sort()).toEqual(["reps", "toFailure", "weight"]);
+  });
+});
+
+describe("countProblems", () => {
+  it("counts one per message: an empty workout has a name and a no-sets problem", () => {
+    const empty = checkExercise(newExercise(1));
+    expect(countProblems({ dateProblem: false, gymProblem: false, exercises: [empty] })).toBe(2);
+  });
+  it("adds the date, the gym, every bad set row and every exercise", () => {
+    const bad = newExercise(1);
+    bad.sets[0] = { ...bad.sets[0], weight: "20" }; // incomplete
+    bad.sets[2] = { ...bad.sets[2], weight: "x", reps: "5" }; // invalid
+    // name (1) + two set rows (2); noSets is not raised when a row is wrong
+    expect(countProblems({ dateProblem: true, gymProblem: true, exercises: [checkExercise(bad), checkExercise(newExercise(2))] })).toBe(2 + 3 + 2);
+  });
+  it("is zero for a form that can be saved", () => {
+    const ok = { ...newExercise(1), exerciseId: bench.id };
+    ok.sets[0] = { ...ok.sets[0], weight: "20", reps: "10" };
+    expect(countProblems({ dateProblem: false, gymProblem: false, exercises: [checkExercise(ok)] })).toBe(0);
   });
 });
 

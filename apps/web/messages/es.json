@@ -35,6 +35,7 @@
     "previousWeek": "Semana anterior",
     "nextWeek": "Semana siguiente",
     "hasEntries": "tiene registros",
+    "goToToday": "Hoy",
     "today": "hoy",
     "thisWeek": "Esta semana",
     "emptyWeek": "No hay nada registrado esta semana.",
@@ -195,7 +196,7 @@
       "noSets": "Escribe el peso y las repeticiones de al menos una serie.",
       "setIncomplete": "Serie {number}: escribe peso y repeticiones, o deja ambos vacíos.",
       "setInvalid": "Serie {number}: el peso y las repeticiones deben ser números (el peso, hasta dos decimales).",
-      "fixBeforeSaving": "Corrige los problemas marcados antes de guardar."
+      "problemsToFix": "{count, plural, one {# problema por corregir antes de guardar.} other {# problemas por corregir antes de guardar.}}"
     },
     "errors": {
       "invalid_input": "Algo del entrenamiento no es válido. Revisa la fecha y las series e inténtalo de nuevo.",
@@ -205,6 +206,7 @@
       "save_failed": "No se pudo guardar el entrenamiento. Tus datos siguen aquí: inténtalo de nuevo."
     },
     "editTitle": "Editar entrenamiento",
+    "noChanges": "No hay cambios para guardar.",
     "saveChanges": "Guardar cambios",
     "cancelEdit": "Cancelar",
     "changesSaved": "Cambios guardados.",
